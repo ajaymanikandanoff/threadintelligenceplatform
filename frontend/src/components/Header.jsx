@@ -1,7 +1,7 @@
 import React from 'react';
-import { Shield, Key, FileUp, Settings } from 'lucide-react';
+import { Shield, FileUp, Settings, FileText } from 'lucide-react';
 
-export default function Header({ hasCustomKey, onOpenSettings, onOpenIngest }) {
+export default function Header({ hasCustomKey, onOpenSettings, onOpenIngest, onOpenReport, threatData }) {
   return (
     <header style={{
       borderBottom: '1px solid var(--border)',
@@ -35,6 +35,17 @@ export default function Header({ hasCustomKey, onOpenSettings, onOpenIngest }) {
 
       {/* Right: Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {threatData && (
+          <button
+            className="btn-ghost"
+            onClick={onOpenReport}
+            style={{ padding: '6px 12px', borderColor: 'rgba(99,179,237,0.3)', color: 'var(--cyan)' }}
+            title="Generate Executive Briefing & Export PDF"
+          >
+            <FileText size={15} />
+            <span>Executive Briefing</span>
+          </button>
+        )}
         <button className="btn-ghost" onClick={onOpenIngest} style={{ padding: '6px 12px' }}>
           <FileUp size={15} />
           <span>Ingest</span>

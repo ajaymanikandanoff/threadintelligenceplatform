@@ -167,3 +167,30 @@ pre, code { font-family: var(--font-mono); }
 .fade-in {
   animation: fadeIn 0.3s ease forwards;
 }
+
+/* Print Styles for Executive Briefing & PDF export */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #1a202c !important;
+  }
+  header, nav, .btn-ghost, .btn-primary, button {
+    display: none !important;
+  }
+  #printable-briefing {
+    padding: 0 !important;
+    color: #111827 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  #printable-briefing * {
+    color: #111827 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  #printable-briefing .tag {
+    border: 1px solid #9ca3af !important;
+    color: #111827 !important;
+  }
+}
+
