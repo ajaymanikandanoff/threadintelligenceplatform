@@ -1,36 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import OverviewTab from './components/OverviewTab';
-import AnalyticsDashboard from './components/AnalyticsDashboard';
-import IocExplorer from './components/IocExplorer';
-import KnowledgeGraph from './components/KnowledgeGraph';
-import MitreMatrix from './components/MitreMatrix';
 import DefenseCenter from './components/DefenseCenter';
+import IocExplorer from './components/IocExplorer';
 import ThreatCopilot from './components/ThreatCopilot';
+import TechnicalDeepDive from './components/TechnicalDeepDive';
 import IngestModal from './components/IngestModal';
 import SettingsModal from './components/SettingsModal';
 import ExecutiveReportModal from './components/ExecutiveReportModal';
 import {
-  Activity,
-  BarChart3,
-  Database,
-  GitCommit,
-  Target,
+  FileText,
   ShieldCheck,
+  Database,
   Terminal,
+  Cpu,
   Loader,
   Radio,
-  ChevronRight
+  ChevronRight,
+  FileUp,
+  AlertCircle
 } from 'lucide-react';
 
 const TABS = [
-  { id: 'overview',   label: 'Overview',          icon: Activity },
-  { id: 'analytics',  label: 'Analytics & Risk',  icon: BarChart3 },
-  { id: 'iocs',       label: 'IoC Explorer',      icon: Database },
-  { id: 'graph',      label: 'Knowledge Graph',   icon: GitCommit },
-  { id: 'mitre',      label: 'MITRE ATT&CK',      icon: Target },
-  { id: 'defense',    label: 'Defense Rules',      icon: ShieldCheck },
-  { id: 'copilot',    label: 'AI Copilot',         icon: Terminal }
+  { id: 'overview',   label: 'Threat Summary',       icon: FileText,    sub: 'What happened & who attacked' },
+  { id: 'defense',    label: 'Defense & Rules',      icon: ShieldCheck, sub: 'Firewall & containment rules' },
+  { id: 'iocs',       label: 'Block Indicators',     icon: Database,    sub: 'Malicious IPs & file hashes' },
+  { id: 'copilot',    label: 'AI Security Copilot',  icon: Terminal,    sub: 'Ask questions in plain English' },
+  { id: 'technical',  label: 'Technical Deep Dive',  icon: Cpu,         sub: 'MITRE Matrix & Attack Graph' }
 ];
 
 export default function App() {
@@ -51,7 +47,7 @@ export default function App() {
   const [copilotMessages, setCopilotMessages] = useState([
     {
       role: 'assistant',
-      content: 'Welcome to the Threat Intelligence Copilot. I can help you analyze adversary TTPs, suggest mitigations, draft SIEM/YARA rules, or investigate indicators from this campaign.'
+      content: 'Hello! I am your AI Security Copilot. I can explain this cyber attack in simple words, give step-by-step containment instructions, or help write firewall rules. Ask me anything!'
     }
   ]);
 
@@ -91,11 +87,11 @@ export default function App() {
         ...prev,
         {
           role: 'assistant',
-          content: `Ingested: "${d.title}". Actor: ${d.threat_actor?.name || 'Unknown'} — ${d.cves?.length || 0} CVEs, ${d.mitre_techniques?.length || 0} TTPs mapped, ${d.iocs?.length || 0} IoCs extracted. What would you like to investigate?`
+          content: `Ingested threat: "${d.title}". Hacker: ${d.threat_actor?.name || 'Unknown'} — ${d.cves?.length || 0} Vulnerabilities, ${d.mitre_techniques?.length || 0} Attack Techniques, ${d.iocs?.length || 0} Malicious Indicators. How can I help you analyze or defend against this threat?`
         }
       ]);
     } catch {
-      alert('Backend unreachable. Ensure backend server is running on port 8000.');
+      alert('Backend unreachable. Make sure python backend is running on port 8000.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -121,7 +117,7 @@ export default function App() {
         ...prev,
         {
           role: 'assistant',
-          content: `Processed "${file.name}" (${d.extracted_char_count} chars). Actor: ${d.threat_actor?.name || 'Unknown'} — ${d.cves?.length || 0} CVEs, ${d.mitre_techniques?.length || 0} TTPs.`
+          content: `Analyzed "${file.name}" (${d.extracted_char_count} chars). Actor: ${d.threat_actor?.name || 'Unknown'} — ${d.cves?.length || 0} CVEs, ${d.mitre_techniques?.length || 0} Techniques. Ready for your questions.`
         }
       ]);
     } catch (err) {
@@ -172,18 +168,19 @@ export default function App() {
       />
 
       <div style={{ display: 'flex', flex: 1 }}>
-        {/* Sidebar Navigation */}
+        {/* Simple & Clean Sidebar */}
         <nav style={{
-          width: '235px', flexShrink: 0,
+          width: '240px', flexShrink: 0,
           borderRight: '1px solid var(--border)',
           background: 'var(--bg-1)',
-          padding: '16px 10px',
+          padding: '16px 12px',
           display: 'flex', flexDirection: 'column', gap: '4px'
         }}>
-          {/* Main Navigation Tabs */}
-          <div style={{ fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-3)', fontWeight: '700', padding: '0 12px 6px' }}>
-            Navigation
+          {/* Main Navigation */}
+          <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-3)', fontWeight: '700', padding: '0 8px 6px' }}>
+            Platform Views
           </div>
+
           {TABS.map(tab => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -192,45 +189,50 @@ export default function App() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                  padding: '9px 12px', borderRadius: '7px', width: '100%', textAlign: 'left',
+                  display: 'flex', alignItems: 'flex-start', gap: '10px',
+                  padding: '10px 12px', borderRadius: '8px', width: '100%', textAlign: 'left',
                   background: active ? 'rgba(99,179,237,0.1)' : 'transparent',
-                  border: 'none', cursor: 'pointer',
-                  color: active ? 'var(--cyan)' : 'var(--text-3)',
-                  fontFamily: 'var(--font-sans)', fontSize: '0.84rem', fontWeight: active ? '600' : '500',
+                  border: `1px solid ${active ? 'rgba(99,179,237,0.3)' : 'transparent'}`,
+                  cursor: 'pointer',
                   transition: 'all 0.12s ease'
                 }}
                 onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--bg-hover)'; }}
                 onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
               >
-                <Icon size={16} strokeWidth={active ? 2.2 : 1.8} />
-                <span>{tab.label}</span>
+                <Icon size={18} color={active ? 'var(--cyan)' : 'var(--text-3)'} style={{ marginTop: '2px', flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: '0.84rem', fontWeight: active ? '700' : '500', color: active ? 'var(--cyan)' : 'var(--text-1)' }}>
+                    {tab.label}
+                  </div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-3)', marginTop: '2px' }}>
+                    {tab.sub}
+                  </div>
+                </div>
               </button>
             );
           })}
 
-          {/* Quick Threat Feed Switcher */}
-          <div style={{ marginTop: '20px', paddingTop: '14px', borderTop: '1px solid var(--border)' }}>
+          {/* Real-World Official Advisories Switcher */}
+          <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
             <div style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.08em',
-              color: 'var(--text-3)', fontWeight: '700', padding: '0 12px 8px'
+              color: 'var(--text-3)', fontWeight: '700', padding: '0 8px 8px'
             }}>
               <Radio size={11} color="var(--red)" />
-              <span>Live Threat Feed</span>
+              <span>Government Cyber Feeds</span>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {sampleReports.map(rep => {
                 const isSelected = activeReportId === rep.id;
-                // shorten label
                 const shortLabel = rep.id.includes('moveit') || rep.id.includes('158a')
-                  ? 'CL0P / MOVEit'
+                  ? 'CISA: CL0P / MOVEit'
                   : rep.id.includes('volt')
-                  ? 'Volt Typhoon (LotL)'
+                  ? 'NSA: Volt Typhoon (LotL)'
                   : rep.id.includes('alphv') || rep.id.includes('blackcat')
-                  ? 'ALPHV / BlackCat'
-                  : rep.title.slice(0, 20);
+                  ? 'FBI: ALPHV Ransomware'
+                  : rep.title.slice(0, 22);
 
                 return (
                   <button
@@ -238,16 +240,16 @@ export default function App() {
                     onClick={() => analyzeThreatReport(rep.content, rep.title, rep.id)}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '7px 10px', borderRadius: '5px',
-                      background: isSelected ? 'rgba(252,129,129,0.1)' : 'transparent',
-                      border: `1px solid ${isSelected ? 'rgba(252,129,129,0.3)' : 'transparent'}`,
+                      padding: '8px 10px', borderRadius: '6px',
+                      background: isSelected ? 'rgba(252,129,129,0.1)' : 'var(--bg-2)',
+                      border: `1px solid ${isSelected ? 'rgba(252,129,129,0.35)' : 'var(--border)'}`,
                       color: isSelected ? 'var(--red)' : 'var(--text-2)',
                       fontSize: '0.74rem', fontFamily: 'var(--font-mono)',
                       cursor: 'pointer', textAlign: 'left', width: '100%',
                       transition: 'all 0.12s ease'
                     }}
                     onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--bg-hover)'; }}
-                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
+                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = isSelected ? 'rgba(252,129,129,0.1)' : 'var(--bg-2)'; }}
                     title={rep.title}
                   >
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -260,40 +262,58 @@ export default function App() {
             </div>
           </div>
 
-          {/* Active Threat Summary Info Card */}
-          {threatData && (
-            <div style={{ marginTop: 'auto', padding: '12px', background: 'var(--bg-2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: '0.64rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-3)', fontWeight: '700', marginBottom: '4px' }}>
-                Active Adversary
-              </div>
-              <div style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--red)', lineHeight: '1.2', marginBottom: '4px' }}>
-                {threatData.threat_actor?.name || 'Unattributed'}
-              </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>
-                {threatData.cves?.length || 0} CVEs · {threatData.iocs?.length || 0} IoCs
-              </div>
+          {/* Quick upload card in sidebar */}
+          <div style={{ marginTop: 'auto', padding: '14px', background: 'var(--bg-2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--text-0)', marginBottom: '4px' }}>
+              Have your own report?
             </div>
-          )}
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-3)', margin: '0 0 10px 0', lineHeight: '1.4' }}>
+              Upload any PDF or security alert to auto-extract defense rules.
+            </p>
+            <button
+              onClick={() => setIsIngestOpen(true)}
+              className="btn-ghost"
+              style={{ width: '100%', justifyContent: 'center', fontSize: '0.74rem', padding: '6px' }}
+            >
+              <FileUp size={13} />
+              <span>Upload PDF</span>
+            </button>
+          </div>
         </nav>
 
         {/* Main Content Area */}
-        <main style={{ flex: 1, padding: '24px 32px', overflowY: 'auto', maxHeight: 'calc(100vh - 56px)' }}>
+        <main style={{ flex: 1, padding: '24px 32px', overflowY: 'auto', maxHeight: 'calc(100vh - 58px)' }}>
           {isAnalyzing ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '400px', gap: '16px' }}>
-              <Loader size={28} color="var(--cyan)" className="spin" />
-              <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-0)' }}>Extracting Threat Intelligence…</div>
-              <p style={{ fontSize: '0.84rem', color: 'var(--text-3)', maxWidth: '420px', textAlign: 'center', lineHeight: '1.5' }}>
-                Parsing IoCs, mapping adversary TTPs to MITRE ATT&CK, calculating risk score, and generating defense rules.
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '420px', gap: '16px' }}>
+              <Loader size={30} color="var(--cyan)" className="spin" />
+              <div style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-0)' }}>
+                Analyzing Threat Report with Gemini AI…
+              </div>
+              <p style={{ fontSize: '0.84rem', color: 'var(--text-2)', maxWidth: '440px', textAlign: 'center', lineHeight: '1.6' }}>
+                Extracting hacker attribution, identifying software vulnerabilities, mapping tactics to MITRE ATT&CK, and generating firewall defense rules.
               </p>
             </div>
           ) : (
             <>
-              {activeTab === 'overview' && <OverviewTab threatData={threatData} onSwitchTab={setActiveTab} />}
-              {activeTab === 'analytics' && <AnalyticsDashboard threatData={threatData} />}
-              {activeTab === 'iocs' && <IocExplorer iocs={threatData?.iocs || []} threatData={threatData} />}
-              {activeTab === 'graph' && <KnowledgeGraph graphData={threatData?.graph_data} onAskCopilot={askCopilot} />}
-              {activeTab === 'mitre' && <MitreMatrix tactics={tactics} activeTechniques={threatData?.mitre_techniques || []} onAskCopilot={askCopilot} />}
-              {activeTab === 'defense' && <DefenseCenter defenseArtifacts={threatData?.defense_artifacts} />}
+              {activeTab === 'overview' && (
+                <OverviewTab
+                  threatData={threatData}
+                  onSwitchTab={setActiveTab}
+                  onOpenIngest={() => setIsIngestOpen(true)}
+                />
+              )}
+              {activeTab === 'defense' && (
+                <DefenseCenter
+                  defenseArtifacts={threatData?.defense_artifacts}
+                  threatData={threatData}
+                />
+              )}
+              {activeTab === 'iocs' && (
+                <IocExplorer
+                  iocs={threatData?.iocs || []}
+                  threatData={threatData}
+                />
+              )}
               {activeTab === 'copilot' && (
                 <ThreatCopilot
                   messages={copilotMessages}
@@ -302,6 +322,13 @@ export default function App() {
                   threatActor={threatData?.threat_actor?.name}
                   externalQuery={externalCopilotQuery}
                   onClearExternalQuery={() => setExternalCopilotQuery('')}
+                />
+              )}
+              {activeTab === 'technical' && (
+                <TechnicalDeepDive
+                  tactics={tactics}
+                  threatData={threatData}
+                  onAskCopilot={askCopilot}
                 />
               )}
             </>

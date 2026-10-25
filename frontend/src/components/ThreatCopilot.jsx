@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, Loader } from 'lucide-react';
 
 const PROMPTS = [
-  "What immediate actions should we take to contain this threat?",
-  "List all IoCs for perimeter firewall blocking",
-  "Draft a CISO executive briefing paragraph",
-  "What Windows registry mitigations prevent this attack?"
+  "Explain this threat in simple, non-technical words.",
+  "What should our IT team do right now in the next 1 hour?",
+  "Which servers or software need emergency patching?",
+  "List all malicious IPs to block on our firewall."
 ];
+
 
 export default function ThreatCopilot({ messages, onSendMessage, isLoading, threatActor, externalQuery, onClearExternalQuery }) {
   const [input, setInput] = useState('');
