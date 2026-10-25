@@ -1,306 +1,125 @@
 import React, { useState, useRef } from 'react';
-import { X, FileText, Upload, Sparkles, Check, AlertCircle, FileUp, Shield, FileCheck } from 'lucide-react';
+import { X, FileUp, Sparkles, FileText } from 'lucide-react';
 
-export default function IngestModal({ 
-  isOpen, 
-  onClose, 
-  sampleReports = [], 
-  onAnalyze, 
-  onUploadFile,
-  isAnalyzing 
-}) {
-  const [activeMode, setActiveMode] = useState('upload'); // 'upload', 'samples', or 'custom'
-  const [selectedSampleId, setSelectedSampleId] = useState(sampleReports[0]?.id || '');
+export default function IngestModal({ isOpen, onClose, sampleReports = [], onAnalyze, onUploadFile, isAnalyzing }) {
+  const [mode, setMode] = useState('upload');
+  const [selectedId, setSelectedId] = useState(sampleReports[0]?.id || '');
   const [customText, setCustomText] = useState('');
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
-  
-  const fileInputRef = useRef(null);
+  const [file, setFile] = useState(null);
+  const [isDrag, setIsDrag] = useState(false);
+  const fileRef = useRef(null);
 
   if (!isOpen) return null;
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
+  const go = () => {
+    if (mode === 'upload' && file) onUploadFile(file);
+    else if (mode === 'samples') { const r = sampleReports.find(x => x.id === selectedId) || sampleReports[0]; if (r) onAnalyze(r.content, r.title); }
+    else if (mode === 'custom' && customText.trim()) onAnalyze(customText.trim(), 'Custom Threat Report');
   };
 
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setSelectedFile(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setSelectedFile(e.target.files[0]);
-    }
-  };
-
-  const handleStartAnalysis = () => {
-    if (activeMode === 'upload') {
-      if (!selectedFile) return;
-      onUploadFile(selectedFile);
-    } else if (activeMode === 'samples') {
-      const report = sampleReports.find(r => r.id === selectedSampleId) || sampleReports[0];
-      if (report) {
-        onAnalyze(report.content, report.title);
-      }
-    } else {
-      if (!customText.trim()) return;
-      onAnalyze(customText.trim(), "Custom Threat Advisory Ingestion");
-    }
-  };
+  const canGo = mode === 'upload' ? !!file : mode === 'samples' ? true : !!customText.trim();
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(5, 8, 17, 0.88)',
-      backdropFilter: 'blur(12px)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 100,
-      padding: '20px'
-    }} onClick={onClose}>
-      <div 
-        className="cyber-card" 
-        style={{ 
-          maxWidth: '720px', 
-          width: '100%', 
-          padding: '28px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          boxShadow: '0 25px 70px rgba(0,0,0,0.9)'
-        }}
-        onClick={e => e.stopPropagation()}
-      >
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(6,9,15,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }} onClick={onClose}>
+      <div className="surface" style={{ maxWidth: '620px', width: '100%', padding: '28px', maxHeight: '88vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.7)' }} onClick={e => e.stopPropagation()}>
+
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <FileUp size={22} color="var(--accent-cyan)" />
-              <h2 style={{ fontSize: '1.3rem', fontWeight: '700', color: '#fff' }}>
-                Ingest Threat Intelligence Document
-              </h2>
-            </div>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-              Upload real security PDF advisories, select pre-loaded CISA reports, or paste raw intelligence feeds.
-            </p>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: '700', color: 'var(--text-0)', marginBottom: '4px' }}>Ingest Threat Intelligence</h2>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-3)' }}>Upload a PDF, select a sample advisory, or paste raw text.</p>
           </div>
-          <button 
-            onClick={onClose}
-            style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
-          >
-            <X size={20} />
-          </button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer' }}><X size={18} /></button>
         </div>
 
-        {/* Mode Selector Tabs */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '22px' }}>
-          <button
-            onClick={() => setActiveMode('upload')}
-            className={activeMode === 'upload' ? 'cyber-btn-primary' : 'cyber-btn-secondary'}
-            style={{ flex: 1, justifyContent: 'center' }}
-          >
-            <FileUp size={15} />
-            <span>Upload PDF File</span>
-          </button>
-          <button
-            onClick={() => setActiveMode('samples')}
-            className={activeMode === 'samples' ? 'cyber-btn-primary' : 'cyber-btn-secondary'}
-            style={{ flex: 1, justifyContent: 'center' }}
-          >
-            <Sparkles size={15} />
-            <span>Pre-Loaded CISA Intel</span>
-          </button>
-          <button
-            onClick={() => setActiveMode('custom')}
-            className={activeMode === 'custom' ? 'cyber-btn-primary' : 'cyber-btn-secondary'}
-            style={{ flex: 1, justifyContent: 'center' }}
-          >
-            <FileText size={15} />
-            <span>Paste Raw Text</span>
-          </button>
-        </div>
-
-        {/* Mode 1: Drag & Drop Real PDF */}
-        {activeMode === 'upload' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-            <div
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                border: `2px dashed ${isDragging ? 'var(--accent-cyan)' : 'rgba(0, 240, 255, 0.3)'}`,
-                background: isDragging ? 'rgba(0, 240, 255, 0.1)' : 'rgba(15, 23, 42, 0.5)',
-                borderRadius: '12px',
-                padding: '40px 20px',
-                textAlign: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '12px'
-              }}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.txt,.json,.md"
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-              />
-
-              <div style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '50%',
-                background: 'rgba(0, 240, 255, 0.12)',
-                border: '1px solid var(--accent-cyan)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 0 20px rgba(0, 240, 255, 0.2)'
+        {/* Mode tabs */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+          {[
+            { id: 'upload', label: 'Upload PDF', icon: FileUp },
+            { id: 'samples', label: 'Sample Reports', icon: Sparkles },
+            { id: 'custom', label: 'Paste Text', icon: FileText }
+          ].map(m => {
+            const Icon = m.icon;
+            const active = mode === m.id;
+            return (
+              <button key={m.id} onClick={() => setMode(m.id)} style={{
+                flex: 1, padding: '10px', borderRadius: '7px', cursor: 'pointer', textAlign: 'center',
+                background: active ? 'rgba(99,179,237,0.1)' : 'transparent',
+                border: `1px solid ${active ? 'rgba(99,179,237,0.35)' : 'var(--border)'}`,
+                color: active ? 'var(--cyan)' : 'var(--text-3)',
+                fontFamily: 'var(--font-sans)', fontWeight: '600', fontSize: '0.82rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                transition: 'all 0.15s ease'
               }}>
-                <FileUp size={26} color="var(--accent-cyan)" />
-              </div>
-
-              <div>
-                <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#fff', marginBottom: '4px' }}>
-                  {selectedFile ? selectedFile.name : 'Drag & Drop your Threat PDF here'}
-                </h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  {selectedFile 
-                    ? `Size: ${(selectedFile.size / 1024).toFixed(1)} KB — Ready to extract`
-                    : 'Supports PDF advisories, CISA alerts, CVE documents, or TXT feeds'}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="cyber-btn-secondary"
-                style={{ marginTop: '6px' }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  fileInputRef.current?.click();
-                }}
-              >
-                Browse From Computer
+                <Icon size={15} /><span>{m.label}</span>
               </button>
-            </div>
+            );
+          })}
+        </div>
 
-            {/* Note about sample PDFs on disk */}
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '8px',
-              padding: '12px 14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontSize: '0.78rem'
+        {/* Upload mode */}
+        {mode === 'upload' && (
+          <div
+            onDragOver={e => { e.preventDefault(); setIsDrag(true); }}
+            onDragLeave={e => { e.preventDefault(); setIsDrag(false); }}
+            onDrop={e => { e.preventDefault(); setIsDrag(false); if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); }}
+            onClick={() => fileRef.current?.click()}
+            style={{
+              border: `2px dashed ${isDrag ? 'var(--cyan)' : 'rgba(99,179,237,0.25)'}`,
+              background: isDrag ? 'rgba(99,179,237,0.06)' : 'var(--bg-2)',
+              borderRadius: '10px', padding: '40px 20px', textAlign: 'center', cursor: 'pointer',
+              transition: 'all 0.2s ease', marginBottom: '20px'
             }}>
-              <span style={{ color: 'var(--text-muted)' }}>
-                📁 <strong>Tip:</strong> We generated sample test PDFs in your project folder at <code>threat-intel-platform/sample_pdfs/</code>
-              </span>
-              <span className="badge badge-cyan" style={{ fontSize: '0.68rem' }}>READY</span>
-            </div>
+            <input ref={fileRef} type="file" accept=".pdf,.txt,.json,.md" onChange={e => { if (e.target.files[0]) setFile(e.target.files[0]); }} style={{ display: 'none' }} />
+            <FileUp size={32} color="var(--cyan)" strokeWidth={1.5} style={{ marginBottom: '12px' }} />
+            <h3 style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-0)', marginBottom: '4px' }}>
+              {file ? file.name : 'Drag & drop your threat report'}
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-3)' }}>
+              {file ? `${(file.size / 1024).toFixed(1)} KB — Ready` : 'PDF, TXT, JSON supported'}
+            </p>
           </div>
         )}
 
-        {/* Mode 2: Pre-loaded Samples */}
-        {activeMode === 'samples' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-            {sampleReports.map((report) => (
-              <div
-                key={report.id}
-                onClick={() => setSelectedSampleId(report.id)}
-                style={{
-                  background: selectedSampleId === report.id ? 'rgba(0, 240, 255, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-                  border: `1px solid ${selectedSampleId === report.id ? 'var(--accent-cyan)' : 'var(--border-subtle)'}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span className="badge badge-red">{report.severity}</span>
-                    <span className="badge badge-purple">{report.source}</span>
-                  </div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
-                    {report.date}
-                  </span>
+        {/* Samples mode */}
+        {mode === 'samples' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+            {sampleReports.map(r => (
+              <div key={r.id} onClick={() => setSelectedId(r.id)} style={{
+                padding: '14px 16px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s ease',
+                background: selectedId === r.id ? 'rgba(99,179,237,0.06)' : 'var(--bg-2)',
+                border: `1px solid ${selectedId === r.id ? 'rgba(99,179,237,0.3)' : 'var(--border)'}`
+              }}>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+                  <span className="tag tag-red">{r.severity}</span>
+                  <span className="tag tag-purple">{r.source?.split('/')[0]?.trim()}</span>
                 </div>
-                <h4 style={{ fontSize: '0.92rem', fontWeight: '700', color: '#fff', marginBottom: '4px' }}>
-                  {report.title}
-                </h4>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                  {report.summary}
-                </p>
+                <h4 style={{ fontSize: '0.88rem', fontWeight: '600', color: 'var(--text-0)', marginBottom: '4px', lineHeight: '1.3' }}>{r.title}</h4>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-3)', lineHeight: '1.4' }}>{r.summary?.substring(0, 120)}…</p>
               </div>
             ))}
           </div>
         )}
 
-        {/* Mode 3: Custom Text */}
-        {activeMode === 'custom' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Paste unformatted threat intelligence, incident notes, malware reports, or CVE details:
-            </p>
-            <textarea
-              rows={9}
-              value={customText}
-              onChange={(e) => setCustomText(e.target.value)}
-              placeholder="Paste raw threat advisory, CISA report, or hacker forum dump here..."
-              style={{
-                width: '100%',
-                background: 'var(--bg-input)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: '8px',
-                padding: '12px 14px',
-                color: '#fff',
-                fontSize: '0.85rem',
-                fontFamily: 'var(--font-mono)',
-                outline: 'none',
-                resize: 'vertical'
-              }}
-              onFocus={e => e.target.style.borderColor = 'var(--accent-cyan)'}
-              onBlur={e => e.target.style.borderColor = 'var(--border-subtle)'}
-            />
-          </div>
+        {/* Custom text mode */}
+        {mode === 'custom' && (
+          <textarea rows={8} value={customText} onChange={e => setCustomText(e.target.value)}
+            placeholder="Paste unstructured threat intelligence, CISA advisory text, or CVE details…"
+            style={{
+              width: '100%', background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: '7px',
+              padding: '12px 14px', color: 'var(--text-0)', fontSize: '0.84rem', fontFamily: 'var(--font-mono)',
+              outline: 'none', resize: 'vertical', marginBottom: '20px', lineHeight: '1.5'
+            }}
+            onFocus={e => e.target.style.borderColor = 'rgba(99,179,237,0.4)'}
+            onBlur={e => e.target.style.borderColor = 'var(--border)'}
+          />
         )}
 
-        {/* Footer Actions */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid var(--border-subtle)', paddingTop: '16px' }}>
-          <button className="cyber-btn-secondary" onClick={onClose} disabled={isAnalyzing}>
-            Cancel
-          </button>
-          <button 
-            className="cyber-btn-primary" 
-            onClick={handleStartAnalysis} 
-            disabled={
-              isAnalyzing || 
-              (activeMode === 'upload' && !selectedFile) ||
-              (activeMode === 'custom' && !customText.trim())
-            }
-          >
-            {isAnalyzing ? 'Extracting Intelligence...' : 'Run Autonomous Extraction'}
+        {/* Footer */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+          <button className="btn-ghost" onClick={onClose} disabled={isAnalyzing}>Cancel</button>
+          <button className="btn-primary" onClick={go} disabled={isAnalyzing || !canGo}>
+            {isAnalyzing ? 'Extracting…' : 'Analyze Report'}
           </button>
         </div>
       </div>
