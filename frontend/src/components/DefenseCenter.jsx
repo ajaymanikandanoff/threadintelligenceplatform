@@ -1,72 +1,22 @@
 import React, { useState } from 'react';
-import { Copy, Check, Download, FileCode, Shield, Layers, Terminal, Server } from 'lucide-react';
+import { Copy, Check, Download, Shield, Terminal, FileCode, Layers, Server, Zap, Lock } from 'lucide-react';
 
-export default function DefenseCenter({ defenseArtifacts, threatData }) {
-  const [tab, setTab] = useState('firewall');
-  const [firewallFormat, setFirewallFormat] = useState('powershell');
+const FIREWALL_FORMATS = [
+  { id: 'powershell', label: 'Windows PowerShell', icon: Terminal, ext: '.ps1', desc: 'Block via Windows Defender Firewall' },
+  { id: 'iptables',   label: 'Linux iptables',     icon: Server,   ext: '.sh',  desc: 'Block via Linux kernel firewall' },
+  { id: 'cisco',      label: 'Cisco ACL',          icon: Lock,     ext: '.txt', desc: 'Cisco ASA / IOS access-list' },
+  { id: 'hosts',      label: 'Hosts Sinkhole',     icon: FileCode, ext: '.txt', desc: 'DNS sinkhole via hosts file' },
+];
+
+const RULE_TABS = [
+  { id: 'firewall', label: 'Firewall Rules', icon: Shield,   desc: 'Block malicious IPs & domains' },
+  { id: 'sigma',    label: 'Sigma Rule',     icon: Zap,      desc: 'SIEM detection rule (Elastic/Splunk)' },
+  { id: 'yara',     label: 'YARA Rule',      icon: FileCode, desc: 'Malware file scanner rule' },
+  { id: 'stix',     label: 'STIX 2.1',       icon: Layers,   desc: 'Machine-readable threat intel bundle' },
+];
+
+function CodeDisplay({ content, filename, lang }) {
   const [copied, setCopied] = useState(false);
-  const [copiedIps, setCopiedIps] = useState(false);
-
-  const { sigma_rule = '', yara_rule = '', stix_bundle = {} } = defenseArtifacts || {};
-  const stixStr = JSON.stringify(stix_bundle, null, 2);
-
-  // Extract IPs and Domains
-  const rawIps = (threatData?.iocs || []).filter(i => i.type === 'ipv4').map(i => i.value.replace(/\[\.\]/g, '.'));
-  const rawDomains = (threatData?.iocs || []).filter(i => i.type === 'domain').map(i => i.value.replace(/\[\.\]/g, '.'));
-
-  // Generate firewall scripts based on format
-  const generateFirewallScript = () => {
-    if (rawIps.length === 0 && rawDomains.length === 0) {
-      return '# No malicious IP or Domain indicators extracted for this campaign.';
-    }
-
-    if (firewallFormat === 'powershell') {
-      let script = '# Windows PowerShell Inbound & Outbound Block Rules\n# Run as Administrator:\n\n';
-      rawIps.forEach(ip => {
-        script += `New-NetFirewallRule -DisplayName "BLOCK-C2-${ip}" -Direction Inbound -Action Block -RemoteAddress "${ip}"\n`;
-        script += `New-NetFirewallRule -DisplayName "BLOCK-C2-${ip}" -Direction Outbound -Action Block -RemoteAddress "${ip}"\n`;
-      });
-      return script;
-    } else if (firewallFormat === 'iptables') {
-      let script = '#!/bin/bash\n# Linux iptables Perimeter Drop Rules\n# Run with sudo:\n\n';
-      rawIps.forEach(ip => {
-        script += `iptables -A INPUT -s ${ip} -j DROP\n`;
-        script += `iptables -A OUTPUT -d ${ip} -j DROP\n`;
-      });
-      return script;
-    } else if (firewallFormat === 'cisco') {
-      let script = '! Cisco ASA / Switch Access Control List (ACL)\n';
-      rawIps.forEach(ip => {
-        script += `access-list OUTSIDE_IN deny ip host ${ip} any\n`;
-      });
-      return script;
-    } else if (firewallFormat === 'hosts') {
-      let script = '# Local /etc/hosts or Windows hosts file DNS Sinkhole\n# 127.0.0.1 redirect to nullify connection:\n\n';
-      rawDomains.forEach(dom => {
-        script += `0.0.0.0 ${dom}\n`;
-      });
-      return script;
-    }
-    return rawIps.join('\n');
-  };
-
-  const firewallScriptContent = generateFirewallScript();
-
-  let content = '';
-  let filename = '';
-  if (tab === 'firewall') {
-    content = firewallScriptContent;
-    filename = firewallFormat === 'powershell' ? 'block_firewall.ps1' : firewallFormat === 'iptables' ? 'block_iptables.sh' : 'firewall_acl.txt';
-  } else if (tab === 'sigma') {
-    content = sigma_rule;
-    filename = 'sigma_detection.yml';
-  } else if (tab === 'yara') {
-    content = yara_rule;
-    filename = 'malware_scan.yar';
-  } else {
-    content = stixStr;
-    filename = 'stix_bundle.json';
-  }
 
   const doCopy = () => {
     navigator.clipboard.writeText(content);
@@ -75,178 +25,198 @@ export default function DefenseCenter({ defenseArtifacts, threatData }) {
   };
 
   const doDownload = () => {
-    const b = new Blob([content], { type: 'text/plain' });
-    const u = URL.createObjectURL(b);
-    const a = document.createElement('a');
-    a.href = u;
-    a.download = filename;
+    const a = Object.assign(document.createElement('a'), {
+      href: URL.createObjectURL(new Blob([content], { type: 'text/plain' })),
+      download: filename
+    });
     a.click();
-    URL.revokeObjectURL(u);
   };
-
-  const copyAllIps = () => {
-    if (rawIps.length === 0) return;
-    navigator.clipboard.writeText(rawIps.join('\n'));
-    setCopiedIps(true);
-    setTimeout(() => setCopiedIps(false), 1500);
-  };
-
-  const tabs = [
-    {
-      id: 'firewall',
-      label: 'Firewall Block Scripts',
-      whatIsIt: '1-click copy-paste terminal scripts for Windows PowerShell, Linux iptables & Cisco.',
-      icon: Terminal,
-      color: 'var(--red)'
-    },
-    {
-      id: 'sigma',
-      label: 'Sigma SIEM Rule',
-      whatIsIt: 'Universal search query for Splunk, Elastic, Sentinel to detect attacker activity.',
-      icon: FileCode,
-      color: 'var(--cyan)'
-    },
-    {
-      id: 'yara',
-      label: 'YARA Antivirus Rule',
-      whatIsIt: 'Malware scanner signature to find malicious webshells and files on servers.',
-      icon: Shield,
-      color: 'var(--purple)'
-    },
-    {
-      id: 'stix',
-      label: 'STIX 2.1 Bundle',
-      whatIsIt: 'Standardized threat intelligence format to share with firewalls and threat sharing portals.',
-      icon: Layers,
-      color: 'var(--green)'
-    }
-  ];
 
   return (
-    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-
-      {/* Header with Quick Actions */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <div>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-0)', margin: 0 }}>
-            Automated Defense & Firewall Generator
-          </h2>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-3)', margin: '4px 0 0 0' }}>
-            Production-ready rules auto-generated from this threat report to protect your network immediately.
-          </p>
-        </div>
-
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {rawIps.length > 0 && (
-            <button
-              onClick={copyAllIps}
-              className="btn-ghost"
-              style={{
-                padding: '6px 12px', fontSize: '0.78rem',
-                borderColor: 'rgba(252,129,129,0.35)', color: 'var(--red)'
-              }}
-              title="Copy all malicious IPs separated by newlines for firewall blocklist"
-            >
-              {copiedIps ? <Check size={14} color="var(--green)" /> : <Copy size={14} />}
-              <span>{copiedIps ? 'All IPs Copied!' : 'Copy Raw IPs'}</span>
-            </button>
-          )}
-
-          <button className="btn-ghost" onClick={doCopy} style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
-            {copied ? <Check size={14} color="var(--green)" /> : <Copy size={14} />}
-            <span>{copied ? 'Copied' : 'Copy Script'}</span>
+    <div className="code-block" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div className="code-block-header">
+        <span>{filename}</span>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <button
+            onClick={doCopy}
+            style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '4px', background: 'transparent', border: '1px solid var(--border)', color: copied ? 'var(--green)' : 'var(--text-tertiary)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: '11px', transition: 'all 0.12s' }}
+          >
+            {copied ? <Check size={11} /> : <Copy size={11} />}
+            {copied ? 'Copied!' : 'Copy'}
           </button>
-          <button className="btn-primary" onClick={doDownload} style={{ padding: '6px 14px', fontSize: '0.78rem' }}>
-            <Download size={14} />
-            <span>Download {filename}</span>
+          <button
+            onClick={doDownload}
+            style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '4px', background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-tertiary)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: '11px', transition: 'all 0.12s' }}
+          >
+            <Download size={11} /> Download
           </button>
         </div>
       </div>
+      <pre style={{ flex: 1, overflowY: 'auto', maxHeight: '480px' }}>
+        {content || `# No ${lang} content generated for this report.`}
+      </pre>
+    </div>
+  );
+}
 
-      {/* Rule Type Selector Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-        {tabs.map(t => {
+export default function DefenseCenter({ defenseArtifacts, threatData }) {
+  const [activeTab, setActiveTab]     = useState('firewall');
+  const [fwFormat, setFwFormat]       = useState('powershell');
+
+  const { sigma_rule = '', yara_rule = '', stix_bundle = {} } = defenseArtifacts || {};
+  const stixStr = JSON.stringify(stix_bundle, null, 2);
+
+  const rawIps     = (threatData?.iocs || []).filter(i => i.type?.toLowerCase().includes('ip')).map(i => i.value?.replace(/\[\.\]/g, '.') || '');
+  const rawDomains = (threatData?.iocs || []).filter(i => i.type?.toLowerCase().includes('domain')).map(i => i.value?.replace(/\[\.\]/g, '.') || '');
+
+  const buildFirewall = () => {
+    if (!rawIps.length && !rawDomains.length) return '# No malicious IPs or domains extracted for this campaign.';
+    if (fwFormat === 'powershell') {
+      return `# ═══════════════════════════════════════════════
+# CyberIntel.AI — Windows PowerShell Firewall Block
+# Run as Administrator in PowerShell
+# ═══════════════════════════════════════════════
+\n` + rawIps.map(ip =>
+        `New-NetFirewallRule -DisplayName "CYBERINTEL-BLOCK-${ip}" -Direction Inbound  -Action Block -RemoteAddress "${ip}"\n` +
+        `New-NetFirewallRule -DisplayName "CYBERINTEL-BLOCK-${ip}" -Direction Outbound -Action Block -RemoteAddress "${ip}"`
+      ).join('\n');
+    }
+    if (fwFormat === 'iptables') {
+      return `#!/bin/bash
+# ═══════════════════════════════════════════════
+# CyberIntel.AI — Linux iptables Block Rules
+# Run with: sudo bash block_iptables.sh
+# ═══════════════════════════════════════════════
+\n` + rawIps.map(ip =>
+        `iptables -A INPUT  -s ${ip} -j DROP\n` +
+        `iptables -A OUTPUT -d ${ip} -j DROP`
+      ).join('\n');
+    }
+    if (fwFormat === 'cisco') {
+      return `! ═══════════════════════════════════════════════
+! CyberIntel.AI — Cisco ASA/IOS ACL Block Rules
+! Paste into privileged EXEC mode
+! ═══════════════════════════════════════════════\n\n` +
+      rawIps.map((ip, i) => `access-list CYBERINTEL_BLOCK deny ip host ${ip} any log`).join('\n');
+    }
+    if (fwFormat === 'hosts') {
+      return `# ═══════════════════════════════════════════════
+# CyberIntel.AI — Hosts File DNS Sinkhole
+# Add to: /etc/hosts (Linux/Mac) or
+#   C:\\Windows\\System32\\drivers\\etc\\hosts (Windows)
+# ═══════════════════════════════════════════════
+\n` + rawDomains.map(d => `0.0.0.0   ${d}`).join('\n');
+    }
+    return rawIps.join('\n');
+  };
+
+  const getFwFilename = () => ({ powershell: 'block_c2_ips.ps1', iptables: 'block_iptables.sh', cisco: 'cisco_acl.txt', hosts: 'hosts_sinkhole.txt' }[fwFormat]);
+
+  const getContent = () => {
+    if (activeTab === 'sigma') return sigma_rule;
+    if (activeTab === 'yara')  return yara_rule;
+    if (activeTab === 'stix')  return stixStr;
+    return buildFirewall();
+  };
+
+  const getFilename = () => {
+    if (activeTab === 'sigma') return 'sigma_detection.yml';
+    if (activeTab === 'yara')  return 'malware_scan.yar';
+    if (activeTab === 'stix')  return 'stix_bundle.json';
+    return getFwFilename();
+  };
+
+  return (
+    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: 'calc(100vh - 130px)' }}>
+
+      {/* Header */}
+      <div>
+        <h1 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 4px', letterSpacing: '-0.02em' }}>
+          Defense & Detection Center
+        </h1>
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
+          AI-generated firewall rules, SIEM detections, and threat intelligence artifacts — ready to deploy.
+        </p>
+      </div>
+
+      {/* Main Rule Tabs */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+        {RULE_TABS.map(t => {
           const Icon = t.icon;
-          const active = tab === t.id;
+          const active = activeTab === t.id;
           return (
             <button
               key={t.id}
-              onClick={() => setTab(t.id)}
-              className="surface"
+              onClick={() => setActiveTab(t.id)}
               style={{
-                padding: '12px 14px', cursor: 'pointer', textAlign: 'left',
-                borderColor: active ? t.color : 'var(--border)',
-                background: active ? 'rgba(255,255,255,0.03)' : 'var(--bg-1)',
-                borderWidth: active ? '2px' : '1px',
-                transition: 'all 0.15s ease'
+                display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px',
+                padding: '12px 14px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left',
+                background: active ? 'var(--bg-active)' : 'var(--bg-elevated)',
+                border: `1px solid ${active ? 'var(--border-accent)' : 'var(--border)'}`,
+                fontFamily: 'var(--font-sans)', transition: 'all 0.15s ease'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <Icon size={16} color={active ? t.color : 'var(--text-3)'} />
-                <span style={{ fontSize: '0.84rem', fontWeight: '700', color: active ? 'var(--text-0)' : 'var(--text-2)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Icon size={13} color={active ? 'var(--accent)' : 'var(--text-secondary)'} />
+                <span style={{ fontSize: '13px', fontWeight: '700', color: active ? 'var(--accent)' : 'var(--text-primary)' }}>
                   {t.label}
                 </span>
               </div>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-3)', margin: 0, lineHeight: '1.35' }}>
-                {t.whatIsIt}
-              </p>
+              <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', lineHeight: '1.3' }}>
+                {t.desc}
+              </span>
             </button>
           );
         })}
       </div>
 
-      {/* Sub-selector for Firewall format */}
-      {tab === 'firewall' && (
-        <div style={{
-          display: 'flex', gap: '8px', alignItems: 'center',
-          padding: '8px 14px', background: 'var(--bg-2)', borderRadius: '8px', border: '1px solid var(--border)'
-        }}>
-          <span style={{ fontSize: '0.74rem', color: 'var(--text-3)', fontWeight: '600' }}>Select Firewall Format:</span>
-          {[
-            { id: 'powershell', label: 'Windows PowerShell' },
-            { id: 'iptables',   label: 'Linux iptables' },
-            { id: 'cisco',      label: 'Cisco ASA ACL' },
-            { id: 'hosts',      label: 'Hosts File (Domains)' }
-          ].map(fmt => (
-            <button
-              key={fmt.id}
-              onClick={() => setFirewallFormat(fmt.id)}
-              style={{
-                padding: '4px 10px', borderRadius: '5px',
-                background: firewallFormat === fmt.id ? 'rgba(252,129,129,0.15)' : 'transparent',
-                border: `1px solid ${firewallFormat === fmt.id ? 'var(--red)' : 'var(--border)'}`,
-                color: firewallFormat === fmt.id ? 'var(--red)' : 'var(--text-2)',
-                fontSize: '0.72rem', cursor: 'pointer', fontFamily: 'var(--font-mono)'
-              }}
-            >
-              {fmt.label}
-            </button>
-          ))}
+      {/* Firewall Format Picker */}
+      {activeTab === 'firewall' && (
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {FIREWALL_FORMATS.map(f => {
+            const Icon = f.icon;
+            const active = fwFormat === f.id;
+            return (
+              <button
+                key={f.id}
+                onClick={() => setFwFormat(f.id)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '7px 12px', borderRadius: '7px', cursor: 'pointer',
+                  background: active ? 'rgba(52,211,153,0.1)' : 'var(--bg-overlay)',
+                  border: `1px solid ${active ? 'rgba(52,211,153,0.3)' : 'var(--border)'}`,
+                  color: active ? 'var(--green)' : 'var(--text-secondary)',
+                  fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: '600',
+                  transition: 'all 0.12s ease'
+                }}
+              >
+                <Icon size={12} />
+                <span>{f.label}</span>
+                <code style={{ fontSize: '10px', opacity: 0.7, fontFamily: 'var(--font-mono)' }}>{f.ext}</code>
+              </button>
+            );
+          })}
         </div>
       )}
 
-      {/* Rule Content Viewer */}
-      <div className="surface" style={{ padding: '0', overflow: 'hidden' }}>
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '10px 16px', background: 'var(--bg-2)', borderBottom: '1px solid var(--border)'
-        }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.74rem', color: 'var(--text-2)' }}>
-            {filename}
-          </span>
-          <span style={{ fontSize: '0.7rem', color: 'var(--cyan)' }}>
-            {tab === 'firewall' ? `${rawIps.length} Malicious IPs ready to drop` : tab === 'sigma' ? 'YAML Format' : tab === 'yara' ? 'YARA Rule' : 'JSON Format'}
-          </span>
+      {/* Context banner for firewall */}
+      {activeTab === 'firewall' && (
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'var(--red-dim)', border: '1px solid rgba(248,113,113,0.2)', fontSize: '12px', color: 'var(--red)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Shield size={13} /> <strong>{rawIps.length}</strong>&nbsp;malicious IPs to block
+          </div>
+          <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'var(--amber-dim)', border: '1px solid rgba(251,191,36,0.2)', fontSize: '12px', color: 'var(--amber)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FileCode size={13} /> <strong>{rawDomains.length}</strong>&nbsp;malicious domains to sinkhole
+          </div>
         </div>
-        <pre style={{
-          margin: 0, padding: '16px 20px', overflowX: 'auto', maxHeight: '420px',
-          fontFamily: 'var(--font-mono)', fontSize: '0.8rem', lineHeight: '1.55',
-          color: 'var(--text-1)', background: 'transparent'
-        }}>
-          <code>{content || '# Generating detection script...'}</code>
-        </pre>
-      </div>
+      )}
 
+      {/* Code Output */}
+      <CodeDisplay
+        content={getContent()}
+        filename={getFilename()}
+        lang={activeTab}
+      />
     </div>
   );
 }

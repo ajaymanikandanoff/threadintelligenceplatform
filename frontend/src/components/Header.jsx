@@ -1,110 +1,96 @@
 import React from 'react';
-import { Shield, FileUp, Settings, FileText, BookOpen, Sun, Moon } from 'lucide-react';
+import { Shield, FileUp, Settings, FileText, BookOpen, Sun, Moon, Zap } from 'lucide-react';
 
-export default function Header({
-  hasCustomKey,
-  onOpenSettings,
-  onOpenIngest,
-  onOpenReport,
-  onOpenGlossary,
-  threatData,
-  theme,
-  onToggleTheme
-}) {
+export default function Header({ hasCustomKey, onOpenSettings, onOpenIngest, onOpenReport, onOpenGlossary, threatData, theme, onToggleTheme }) {
   return (
     <header style={{
+      height: '52px',
+      background: 'var(--bg-elevated)',
       borderBottom: '1px solid var(--border)',
-      background: 'var(--bg-1)',
-      backdropFilter: 'blur(12px)',
-      position: 'sticky',
-      top: 0,
-      zIndex: 50,
-      padding: '0 24px',
-      height: '58px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      transition: 'background 0.2s ease, border-color 0.2s ease'
+      padding: '0 20px',
+      position: 'sticky',
+      top: 0,
+      zIndex: 100,
+      flexShrink: 0,
     }}>
-      {/* Left: Brand + Status */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* Brand */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div style={{
-          width: '32px', height: '32px', borderRadius: '8px',
-          background: 'rgba(99,179,237,0.12)', border: '1px solid rgba(99,179,237,0.3)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
+          width: '28px', height: '28px', borderRadius: '7px',
+          background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 0 12px rgba(14,165,233,0.35)',
+          flexShrink: 0
         }}>
-          <Shield size={18} color="var(--cyan)" strokeWidth={2.4} />
+          <Shield size={15} color="#fff" strokeWidth={2.5} />
         </div>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.94rem', fontWeight: '800', letterSpacing: '0.04em', color: 'var(--text-0)' }}>
-              CYBERINTEL<span style={{ color: 'var(--cyan)' }}>.AI</span>
-            </span>
-            <span className="tag tag-cyan" style={{ fontSize: '0.62rem' }}>
-              <span className="status-dot" style={{ background: 'var(--cyan)' }}></span>
-              ACTIVE
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+            CyberIntel<span style={{ color: 'var(--accent)' }}>.AI</span>
+          </span>
+          <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '3px', background: 'rgba(56,189,248,0.1)', color: 'var(--accent)', border: '1px solid rgba(56,189,248,0.2)', fontFamily: 'var(--font-mono)', fontWeight: '600' }}>
+            v2.5 · LIVE
+          </span>
+        </div>
+
+        {threatData && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '16px', paddingLeft: '16px', borderLeft: '1px solid var(--border)' }}>
+            <span className="status-dot" style={{ background: 'var(--red)' }}></span>
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+              Analyzing: <span style={{ color: 'var(--red)', fontWeight: '600' }}>{threatData.threat_actor?.name || 'Active Threat'}</span>
             </span>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Right: Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {/* Jargon Buster / Dictionary */}
-        <button
-          className="btn-ghost"
-          onClick={onOpenGlossary}
-          style={{ padding: '6px 12px', fontSize: '0.78rem', color: 'var(--text-1)' }}
-          title="Open Cyber Jargon Buster (Terms explained in plain words)"
-        >
-          <BookOpen size={14} color="var(--cyan)" />
-          <span>Jargon Buster</span>
+      {/* Actions */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <button className="btn-ghost" onClick={onOpenGlossary} style={{ fontSize: '12px', padding: '6px 10px' }}>
+          <BookOpen size={13} />
+          <span>Dictionary</span>
         </button>
 
-        {/* Executive Report */}
         {threatData && (
-          <button
-            className="btn-ghost"
-            onClick={onOpenReport}
-            style={{ padding: '6px 12px', fontSize: '0.78rem', color: 'var(--text-1)' }}
-            title="Download formatted C-Suite executive briefing report"
-          >
-            <FileText size={14} color="var(--cyan)" />
-            <span>Executive Report</span>
+          <button className="btn-ghost" onClick={onOpenReport} style={{ fontSize: '12px', padding: '6px 10px' }}>
+            <FileText size={13} />
+            <span>Export Report</span>
           </button>
         )}
 
-        {/* Primary Action Button */}
-        <button
-          className="btn-primary"
-          onClick={onOpenIngest}
-          style={{ padding: '7px 15px', fontSize: '0.8rem' }}
-        >
-          <FileUp size={14} />
+        <button className="btn-primary" onClick={onOpenIngest} style={{ padding: '7px 14px', fontSize: '12px' }}>
+          <Zap size={13} />
           <span>Analyze Threat</span>
         </button>
 
-        {/* Dark / Light Mode Toggle */}
+        <div style={{ width: '1px', height: '20px', background: 'var(--border)', margin: '0 2px' }} />
+
         <button
           className="btn-ghost"
           onClick={onToggleTheme}
-          style={{ padding: '7px 10px' }}
-          title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+          style={{ padding: '6px 8px', border: 'none', background: 'transparent' }}
+          title={theme === 'light' ? 'Switch to Dark' : 'Switch to Light'}
         >
-          {theme === 'light' ? <Moon size={15} color="var(--purple)" /> : <Sun size={15} color="var(--amber)" />}
+          {theme === 'light'
+            ? <Moon size={15} color="var(--purple)" />
+            : <Sun size={15} color="var(--amber)" />
+          }
         </button>
 
-        {/* Settings */}
         <button
           className="btn-ghost"
           onClick={onOpenSettings}
           style={{
-            padding: '7px 10px',
-            borderColor: hasCustomKey ? 'rgba(104, 211, 145, 0.4)' : undefined
+            padding: '6px 8px',
+            borderColor: hasCustomKey ? 'rgba(52,211,153,0.3)' : undefined,
+            color: hasCustomKey ? 'var(--green)' : undefined
           }}
-          title="Configure Gemini API Key"
+          title="API Settings"
         >
-          <Settings size={15} color={hasCustomKey ? 'var(--green)' : undefined} />
+          <Settings size={15} />
         </button>
       </div>
     </header>

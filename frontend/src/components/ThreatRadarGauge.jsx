@@ -1,167 +1,112 @@
 import React from 'react';
-import { AlertTriangle, ShieldCheck, Flame, Zap, Crosshair, Bug } from 'lucide-react';
 
-export default function ThreatRadarGauge({ threatData }) {
-  if (!threatData) return null;
+export default function ThreatRadarGauge({ score = 0, cveCount = 0, iocCount = 0, tacticCount = 0 }) {
+  const s = Math.max(0, Math.min(100, score));
+  const angle = -135 + (s / 100) * 270;
+  const isCritical = s >= 75;
+  const isHigh     = s >= 50 && s < 75;
+  const color      = isCritical ? '#f87171' : isHigh ? '#fbbf24' : '#34d399';
+  const label      = isCritical ? 'CRITICAL' : isHigh ? 'HIGH' : 'MODERATE';
 
-  const {
-    cves = [],
-    mitre_techniques = [],
-    iocs = [],
-    threat_actor = {}
-  } = threatData;
+  // Build arc path for the filled portion
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const cx = 100, cy = 100, r = 70;
+  const startAngle = -135;
+  const endAngle   = startAngle + (s / 100) * 270;
+  const x1 = cx + r * Math.cos(toRad(startAngle));
+  const y1 = cy + r * Math.sin(toRad(startAngle));
+  const x2 = cx + r * Math.cos(toRad(endAngle));
+  const y2 = cy + r * Math.sin(toRad(endAngle));
+  const large = endAngle - startAngle > 180 ? 1 : 0;
 
-  // Compute realistic threat risk score
-  const maxCvss = cves.reduce((m, c) => Math.max(m, c.cvss || 0), 0) || 9.2;
-  const avgCvss = cves.length > 0 ? cves.reduce((s, c) => s + (c.cvss || 0), 0) / cves.length : 8.5;
-
-  let calculatedScore = Math.min(
-    Math.round((maxCvss * 6) + (mitre_techniques.length * 4) + (iocs.length * 2) + 15),
-    99
-  );
-
-  const angle = -180 + (calculatedScore / 100) * 180;
-  const isCritical = calculatedScore >= 75;
-  const isHigh = calculatedScore >= 50 && calculatedScore < 75;
-  const scoreColor = isCritical ? 'var(--red)' : isHigh ? 'var(--amber)' : 'var(--green)';
+  // Needle tip
+  const nx = cx + 52 * Math.cos(toRad(angle));
+  const ny = cy + 52 * Math.sin(toRad(angle));
 
   return (
-    <div className="surface" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {/* Title */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Flame size={18} color={scoreColor} />
-          <h3 style={{ fontSize: '0.96rem', fontWeight: '800', color: 'var(--text-0)', margin: 0 }}>
-            Executive Threat Risk Meter (ஆபத்து அளவு)
-          </h3>
-        </div>
-        <span className="tag" style={{
-          background: isCritical ? 'rgba(252,129,129,0.15)' : 'rgba(246,173,85,0.15)',
-          color: scoreColor, fontSize: '0.72rem', fontWeight: '800'
-        }}>
-          {isCritical ? 'CRITICAL EMERGENCY' : isHigh ? 'ELEVATED THREAT' : 'MODERATE RISK'}
-        </span>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%' }}>
+      <svg width="190" height="140" viewBox="0 0 200 145" style={{ overflow: 'visible' }}>
+        <defs>
+          <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stopColor="#34d399" />
+            <stop offset="50%"  stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#f87171" />
+          </linearGradient>
+          <filter id="needleGlow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+
+        {/* Track arc (background) */}
+        <path
+          d={`M ${cx + r * Math.cos(toRad(startAngle))} ${cy + r * Math.sin(toRad(startAngle))} A ${r} ${r} 0 1 1 ${cx + r * Math.cos(toRad(startAngle + 270))} ${cy + r * Math.sin(toRad(startAngle + 270))}`}
+          fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="14" strokeLinecap="round"
+        />
+
+        {/* Filled arc */}
+        {s > 0 && (
+          <path
+            d={`M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`}
+            fill="none" stroke={`url(#arcGrad)`} strokeWidth="14" strokeLinecap="round"
+          />
+        )}
+
+        {/* Tick marks */}
+        {[0, 25, 50, 75, 100].map(v => {
+          const a = toRad(startAngle + (v / 100) * 270);
+          const r1 = 78, r2 = 86;
+          return (
+            <line
+              key={v}
+              x1={cx + r1 * Math.cos(a)} y1={cy + r1 * Math.sin(a)}
+              x2={cx + r2 * Math.cos(a)} y2={cy + r2 * Math.sin(a)}
+              stroke="rgba(255,255,255,0.15)" strokeWidth="2"
+            />
+          );
+        })}
+
+        {/* Center */}
+        <circle cx={cx} cy={cy} r="7" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+
+        {/* Needle */}
+        <line
+          x1={cx} y1={cy} x2={nx} y2={ny}
+          stroke={color} strokeWidth="2.5" strokeLinecap="round"
+          filter="url(#needleGlow)"
+          style={{ transition: 'x2 0.8s ease, y2 0.8s ease' }}
+        />
+
+        {/* Score text */}
+        <text x={cx} y={cy + 24} textAnchor="middle" fill={color} fontSize="26" fontWeight="800" fontFamily="Inter, sans-serif">{s}</text>
+        <text x={cx} y={cy + 38} textAnchor="middle" fill="rgba(148,163,184,0.8)" fontSize="9" fontFamily="Inter, sans-serif" letterSpacing="1">RISK SCORE</text>
+
+        {/* Labels */}
+        <text x={cx - 68} y={cy + 22} fill="rgba(52,211,153,0.7)" fontSize="9" fontFamily="Inter">LOW</text>
+        <text x={cx + 52} y={cy + 22} fill="rgba(248,113,113,0.7)" fontSize="9" fontFamily="Inter">HIGH</text>
+      </svg>
+
+      {/* Severity label */}
+      <div style={{
+        padding: '4px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: '800',
+        letterSpacing: '0.06em', fontFamily: 'Inter, sans-serif',
+        background: `${color}20`, color, border: `1px solid ${color}40`
+      }}>
+        {label} THREAT
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '20px', alignItems: 'center' }}>
-        {/* Semi-circle Speedometer SVG */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
-          <svg width="200" height="115" viewBox="0 0 200 115" style={{ overflow: 'visible' }}>
-            <defs>
-              <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#48bb78" />
-                <stop offset="50%" stopColor="#ecc94b" />
-                <stop offset="100%" stopColor="#f56565" />
-              </linearGradient>
-              <filter id="gaugeGlow">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                <feMerge>
-                  <feMergeNode in="coloredBlur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-
-            {/* Background Arc */}
-            <path
-              d="M 20 100 A 80 80 0 0 1 180 100"
-              fill="none"
-              stroke="var(--bg-3)"
-              strokeWidth="16"
-              strokeLinecap="round"
-            />
-
-            {/* Colored Gauge Arc */}
-            <path
-              d="M 20 100 A 80 80 0 0 1 180 100"
-              fill="none"
-              stroke="url(#gaugeGrad)"
-              strokeWidth="16"
-              strokeLinecap="round"
-              strokeDasharray={`${(calculatedScore / 100) * 251} 251`}
-              filter="url(#gaugeGlow)"
-              style={{ transition: 'stroke-dasharray 1s ease-out' }}
-            />
-
-            {/* Needle */}
-            <g transform={`rotate(${angle} 100 100)`} style={{ transition: 'transform 1s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
-              <line x1="100" y1="100" x2="35" y2="100" stroke="#f7fafc" strokeWidth="3" strokeLinecap="round" />
-              <circle cx="100" cy="100" r="7" fill="var(--bg-0)" stroke="var(--cyan)" strokeWidth="3" />
-            </g>
-          </svg>
-
-          {/* Big Score Readout */}
-          <div style={{ marginTop: '-15px', textAlign: 'center' }}>
-            <div style={{ fontSize: '2.2rem', fontWeight: '900', color: scoreColor, fontFamily: 'var(--font-mono)', lineHeight: '1' }}>
-              {calculatedScore}
-              <span style={{ fontSize: '1rem', color: 'var(--text-3)', fontWeight: '500' }}>/100</span>
-            </div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-3)', fontWeight: '600', marginTop: '2px' }}>
-              COMPOSITE SEVERITY
-            </div>
+      {/* Mini stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', width: '100%' }}>
+        {[
+          { label: 'CVEs', value: cveCount, c: '#fbbf24' },
+          { label: 'IoCs', value: iocCount, c: '#f87171' },
+          { label: 'TTPs', value: tacticCount, c: '#a78bfa' },
+        ].map(m => (
+          <div key={m.label} style={{ textAlign: 'center', padding: '7px 4px', background: 'rgba(255,255,255,0.03)', borderRadius: '7px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: m.c, lineHeight: 1, fontFamily: 'Inter' }}>{m.value}</div>
+            <div style={{ fontSize: '9px', color: 'rgba(148,163,184,0.7)', marginTop: '2px', fontFamily: 'Inter', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{m.label}</div>
           </div>
-        </div>
-
-        {/* 4 Dimension Progress Bars (For Analyst & CISO) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {/* CVSS Dimension */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', marginBottom: '3px' }}>
-              <span style={{ color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Bug size={13} color="var(--red)" />
-                <span>Exploit Severity (CVSS Max)</span>
-              </span>
-              <span style={{ color: 'var(--red)', fontFamily: 'var(--font-mono)', fontWeight: '700' }}>
-                {maxCvss.toFixed(1)} / 10.0
-              </span>
-            </div>
-            <div style={{ height: '6px', background: 'var(--bg-3)', borderRadius: '3px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${(maxCvss / 10) * 100}%`, background: 'var(--red)', borderRadius: '3px' }} />
-            </div>
-          </div>
-
-          {/* TTP Breadth */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', marginBottom: '3px' }}>
-              <span style={{ color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Crosshair size={13} color="var(--cyan)" />
-                <span>Attacker TTP Complexity</span>
-              </span>
-              <span style={{ color: 'var(--cyan)', fontFamily: 'var(--font-mono)', fontWeight: '700' }}>
-                {mitre_techniques.length} Techniques Mapped
-              </span>
-            </div>
-            <div style={{ height: '6px', background: 'var(--bg-3)', borderRadius: '3px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${Math.min(mitre_techniques.length * 15, 100)}%`, background: 'var(--cyan)', borderRadius: '3px' }} />
-            </div>
-          </div>
-
-          {/* IoC Density */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', marginBottom: '3px' }}>
-              <span style={{ color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Zap size={13} color="var(--amber)" />
-                <span>Active Network IoC Footprint</span>
-              </span>
-              <span style={{ color: 'var(--amber)', fontFamily: 'var(--font-mono)', fontWeight: '700' }}>
-                {iocs.length} Live Indicators
-              </span>
-            </div>
-            <div style={{ height: '6px', background: 'var(--bg-3)', borderRadius: '3px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${Math.min(iocs.length * 12, 100)}%`, background: 'var(--amber)', borderRadius: '3px' }} />
-            </div>
-          </div>
-
-          {/* Plain Meaning for Normal Person */}
-          <div style={{
-            fontSize: '0.76rem', color: 'var(--text-2)', background: 'var(--bg-2)',
-            padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border)', marginTop: '2px'
-          }}>
-            💡 <strong>Plain Meaning:</strong> {calculatedScore >= 80
-              ? 'Extreme Danger: Automated malware can breach internal databases without needing valid user credentials.'
-              : 'High Threat: Targeted exploit requiring network-wide containment and rapid patching.'}
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );

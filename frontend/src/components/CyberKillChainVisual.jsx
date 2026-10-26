@@ -1,179 +1,354 @@
 import React, { useState } from 'react';
-import { Target, Terminal, Bug, Radio, Database, AlertOctagon, ChevronRight, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { Target, Terminal, Bug, Radio, AlertOctagon, ShieldCheck, ChevronRight, CheckCircle2, Lock, Eye, Zap, Layers } from 'lucide-react';
 
 const DEFAULT_STAGES = [
   {
     id: 'recon',
-    name: '1. Reconnaissance & Initial Access',
-    subtitle: 'Entry Point',
+    name: 'Initial Access & Infiltration',
+    tamil: 'முதல் நுழைவு (Entry Point)',
+    simpleExplain: 'Attackers find an unlocked digital door—like an unpatched software bug or phishing email—to break in.',
+    analystForensics: 'Exploitation of public edge gateway, CVE remote code execution, or credential theft.',
+    defenseControl: 'Patch perimeter CVEs immediately, enforce MFA, and restrict edge management ports.',
     icon: Target,
-    color: '#fc8181',
-    description: 'Attackers scan public-facing assets and exploit software flaws or stolen credentials.',
-    evidence: 'Exploitation of public edge gateway / web server vulnerability.'
+    color: 'var(--red)',
+    badge: 'STAGE 1'
   },
   {
     id: 'execution',
-    name: '2. Execution & Defense Evasion',
-    subtitle: 'Running Malicious Code',
+    name: 'Execution & Defense Evasion',
+    tamil: 'கட்டளை இயக்கம் (Running Malware)',
+    simpleExplain: 'The hacker runs hidden commands, turns off antivirus alerts, and slips past security sensors.',
+    analystForensics: 'Living-off-the-land binaries (LOLBins), PowerShell obfuscation, security log clearing (T1070).',
+    defenseControl: 'Enable PowerShell Script Block Logging, block unauthorized script executions via AppLocker/WDAC.',
     icon: Terminal,
-    color: '#f6ad55',
-    description: 'Attackers trigger scripts (PowerShell, bash) and disable logging or antivirus protection.',
-    evidence: 'Living-off-the-land commands executed to evade host detection.'
+    color: 'var(--amber)',
+    badge: 'STAGE 2'
   },
   {
     id: 'persistence',
-    name: '3. Persistence & Malware Implant',
-    subtitle: 'Backdoor Installation',
+    name: 'Persistence & Privilege Escalation',
+    tamil: 'நிலையான இருப்பு (Backdoor Implant)',
+    simpleExplain: 'They install a secret trapdoor so even if the system restarts, they stay inside your network.',
+    analystForensics: 'Webshell placement, scheduled tasks creation, admin account hijacking, registry run keys.',
+    defenseControl: 'Audit autorun registry keys, monitor server directories for newly spawned .aspx/.php files.',
     icon: Bug,
-    color: '#b794f4',
-    description: 'A webshell or Trojan is planted in system directories to maintain permanent unauthorized access.',
-    evidence: 'Custom webshell or backdoor script established on host drive.'
+    color: '#a855f7',
+    badge: 'STAGE 3'
   },
   {
     id: 'c2',
-    name: '4. Command & Control (C2)',
-    subtitle: 'Attacker Communication',
+    name: 'Command & Control (C2)',
+    tamil: 'கட்டுப்பாட்டு தொடர்பு (Beaconing)',
+    simpleExplain: 'The infected computer dials out secretly to the hackers server waiting for instructions.',
+    analystForensics: 'Encrypted HTTPS/DNS beaconing, dynamic domain generation algorithms (DGA), proxy routing.',
+    defenseControl: 'Block outbound traffic to newly registered domains & known malicious C2 IP blocks in firewall.',
     icon: Radio,
-    color: '#63b3ed',
-    description: 'The infected machine beacons out to remote hacker-controlled IP addresses and proxy nodes.',
-    evidence: 'Outbound connections to known malicious C2 IP infrastructure.'
+    color: 'var(--accent)',
+    badge: 'STAGE 4'
   },
   {
     id: 'impact',
-    name: '5. Exfiltration & Ransom Extortion',
-    subtitle: 'Objective / Damage',
+    name: 'Exfiltration & Extortion',
+    tamil: 'தரவு திருட்டு மற்றும் சேதம் (Data Theft)',
+    simpleExplain: 'The grand prize for hackers: stealing confidential company files and demanding millions in ransom.',
+    analystForensics: 'Data staging in hidden archives, megaupload exfiltration, VSS shadow copy deletion, ransomware deployment.',
+    defenseControl: 'Isolate affected subnet, revoke API tokens, take offline immutable backups, report to CERT/CISA.',
     icon: AlertOctagon,
-    color: '#f56565',
-    description: 'Attackers exfiltrate sensitive corporate databases and threaten public release or encryption.',
-    evidence: 'High-volume outbound data transfer and extortion note dropped.'
+    color: '#ef4444',
+    badge: 'STAGE 5'
   }
 ];
 
-export default function CyberKillChainVisual({ attackSteps = [], threatData }) {
-  const [selectedStage, setSelectedStage] = useState(0);
+export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps = [], threatData }) {
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [viewMode, setViewMode] = useState('dual'); // 'dual' | 'simple' | 'technical'
 
-  // Map real attack steps if available
+  const rawSteps = (attackSteps && attackSteps.length > 0) ? attackSteps : (attackFlowSteps || []);
+
   const stages = DEFAULT_STAGES.map((def, idx) => {
-    if (attackSteps[idx]) {
-      const real = attackSteps[idx];
+    if (rawSteps[idx]) {
+      const real = rawSteps[idx];
       return {
         ...def,
-        name: `${idx + 1}. ${real.title || real.tactic || def.name}`,
-        description: real.description || def.description,
-        evidence: real.technique || real.tactic ? `Mapped MITRE Tactic: ${real.tactic || 'Forensic telemetry verified'}` : def.evidence
+        name: real.title || real.tactic || def.name,
+        analystForensics: real.description || real.evidence || def.analystForensics,
+        tacticMapped: real.tactic || real.technique || null
       };
     }
     return def;
   });
 
-  const active = stages[selectedStage] || stages[0];
-  const ActiveIcon = active.icon;
+  const activeStage = stages[selectedIdx] || stages[0];
+  const ActiveIcon = activeStage.icon;
 
   return (
-    <div className="surface" style={{ padding: '22px 24px', overflow: 'hidden' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '8px' }}>
+    <div style={{
+      background: 'var(--bg-elevated)',
+      border: '1px solid var(--border)',
+      borderRadius: '12px',
+      padding: '24px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '20px'
+    }}>
+      {/* Header Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--red)', display: 'inline-block', boxShadow: '0 0 8px var(--red)' }}></span>
-            <h3 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-0)', margin: 0 }}>
-              Visual Cyber Kill Chain (தாக்குதல் வரைபடம்)
+            <span style={{
+              width: '10px', height: '10px', borderRadius: '50%',
+              background: 'var(--red)', boxShadow: '0 0 10px var(--red)'
+            }} />
+            <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.01em' }}>
+              Cyber Kill Chain — How the Attack Happened (தாக்குதல் வரைபடம்)
             </h3>
           </div>
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-3)', margin: '3px 0 0 0' }}>
-            Interactive end-to-end intrusion progression — click any stage to inspect attacker behavior & defense controls.
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+            Visual step-by-step adversary lifecycle. Click any phase below to examine attacker techniques and defense containment.
           </p>
         </div>
-        <span className="tag tag-cyan" style={{ fontSize: '0.7rem' }}>
-          MITRE ATT&CK MAPPED
-        </span>
+
+        {/* View Perspective Toggle */}
+        <div style={{
+          display: 'flex', background: 'var(--bg-base)', padding: '3px', borderRadius: '8px',
+          border: '1px solid var(--border)'
+        }}>
+          {[
+            { id: 'dual', label: 'Balanced View' },
+            { id: 'simple', label: 'Plain English' },
+            { id: 'technical', label: 'SOC Analyst' }
+          ].map(m => (
+            <button
+              key={m.id}
+              onClick={() => setViewMode(m.id)}
+              style={{
+                background: viewMode === m.id ? 'var(--bg-overlay)' : 'transparent',
+                color: viewMode === m.id ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                border: 'none', borderRadius: '6px', padding: '5px 11px',
+                fontSize: '12px', fontWeight: viewMode === m.id ? '600' : '400',
+                cursor: 'pointer', transition: 'all 0.15s ease'
+              }}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Visual Pipeline Connector Track */}
+      {/* Progress Track Stages */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: `repeat(${stages.length}, 1fr)`,
         gap: '8px',
-        position: 'relative',
-        marginBottom: '20px'
+        position: 'relative'
       }}>
         {stages.map((stage, idx) => {
+          const isSelected = selectedIdx === idx;
+          const isPast = idx < selectedIdx;
           const Icon = stage.icon;
-          const isCurrent = selectedStage === idx;
-          const isPast = selectedStage > idx;
 
           return (
-            <div
+            <button
               key={stage.id}
-              onClick={() => setSelectedStage(idx)}
+              onClick={() => setSelectedIdx(idx)}
               style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                cursor: 'pointer', textAlign: 'center', padding: '12px 8px',
-                borderRadius: '8px',
-                background: isCurrent ? 'rgba(99,179,237,0.12)' : 'var(--bg-2)',
-                border: `1.5px solid ${isCurrent ? stage.color : isPast ? 'rgba(104,211,145,0.4)' : 'var(--border)'}`,
-                boxShadow: isCurrent ? `0 0 16px ${stage.color}25` : 'none',
-                transition: 'all 0.2s ease'
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                padding: '14px 8px',
+                borderRadius: '10px',
+                background: isSelected
+                  ? 'rgba(56, 189, 248, 0.1)'
+                  : isPast
+                  ? 'rgba(255, 255, 255, 0.02)'
+                  : 'var(--bg-base)',
+                border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
+                cursor: 'pointer',
+                transition: 'all 0.18s ease',
+                position: 'relative',
+                textAlign: 'center'
               }}
             >
+              {/* Top Phase Number */}
               <div style={{
-                width: '36px', height: '36px', borderRadius: '50%',
-                background: isCurrent ? stage.color : isPast ? 'rgba(104,211,145,0.2)' : 'var(--bg-3)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: isCurrent ? '#000' : isPast ? 'var(--green)' : 'var(--text-2)',
-                marginBottom: '8px', fontWeight: '800', fontSize: '0.85rem'
+                fontSize: '10px',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: '700',
+                color: isSelected ? 'var(--accent)' : 'var(--text-tertiary)',
+                marginBottom: '8px'
               }}>
-                <Icon size={18} strokeWidth={isCurrent ? 2.4 : 1.8} />
+                {stage.badge}
               </div>
+
+              {/* Icon Circle */}
               <div style={{
-                fontSize: '0.74rem', fontWeight: '700',
-                color: isCurrent ? stage.color : 'var(--text-1)',
-                lineHeight: '1.2', marginBottom: '2px'
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: isSelected ? stage.color : 'var(--bg-overlay)',
+                color: isSelected ? '#fff' : 'var(--text-secondary)',
+                boxShadow: isSelected ? `0 0 16px ${stage.color}66` : 'none',
+                marginBottom: '10px',
+                transition: 'all 0.2s ease'
               }}>
-                {stage.subtitle}
+                <Icon size={18} />
               </div>
-              <div style={{ fontSize: '0.64rem', color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>
-                Stage {idx + 1}
+
+              {/* Title */}
+              <div style={{
+                fontSize: '12px',
+                fontWeight: isSelected ? '700' : '500',
+                color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
+                lineHeight: '1.25',
+                minHeight: '30px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                {stage.name.split('&')[0]}
               </div>
-            </div>
+
+              {/* Tamil subtitle hint */}
+              <div style={{
+                fontSize: '10px',
+                color: 'var(--text-tertiary)',
+                marginTop: '4px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '100%'
+              }}>
+                {stage.tamil.split('(')[0]}
+              </div>
+            </button>
           );
         })}
       </div>
 
-      {/* Stage Detail Inspector Card */}
+      {/* Selected Stage Detail Card */}
       <div style={{
-        padding: '16px 20px', borderRadius: '10px',
-        background: 'linear-gradient(135deg, rgba(15,23,42,0.9) 0%, rgba(30,41,59,0.5) 100%)',
-        border: `1px solid ${active.color}40`,
-        display: 'flex', gap: '16px', alignItems: 'flex-start'
+        background: 'var(--bg-base)',
+        border: '1px solid var(--border)',
+        borderRadius: '10px',
+        padding: '20px 24px',
+        display: 'grid',
+        gridTemplateColumns: 'auto 1fr',
+        gap: '20px',
+        alignItems: 'start'
       }}>
+        {/* Stage Icon Showcase */}
         <div style={{
-          width: '40px', height: '40px', borderRadius: '10px',
-          background: `${active.color}20`, border: `1px solid ${active.color}50`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: active.color, flexShrink: 0
+          width: '52px',
+          height: '52px',
+          borderRadius: '12px',
+          background: `${activeStage.color}1a`,
+          border: `1px solid ${activeStage.color}44`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: activeStage.color,
+          flexShrink: 0
         }}>
-          <ActiveIcon size={22} />
+          <ActiveIcon size={26} />
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <h4 style={{ fontSize: '0.92rem', fontWeight: '800', color: active.color, margin: 0 }}>
-              {active.name}
-            </h4>
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>
-              Step {selectedStage + 1} of {stages.length}
-            </span>
+
+        {/* Content Breakdown */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <span style={{
+                padding: '3px 8px', borderRadius: '4px', fontSize: '11px',
+                fontWeight: '700', background: `${activeStage.color}22`, color: activeStage.color,
+                fontFamily: 'var(--font-mono)'
+              }}>
+                {activeStage.badge}
+              </span>
+              <h4 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
+                {activeStage.name}
+              </h4>
+              <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
+                {activeStage.tamil}
+              </span>
+              {activeStage.tacticMapped && (
+                <span style={{
+                  padding: '2px 8px', borderRadius: '4px', fontSize: '11px',
+                  background: 'rgba(56,189,248,0.1)', color: 'var(--accent)',
+                  border: '1px solid var(--border-accent)', marginLeft: 'auto'
+                }}>
+                  {activeStage.tacticMapped}
+                </span>
+              )}
+            </div>
           </div>
-          <p style={{ fontSize: '0.84rem', color: 'var(--text-1)', margin: '0 0 10px 0', lineHeight: '1.5' }}>
-            {active.description}
-          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'dual' ? '1fr 1fr' : '1fr', gap: '16px' }}>
+            {/* Plain English Box */}
+            {(viewMode === 'dual' || viewMode === 'simple') && (
+              <div style={{
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                padding: '14px 16px'
+              }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  fontSize: '12px', fontWeight: '700', color: 'var(--green)',
+                  marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em'
+                }}>
+                  <Eye size={14} />
+                  <span>Plain Language (எளிய விளக்கம்)</span>
+                </div>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
+                  {activeStage.simpleExplain}
+                </p>
+              </div>
+            )}
+
+            {/* Technical Forensics Box */}
+            {(viewMode === 'dual' || viewMode === 'technical') && (
+              <div style={{
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                padding: '14px 16px'
+              }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  fontSize: '12px', fontWeight: '700', color: 'var(--amber)',
+                  marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em'
+                }}>
+                  <Zap size={14} />
+                  <span>Technical Telemetry & Evidence (SOC Forensics)</span>
+                </div>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0, fontFamily: 'var(--font-mono)' }}>
+                  {activeStage.analystForensics}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Defense Mitigation Directive */}
           <div style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            fontSize: '0.76rem', color: 'var(--text-2)', background: 'rgba(0,0,0,0.3)',
-            padding: '6px 12px', borderRadius: '6px'
+            background: 'rgba(56, 189, 248, 0.06)',
+            border: '1px solid rgba(56, 189, 248, 0.25)',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '10px'
           }}>
-            <ShieldAlert size={14} color={active.color} />
-            <span><strong>Technical Detection Signal:</strong> {active.evidence}</span>
+            <ShieldCheck size={18} color="var(--accent)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', marginBottom: '3px' }}>
+                Recommended Defense & Containment (எப்படி தடுப்பது?):
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                {activeStage.defenseControl}
+              </div>
+            </div>
           </div>
         </div>
       </div>
