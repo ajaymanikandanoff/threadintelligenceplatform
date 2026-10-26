@@ -1,11 +1,20 @@
 import React from 'react';
-import { Shield, FileUp, Settings, FileText, Sparkles } from 'lucide-react';
+import { Shield, FileUp, Settings, FileText, BookOpen, Sun, Moon } from 'lucide-react';
 
-export default function Header({ hasCustomKey, onOpenSettings, onOpenIngest, onOpenReport, threatData }) {
+export default function Header({
+  hasCustomKey,
+  onOpenSettings,
+  onOpenIngest,
+  onOpenReport,
+  onOpenGlossary,
+  threatData,
+  theme,
+  onToggleTheme
+}) {
   return (
     <header style={{
       borderBottom: '1px solid var(--border)',
-      background: 'rgba(6, 9, 15, 0.95)',
+      background: 'var(--bg-1)',
       backdropFilter: 'blur(12px)',
       position: 'sticky',
       top: 0,
@@ -14,10 +23,11 @@ export default function Header({ hasCustomKey, onOpenSettings, onOpenIngest, onO
       height: '58px',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'space-between'
+      justifyContent: 'space-between',
+      transition: 'background 0.2s ease, border-color 0.2s ease'
     }}>
-      {/* Left: Brand + Simple Subtitle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+      {/* Left: Brand + Status */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div style={{
           width: '32px', height: '32px', borderRadius: '8px',
           background: 'rgba(99,179,237,0.12)', border: '1px solid rgba(99,179,237,0.3)',
@@ -32,25 +42,34 @@ export default function Header({ hasCustomKey, onOpenSettings, onOpenIngest, onO
             </span>
             <span className="tag tag-cyan" style={{ fontSize: '0.62rem' }}>
               <span className="status-dot" style={{ background: 'var(--cyan)' }}></span>
-              READY
+              ACTIVE
             </span>
-          </div>
-          <div style={{ fontSize: '0.68rem', color: 'var(--text-3)', display: 'none' }}>
-            Automated Threat Intelligence & Defense Engine
           </div>
         </div>
       </div>
 
       {/* Right: Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Jargon Buster / Dictionary */}
+        <button
+          className="btn-ghost"
+          onClick={onOpenGlossary}
+          style={{ padding: '6px 12px', fontSize: '0.78rem', color: 'var(--text-1)' }}
+          title="Open Cyber Jargon Buster (Terms explained in plain words)"
+        >
+          <BookOpen size={14} color="var(--cyan)" />
+          <span>Jargon Buster</span>
+        </button>
+
+        {/* Executive Report */}
         {threatData && (
           <button
             className="btn-ghost"
             onClick={onOpenReport}
-            style={{ padding: '7px 12px', fontSize: '0.8rem', color: 'var(--text-1)' }}
+            style={{ padding: '6px 12px', fontSize: '0.78rem', color: 'var(--text-1)' }}
             title="Download formatted C-Suite executive briefing report"
           >
-            <FileText size={15} color="var(--cyan)" />
+            <FileText size={14} color="var(--cyan)" />
             <span>Executive Report</span>
           </button>
         )}
@@ -59,12 +78,23 @@ export default function Header({ hasCustomKey, onOpenSettings, onOpenIngest, onO
         <button
           className="btn-primary"
           onClick={onOpenIngest}
-          style={{ padding: '7px 16px', fontSize: '0.82rem' }}
+          style={{ padding: '7px 15px', fontSize: '0.8rem' }}
         >
-          <FileUp size={15} />
-          <span>Analyze Threat Report</span>
+          <FileUp size={14} />
+          <span>Analyze Threat</span>
         </button>
 
+        {/* Dark / Light Mode Toggle */}
+        <button
+          className="btn-ghost"
+          onClick={onToggleTheme}
+          style={{ padding: '7px 10px' }}
+          title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+        >
+          {theme === 'light' ? <Moon size={15} color="var(--purple)" /> : <Sun size={15} color="var(--amber)" />}
+        </button>
+
+        {/* Settings */}
         <button
           className="btn-ghost"
           onClick={onOpenSettings}

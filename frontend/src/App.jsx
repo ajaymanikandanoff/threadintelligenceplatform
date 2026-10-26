@@ -8,6 +8,7 @@ import TechnicalDeepDive from './components/TechnicalDeepDive';
 import IngestModal from './components/IngestModal';
 import SettingsModal from './components/SettingsModal';
 import ExecutiveReportModal from './components/ExecutiveReportModal';
+import CyberGlossaryModal from './components/CyberGlossaryModal';
 import {
   FileText,
   ShieldCheck,
@@ -38,11 +39,23 @@ export default function App() {
   const [isIngestOpen, setIsIngestOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isGlossaryOpen, setIsGlossaryOpen] = useState(false);
+  const [theme, setTheme] = useState(localStorage.getItem('CYBER_THEME') || 'dark');
   const [apiKey, setApiKey] = useState(localStorage.getItem('GEMINI_API_KEY') || '');
   const [selectedModel, setSelectedModel] = useState(localStorage.getItem('GEMINI_MODEL') || 'gemini-2.5-flash');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isCopilotLoading, setIsCopilotLoading] = useState(false);
   const [externalCopilotQuery, setExternalCopilotQuery] = useState('');
+
+  // Set Theme attribute on html root
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('CYBER_THEME', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   const [copilotMessages, setCopilotMessages] = useState([
     {
@@ -164,7 +177,10 @@ export default function App() {
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenIngest={() => setIsIngestOpen(true)}
         onOpenReport={() => setIsReportOpen(true)}
+        onOpenGlossary={() => setIsGlossaryOpen(true)}
         threatData={threatData}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       <div style={{ display: 'flex', flex: 1 }}>
@@ -262,21 +278,20 @@ export default function App() {
             </div>
           </div>
 
-          {/* Quick upload card in sidebar */}
-          <div style={{ marginTop: 'auto', padding: '14px', background: 'var(--bg-2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-            <div style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--text-0)', marginBottom: '4px' }}>
-              Have your own report?
+          {/* Quick Jargon Buster trigger in sidebar */}
+          <div style={{ marginTop: 'auto', padding: '12px', background: 'var(--bg-2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--text-0)', marginBottom: '3px' }}>
+              💡 Confused by acronyms?
             </div>
-            <p style={{ fontSize: '0.7rem', color: 'var(--text-3)', margin: '0 0 10px 0', lineHeight: '1.4' }}>
-              Upload any PDF or security alert to auto-extract defense rules.
+            <p style={{ fontSize: '0.68rem', color: 'var(--text-3)', margin: '0 0 8px 0', lineHeight: '1.35' }}>
+              Click Jargon Buster to see CVE, IoC & Zero-Day explained in plain English.
             </p>
             <button
-              onClick={() => setIsIngestOpen(true)}
+              onClick={() => setIsGlossaryOpen(true)}
               className="btn-ghost"
-              style={{ width: '100%', justifyContent: 'center', fontSize: '0.74rem', padding: '6px' }}
+              style={{ width: '100%', justifyContent: 'center', fontSize: '0.72rem', padding: '5px' }}
             >
-              <FileUp size={13} />
-              <span>Upload PDF</span>
+              <span>Open Jargon Buster</span>
             </button>
           </div>
         </nav>
@@ -356,6 +371,10 @@ export default function App() {
         isOpen={isReportOpen}
         onClose={() => setIsReportOpen(false)}
         threatData={threatData}
+      />
+      <CyberGlossaryModal
+        isOpen={isGlossaryOpen}
+        onClose={() => setIsGlossaryOpen(false)}
       />
     </div>
   );
