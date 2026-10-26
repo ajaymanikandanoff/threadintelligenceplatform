@@ -91,16 +91,30 @@ a:hover { text-decoration: underline; }
 
 pre, code { font-family: var(--font-mono); }
 
-/* Shared card surface */
+/* Shared card surface with subtle gradient & glow */
 .surface {
-  background: var(--bg-surface);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.75) 0%, rgba(10, 15, 26, 0.85) 100%);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  transition: border-color 0.2s ease;
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .surface:hover {
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(99, 179, 237, 0.22);
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.45);
 }
+
+[data-theme="light"] .surface {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.05);
+}
+[data-theme="light"] .surface:hover {
+  border-color: rgba(2, 132, 199, 0.25);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.08);
+}
+
 
 /* Primary action button */
 .btn-primary {

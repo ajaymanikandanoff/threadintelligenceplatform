@@ -13,20 +13,25 @@ import {
   AlertTriangle,
   Clock,
   Sparkles,
-  Calculator
+  Calculator,
+  GitCommit,
+  Maximize2
 } from 'lucide-react';
+import ThreatRadarGauge from './ThreatRadarGauge';
+import CyberKillChainVisual from './CyberKillChainVisual';
+import KnowledgeGraph from './KnowledgeGraph';
 
 export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
   const [checkedSteps, setCheckedSteps] = useState({});
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [languageMode, setLanguageMode] = useState('en'); // 'en' or 'ta'
+  const [showGraphPreview, setShowGraphPreview] = useState(true);
 
   // Risk Calculator State
   const [usesSoftware, setUsesSoftware] = useState(false);
   const [isPublicExposed, setIsPublicExposed] = useState(false);
   const [noMfa, setNoMfa] = useState(false);
 
-  // Stop audio if component unmounts
   useEffect(() => {
     return () => {
       if ('speechSynthesis' in window) {
@@ -61,14 +66,14 @@ export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
     iocs = [],
     executive_summary,
     attack_flow_steps = [],
-    blue_team_actions = []
+    blue_team_actions = [],
+    graph_data
   } = threatData;
 
   const toggleCheck = (idx) => {
     setCheckedSteps(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
-  // Text to Speech Narrator
   const toggleAudioBriefing = () => {
     if (!('speechSynthesis' in window)) {
       alert('Speech synthesis is not supported in this browser.');
@@ -91,7 +96,6 @@ export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
     }
   };
 
-  // Calculate Organization Risk Score
   let riskLevel = 'LOW';
   let riskColor = 'var(--green)';
   let riskAdvice = 'Your environment is at low risk if you do not run this specific targeted software.';
@@ -107,7 +111,6 @@ export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
     riskAdvice = 'WARNING: You have partial exposure. Enforce MFA, block attacker IPs on perimeter, and verify software patches.';
   }
 
-  // Tamil summary generator helper
   const getTamilExplanation = () => {
     const actorName = threat_actor.name || 'ஒரு சர்வதேச ஹேக்கர் குழு';
     const cveName = cves.length > 0 ? cves[0].id : 'மென்பொருள் குறைபாடு';
@@ -127,52 +130,48 @@ export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
   };
 
   return (
-    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
 
-      {/* 1. Header Toolbar with Audio Narrator & Tamil Toggle */}
+      {/* 1. Header Toolbar with Audio & Language */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '12px 18px', background: 'var(--bg-2)', borderRadius: '10px',
+        padding: '12px 20px', background: 'var(--bg-2)', borderRadius: '12px',
         border: '1px solid var(--border)', flexWrap: 'wrap', gap: '10px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Sparkles size={16} color="var(--cyan)" />
-          <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-0)' }}>
-            AI Threat Assessment:
+          <span style={{ fontSize: '0.84rem', fontWeight: '800', color: 'var(--text-0)' }}>
+            Real-Time Threat Intelligence Dossier
           </span>
-          <span className="tag tag-red" style={{ fontSize: '0.68rem' }}>LIVE ADVISORY</span>
+          <span className="tag tag-red" style={{ fontSize: '0.66rem' }}>LIVE ADVISORY</span>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          {/* Audio Narrator */}
           <button
             onClick={toggleAudioBriefing}
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '6px 12px', borderRadius: '6px',
+              padding: '6px 12px', borderRadius: '7px',
               border: `1px solid ${isPlayingAudio ? 'var(--cyan)' : 'var(--border)'}`,
               background: isPlayingAudio ? 'rgba(99,179,237,0.15)' : 'var(--bg-1)',
               color: isPlayingAudio ? 'var(--cyan)' : 'var(--text-2)',
               fontSize: '0.78rem', cursor: 'pointer', fontWeight: '600'
             }}
-            title="Read summary aloud using browser text-to-speech"
           >
             {isPlayingAudio ? <VolumeX size={14} /> : <Volume2 size={14} />}
             <span>{isPlayingAudio ? 'Stop Narrator' : '🔊 Listen to Audio Briefing'}</span>
           </button>
 
-          {/* Language Toggle */}
           <button
             onClick={() => setLanguageMode(languageMode === 'en' ? 'ta' : 'en')}
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '6px 12px', borderRadius: '6px',
+              padding: '6px 12px', borderRadius: '7px',
               border: '1px solid var(--border)',
               background: languageMode === 'ta' ? 'rgba(183,148,244,0.15)' : 'var(--bg-1)',
               color: languageMode === 'ta' ? 'var(--purple)' : 'var(--text-2)',
               fontSize: '0.78rem', cursor: 'pointer', fontWeight: '600'
             }}
-            title="Switch between English and Tamil plain explanation"
           >
             <Languages size={14} />
             <span>{languageMode === 'en' ? 'தமிழ் விளக்கம்' : 'English Summary'}</span>
@@ -180,19 +179,19 @@ export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
         </div>
       </div>
 
-      {/* 2. Threat Title Header */}
-      <div className="surface" style={{ padding: '24px 28px', borderLeft: '4px solid var(--red)' }}>
+      {/* 2. Threat Title Banner */}
+      <div className="surface" style={{ padding: '24px 28px', borderLeft: '5px solid var(--red)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
           <span className="tag tag-red" style={{ fontSize: '0.72rem' }}>CRITICAL ADVISORY</span>
           <span className="tag tag-amber" style={{ fontSize: '0.72rem' }}>
             {threat_actor.motivation || 'Financial Extortion / Espionage'}
           </span>
           <span style={{ fontSize: '0.74rem', color: 'var(--text-3)', marginLeft: 'auto' }}>
-            Engine: Gemini 2.5 Flash
+            AI Engine: Gemini 2.5 Flash
           </span>
         </div>
 
-        <h1 style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--text-0)', lineHeight: '1.35', margin: '4px 0 12px 0' }}>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-0)', lineHeight: '1.35', margin: '4px 0 12px 0' }}>
           {title}
         </h1>
 
@@ -208,7 +207,46 @@ export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
         </div>
       </div>
 
-      {/* 3. The 3 Core Answers (Who, How, What to do) */}
+      {/* 3. VISUAL HERO SECTION: Dynamic Risk Speedometer Gauge */}
+      <ThreatRadarGauge threatData={threatData} />
+
+      {/* 4. VISUAL HERO SECTION: Interactive Cyber Kill Chain Pipeline */}
+      <CyberKillChainVisual attackSteps={attack_flow_steps} threatData={threatData} />
+
+      {/* 5. VISUAL HERO SECTION: Interactive Attack Knowledge Graph Preview */}
+      {graph_data && (
+        <div className="surface" style={{ padding: '20px 24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <GitCommit size={18} color="var(--cyan)" />
+                <h3 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-0)', margin: 0 }}>
+                  Interactive Threat Knowledge Graph (தாக்குதல் தொடர்பு வரைபடம்)
+                </h3>
+              </div>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-3)', margin: '3px 0 0 0' }}>
+                Visual network connecting Threat Actor ➔ CVE Vulnerability ➔ Malware/Webshell ➔ Malicious C2 IPs. Drag nodes to explore!
+              </p>
+            </div>
+            <button
+              className="btn-ghost"
+              onClick={() => onSwitchTab('technical')}
+              style={{ fontSize: '0.76rem', padding: '6px 12px' }}
+            >
+              <Maximize2 size={13} />
+              <span>Full Screen Graph</span>
+            </button>
+          </div>
+
+          <div style={{ border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden', height: '420px', background: 'var(--bg-0)' }}>
+            <KnowledgeGraph graphData={graph_data} onAskCopilot={(query) => {
+              onSwitchTab('copilot');
+            }} />
+          </div>
+        </div>
+      )}
+
+      {/* 6. The 3 Core Answers (Who, How, What to do) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
 
         {/* Card 1: WHO ATTACKED? */}
@@ -270,14 +308,14 @@ export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
             onClick={() => onSwitchTab('defense')}
             style={{ width: '100%', justifyContent: 'center', padding: '7px 12px', fontSize: '0.78rem' }}
           >
-            <span>View Defense Scripts</span>
+            <span>View Firewall Scripts</span>
             <ArrowRight size={13} />
           </button>
         </div>
 
       </div>
 
-      {/* 4. Plain English or Tamil Summary Box */}
+      {/* 7. Plain English or Tamil Summary Box */}
       <div className="surface" style={{ padding: '24px 28px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <h3 style={{ fontSize: '0.98rem', fontWeight: '700', color: 'var(--text-0)', margin: 0 }}>
@@ -297,7 +335,7 @@ export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
         )}
       </div>
 
-      {/* 5. Interactive "Are We Vulnerable?" Risk Calculator */}
+      {/* 8. Interactive "Are We Vulnerable?" Exposure Calculator */}
       <div className="surface" style={{ padding: '24px 28px', borderTop: `3px solid ${riskColor}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
           <Calculator size={18} color="var(--cyan)" />
@@ -381,49 +419,7 @@ export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
         </div>
       </div>
 
-      {/* 6. Attack Flow Steps */}
-      {attack_flow_steps.length > 0 && (
-        <div className="surface" style={{ padding: '24px 28px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
-            <Clock size={17} color="var(--cyan)" />
-            <h3 style={{ fontSize: '0.98rem', fontWeight: '700', color: 'var(--text-0)', margin: 0 }}>
-              How the Attack Unfolded (Step-by-Step Flow)
-            </h3>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {attack_flow_steps.map((step, idx) => (
-              <div
-                key={idx}
-                style={{
-                  display: 'flex', gap: '14px', alignItems: 'flex-start',
-                  padding: '12px 16px', background: 'var(--bg-2)', borderRadius: '8px',
-                  border: '1px solid var(--border)'
-                }}
-              >
-                <div style={{
-                  width: '24px', height: '24px', borderRadius: '50%',
-                  background: 'rgba(99,179,237,0.15)', color: 'var(--cyan)',
-                  fontSize: '0.76rem', fontWeight: '700', display: 'flex',
-                  alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                }}>
-                  {idx + 1}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '0.84rem', fontWeight: '600', color: 'var(--text-0)', marginBottom: '3px' }}>
-                    {step.title || `Stage ${idx + 1}: ${step.tactic || 'Intrusion Step'}`}
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-2)', lineHeight: '1.5' }}>
-                    {step.description || step.details || step}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 7. Action Items Checklist */}
+      {/* 9. Action Items Checklist */}
       <div className="surface" style={{ padding: '24px 28px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
           <div>
