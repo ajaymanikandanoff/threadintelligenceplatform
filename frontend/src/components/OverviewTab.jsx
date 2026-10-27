@@ -85,6 +85,7 @@ function ChecklistItem({ step, idx, checked, onToggle }) {
 }
 
 function PlainEnglishCard({ summary, actor, sectors }) {
+  const safeSectors = Array.isArray(sectors) ? sectors : [];
   return (
     <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
       <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -119,8 +120,8 @@ function PlainEnglishCard({ summary, actor, sectors }) {
             <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--amber)', marginBottom: '6px' }}>
               🏭 Targeted Sectors
             </div>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{sectors.slice(0, 2).join(', ') || 'Multiple Sectors'}</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>{sectors.length > 2 ? `+${sectors.length - 2} additional industries` : 'Targeted industries'}</div>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{safeSectors.slice(0, 2).join(', ') || 'Multiple Sectors'}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>{safeSectors.length > 2 ? `+${safeSectors.length - 2} additional industries` : 'Targeted industries'}</div>
           </div>
         </div>
       </div>
@@ -130,8 +131,9 @@ function PlainEnglishCard({ summary, actor, sectors }) {
 
 /* ─── Main Component ─── */
 export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
-  const [checkedSteps, setCheckedSteps]   = useState({});
-  const [activeSection, setActiveSection] = useState('briefing');
+  const [checkedSteps, setCheckedSteps]     = useState({});
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [activeSection, setActiveSection]   = useState('briefing');
 
   useEffect(() => () => { window.speechSynthesis?.cancel(); }, []);
 
@@ -150,10 +152,16 @@ export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
     graph_data
   } = threatData;
 
+  const safeCves    = Array.isArray(cves) ? cves : [];
+  const safeMitre   = Array.isArray(mitre_techniques) ? mitre_techniques : [];
+  const safeIocs    = Array.isArray(iocs) ? iocs : [];
+  const safeFlow    = Array.isArray(attack_flow_steps) ? attack_flow_steps : [];
+  const safeActions = Array.isArray(blue_team_actions) ? blue_team_actions : [];
+
   const riskScore = Math.min(100, Math.round(
-    (cves.filter(c => c.severity === 'critical').length * 20) +
-    (mitre_techniques.length * 4) +
-    (iocs.length * 1.5)
+    (safeCves.filter(c => c && c.severity === 'critical').length * 20) +
+    (safeMitre.length * 4) +
+    (safeIocs.length * 1.5)
   ));
 
   const toggleCheck = (idx) => setCheckedSteps(p => ({ ...p, [idx]: !p[idx] }));

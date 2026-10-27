@@ -138,6 +138,29 @@ export default function App() {
     localStorage.setItem('CYBER_THEME', theme);
   }, [theme]);
 
+  const analyzeThreatReport = async (text, title, reportId = null) => {
+    setIsAnalyzing(true);
+    if (reportId) setActiveReportId(reportId);
+    try {
+      const r = await fetch('http://localhost:8000/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, title, api_key: apiKey || null, model: selectedModel })
+      });
+      const d = await r.json();
+      setThreatData(d);
+      setIsIngestOpen(false);
+      setCopilotMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `✅ Threat ingested: **"${d.title}"**\n\nAttacker: ${d.threat_actor?.name || 'Unknown'} | CVEs: ${d.cves?.length || 0} | Attack Techniques: ${d.mitre_techniques?.length || 0} | Malicious Indicators: ${d.iocs?.length || 0}\n\nWhat would you like to know?`
+      }]);
+    } catch {
+      console.error('Backend unreachable on port 8000.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   useEffect(() => {
     (async () => {
       try {
@@ -157,29 +180,6 @@ export default function App() {
       }
     })();
   }, []);
-
-  const analyzeThreatReport = async (text, title, reportId = null) => {
-    setIsAnalyzing(true);
-    if (reportId) setActiveReportId(reportId);
-    try {
-      const r = await fetch('http://localhost:8000/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, title, api_key: apiKey || null, model: selectedModel })
-      });
-      const d = await r.json();
-      setThreatData(d);
-      setIsIngestOpen(false);
-      setCopilotMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `✅ Threat ingested: **"${d.title}"**\n\nAttacker: ${d.threat_actor?.name || 'Unknown'} | CVEs: ${d.cves?.length || 0} | Attack Techniques: ${d.mitre_techniques?.length || 0} | Malicious Indicators: ${d.iocs?.length || 0}\n\nWhat would you like to know?`
-      }]);
-    } catch {
-      alert('Backend unreachable. Make sure the Python backend is running on port 8000.');
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
 
   const handleUploadFile = async (file) => {
     setIsAnalyzing(true);
