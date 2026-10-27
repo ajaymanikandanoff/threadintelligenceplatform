@@ -196,7 +196,7 @@ export default function ExecutiveReportModal({ isOpen, onClose, threatData }) {
               fontSize: '13px', fontWeight: '800', color: 'var(--accent)',
               textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px'
             }}>
-              1. Executive Summary & Impact Analysis (சுருக்கம்)
+              1. Executive Summary & Impact Analysis
             </h4>
             <div style={{
               background: 'var(--bg-base)', border: '1px solid var(--border)',
@@ -307,7 +307,7 @@ export default function ExecutiveReportModal({ isOpen, onClose, threatData }) {
               fontSize: '13px', fontWeight: '800', color: 'var(--accent)',
               textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px'
             }}>
-              5. Recommended Defensive Action Items (தடுப்பு வழிகாட்டுதல்)
+              5. Recommended Defensive Action Items
             </h4>
             <div style={{
               background: 'rgba(56,189,248,0.06)', border: '1px solid rgba(56,189,248,0.2)',

@@ -84,56 +84,43 @@ function ChecklistItem({ step, idx, checked, onToggle }) {
   );
 }
 
-function PlainEnglishCard({ summary, actor, sectors, languageMode, onToggle }) {
-  const isTA = languageMode === 'ta';
-
-  const labels = {
-    whathappened: isTA ? '📋 என்ன நடந்தது' : '📋 What Happened',
-    whoattacked:  isTA ? '🕵️ யார் தாக்கினார்கள்' : '🕵️ Who Attacked',
-    whytarget:    isTA ? '🏭 ஏன் தாக்கப்பட்டது' : '🏭 Who Was Targeted',
-    toggle:       isTA ? '🌐 Switch to English' : '🌐 தமிழில் படிக்கவும்',
-  };
-
+function PlainEnglishCard({ summary, actor, sectors }) {
   return (
     <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
       <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Eye size={14} color="var(--accent)" />
           <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
-            {isTA ? 'எளிய விளக்கம்' : 'Plain English Briefing'}
+            Plain-English Executive Briefing
           </span>
           <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '3px', background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px solid rgba(56,189,248,0.2)', fontWeight: '700' }}>
-            {isTA ? 'தமிழ்' : 'ENGLISH'}
+            MANAGEMENT BRIEF
           </span>
         </div>
-        <button
-          onClick={onToggle}
-          style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '6px', background: 'var(--bg-overlay)', border: '1px solid var(--border)', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 0.15s' }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-accent)'; e.currentTarget.style.color = 'var(--accent)'; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-        >
-          {labels.toggle}
-        </button>
       </div>
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <div style={{ padding: '12px', background: 'var(--bg-overlay)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-          <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)', marginBottom: '6px' }}>{labels.whathappened}</div>
+          <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)', marginBottom: '6px' }}>
+            📋 What Happened
+          </div>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.65', margin: 0 }}>
-            {isTA
-              ? (summary ? `${summary.slice(0, 200)}... — இந்த தாக்குதல் இலக்கு கணினிகளில் தரவை திருடவும் அல்லது சேவைகளை நிறுத்தவும் மேற்கொள்ளப்பட்டது.` : 'தரவு கிடைக்கவில்லை.')
-              : (summary || 'No summary available.')}
+            {summary || 'No threat summary available.'}
           </p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
           <div style={{ padding: '12px', background: 'var(--red-dim)', borderRadius: '8px', border: '1px solid rgba(248,113,113,0.2)' }}>
-            <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--red)', marginBottom: '6px' }}>{labels.whoattacked}</div>
+            <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--red)', marginBottom: '6px' }}>
+              🕵️ Threat Actor / Origin
+            </div>
             <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{actor?.name || 'Unknown Actor'}</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>{actor?.origin || actor?.type || ''}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>{actor?.country || actor?.origin || actor?.type || 'Nation-state / Cybercriminal'}</div>
           </div>
           <div style={{ padding: '12px', background: 'var(--amber-dim)', borderRadius: '8px', border: '1px solid rgba(251,191,36,0.2)' }}>
-            <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--amber)', marginBottom: '6px' }}>{labels.whytarget}</div>
+            <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--amber)', marginBottom: '6px' }}>
+              🏭 Targeted Sectors
+            </div>
             <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{sectors.slice(0, 2).join(', ') || 'Multiple Sectors'}</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>{sectors.length > 2 ? `+${sectors.length - 2} more sectors` : 'Targeted industries'}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>{sectors.length > 2 ? `+${sectors.length - 2} additional industries` : 'Targeted industries'}</div>
           </div>
         </div>
       </div>
@@ -144,8 +131,6 @@ function PlainEnglishCard({ summary, actor, sectors, languageMode, onToggle }) {
 /* ─── Main Component ─── */
 export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
   const [checkedSteps, setCheckedSteps]   = useState({});
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const [languageMode, setLanguageMode]   = useState('en');
   const [activeSection, setActiveSection] = useState('briefing');
 
   useEffect(() => () => { window.speechSynthesis?.cancel(); }, []);
@@ -244,8 +229,6 @@ export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
           summary={executive_summary}
           actor={threat_actor}
           sectors={target_sectors}
-          languageMode={languageMode}
-          onToggle={() => setLanguageMode(p => p === 'en' ? 'ta' : 'en')}
         />
       </div>
 

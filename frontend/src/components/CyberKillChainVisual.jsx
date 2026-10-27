@@ -5,7 +5,7 @@ const DEFAULT_STAGES = [
   {
     id: 'recon',
     name: 'Initial Access & Infiltration',
-    tamil: 'முதல் நுழைவு (Entry Point)',
+    phaseRole: 'Perimeter Breach',
     simpleExplain: 'Attackers find an unlocked digital door—like an unpatched software bug or phishing email—to break in.',
     analystForensics: 'Exploitation of public edge gateway, CVE remote code execution, or credential theft.',
     defenseControl: 'Patch perimeter CVEs immediately, enforce MFA, and restrict edge management ports.',
@@ -16,7 +16,7 @@ const DEFAULT_STAGES = [
   {
     id: 'execution',
     name: 'Execution & Defense Evasion',
-    tamil: 'கட்டளை இயக்கம் (Running Malware)',
+    phaseRole: 'Malware Execution',
     simpleExplain: 'The hacker runs hidden commands, turns off antivirus alerts, and slips past security sensors.',
     analystForensics: 'Living-off-the-land binaries (LOLBins), PowerShell obfuscation, security log clearing (T1070).',
     defenseControl: 'Enable PowerShell Script Block Logging, block unauthorized script executions via AppLocker/WDAC.',
@@ -27,7 +27,7 @@ const DEFAULT_STAGES = [
   {
     id: 'persistence',
     name: 'Persistence & Privilege Escalation',
-    tamil: 'நிலையான இருப்பு (Backdoor Implant)',
+    phaseRole: 'Backdoor Implant',
     simpleExplain: 'They install a secret trapdoor so even if the system restarts, they stay inside your network.',
     analystForensics: 'Webshell placement, scheduled tasks creation, admin account hijacking, registry run keys.',
     defenseControl: 'Audit autorun registry keys, monitor server directories for newly spawned .aspx/.php files.',
@@ -38,7 +38,7 @@ const DEFAULT_STAGES = [
   {
     id: 'c2',
     name: 'Command & Control (C2)',
-    tamil: 'கட்டுப்பாட்டு தொடர்பு (Beaconing)',
+    phaseRole: 'C2 Beaconing',
     simpleExplain: 'The infected computer dials out secretly to the hackers server waiting for instructions.',
     analystForensics: 'Encrypted HTTPS/DNS beaconing, dynamic domain generation algorithms (DGA), proxy routing.',
     defenseControl: 'Block outbound traffic to newly registered domains & known malicious C2 IP blocks in firewall.',
@@ -49,7 +49,7 @@ const DEFAULT_STAGES = [
   {
     id: 'impact',
     name: 'Exfiltration & Extortion',
-    tamil: 'தரவு திருட்டு மற்றும் சேதம் (Data Theft)',
+    phaseRole: 'Data Theft & Ransom',
     simpleExplain: 'The grand prize for hackers: stealing confidential company files and demanding millions in ransom.',
     analystForensics: 'Data staging in hidden archives, megaupload exfiltration, VSS shadow copy deletion, ransomware deployment.',
     defenseControl: 'Isolate affected subnet, revoke API tokens, take offline immutable backups, report to CERT/CISA.',
@@ -100,7 +100,7 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
               background: 'var(--red)', boxShadow: '0 0 10px var(--red)'
             }} />
             <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.01em' }}>
-              Cyber Kill Chain — How the Attack Happened (தாக்குதல் வரைபடம்)
+              Cyber Kill Chain — Adversary Attack Lifecycle
             </h3>
           </div>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
@@ -211,7 +211,7 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
                 {stage.name.split('&')[0]}
               </div>
 
-              {/* Tamil subtitle hint */}
+              {/* Subtitle role badge */}
               <div style={{
                 fontSize: '10px',
                 color: 'var(--text-tertiary)',
@@ -221,7 +221,7 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
                 textOverflow: 'ellipsis',
                 maxWidth: '100%'
               }}>
-                {stage.tamil.split('(')[0]}
+                {stage.phaseRole}
               </div>
             </button>
           );
@@ -270,7 +270,7 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
                 {activeStage.name}
               </h4>
               <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
-                {activeStage.tamil}
+                {activeStage.phaseRole}
               </span>
               {activeStage.tacticMapped && (
                 <span style={{
@@ -299,7 +299,7 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
                   marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em'
                 }}>
                   <Eye size={14} />
-                  <span>Plain Language (எளிய விளக்கம்)</span>
+                  <span>Plain-English Briefing (Non-Technical Explanation)</span>
                 </div>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
                   {activeStage.simpleExplain}
@@ -343,7 +343,7 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
             <ShieldCheck size={18} color="var(--accent)" style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
               <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', marginBottom: '3px' }}>
-                Recommended Defense & Containment (எப்படி தடுப்பது?):
+                Recommended Defense & Containment Directives:
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
                 {activeStage.defenseControl}
