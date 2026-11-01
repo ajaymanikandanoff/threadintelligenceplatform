@@ -29,6 +29,7 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
   const mapRef = useRef(null);
   const popupRef = useRef(null);
   const animFrameRef = useRef(null);
+  const startTimeRef = useRef(performance.now());
   const [mapLoaded, setMapLoaded] = useState(false);
 
   // Filter fallback events if custom GeoJSON is not provided
@@ -87,7 +88,7 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
   };
 
   const getRoutesData = () => {
-    if (routesGeoJson && routesGeoJson.features) {
+    if (routesGeoJson && routesGeoJson.features && routesGeoJson.features.length > 0) {
       return routesGeoJson;
     }
     return buildAttackRoutesGeoJson(filteredEvents);
@@ -97,7 +98,6 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
     if (densityGeoJson && densityGeoJson.features) {
       return densityGeoJson;
     }
-    // Fallback: build density points from origin events
     return {
       type: 'FeatureCollection',
       features: filteredEvents.map(e => ({
@@ -121,6 +121,7 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
     const initialRoutes = getRoutesData();
     const initialDensity = getDensityData();
 
+    // MapLibre instance with BOTH base raster and reference raster inside the background style!
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
       style: {
@@ -145,6 +146,16 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
             source: 'esri-dark-base',
             minzoom: 0,
             maxzoom: 16
+          },
+          {
+            id: 'esri-dark-ref-tiles',
+            type: 'raster',
+            source: 'esri-dark-ref',
+            minzoom: 0,
+            maxzoom: 16,
+            paint: {
+              'raster-opacity': 0.65
+            }
           }
         ]
       },
@@ -182,8 +193,8 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
         type: 'line',
         source: 'world-countries',
         paint: {
-          'line-color': 'rgba(56, 189, 248, 0.22)',
-          'line-width': 0.8,
+          'line-color': 'rgba(56, 189, 248, 0.25)',
+          'line-width': 0.85,
           'line-opacity': 0.85
         }
       });
@@ -238,7 +249,7 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
         data: initialRoutes
       });
 
-      // Outer Glowing Path
+      // Outer Glowing Path (Vivid and wide for high visibility)
       map.addLayer({
         id: 'attack-routes-glow',
         type: 'line',
@@ -251,20 +262,20 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
         paint: {
           'line-color': [
             'match',
-            ['get', 'severity'],
+            ['downcase', ['coalesce', ['get', 'severity'], 'critical']],
             'critical', SEVERITY_COLORS.critical,
             'high', SEVERITY_COLORS.high,
             'medium', SEVERITY_COLORS.medium,
             'low', SEVERITY_COLORS.low,
             SEVERITY_COLORS.info
           ],
-          'line-width': 4.5,
-          'line-opacity': 0.38,
-          'line-blur': 2.2
+          'line-width': 5.5,
+          'line-opacity': 0.65,
+          'line-blur': 1.8
         }
       });
 
-      // Inner Core Line
+      // Inner Core Line (Sharp and bright)
       map.addLayer({
         id: 'attack-routes-core',
         type: 'line',
@@ -277,19 +288,57 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
         paint: {
           'line-color': [
             'match',
-            ['get', 'severity'],
-            'critical', SEVERITY_COLORS.critical,
-            'high', SEVERITY_COLORS.high,
-            'medium', SEVERITY_COLORS.medium,
-            'low', SEVERITY_COLORS.low,
-            SEVERITY_COLORS.info
+            ['downcase', ['coalesce', ['get', 'severity'], 'critical']],
+            'critical', '#ff4d6d',
+            'high', '#ffa94d',
+            'medium', '#ffe066',
+            'low', '#38d9a9',
+            '#4dabf7'
           ],
-          'line-width': 1.8,
-          'line-opacity': 0.9
+          'line-width': 2.4,
+          'line-opacity': 0.95
         }
       });
 
-      // 4. Threat Origin Nodes (Clustered Source)
+      // 4. ANIMATED ATTACK FLOW BEACONS (Missiles / Particles traveling along the trajectory!)
+      map.addSource('attack-flow-beacons', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] }
+      });
+
+      // Moving Aura
+      map.addLayer({
+        id: 'attack-flow-aura',
+        type: 'circle',
+        source: 'attack-flow-beacons',
+        layout: {
+          visibility: visibleLayers.routes !== false ? 'visible' : 'none'
+        },
+        paint: {
+          'circle-radius': 9,
+          'circle-color': ['coalesce', ['get', 'color'], '#00e5ff'],
+          'circle-opacity': 0.6,
+          'circle-blur': 0.6
+        }
+      });
+
+      // Moving Core Missile Head
+      map.addLayer({
+        id: 'attack-flow-core',
+        type: 'circle',
+        source: 'attack-flow-beacons',
+        layout: {
+          visibility: visibleLayers.routes !== false ? 'visible' : 'none'
+        },
+        paint: {
+          'circle-radius': 4.5,
+          'circle-color': '#ffffff',
+          'circle-stroke-width': 2,
+          'circle-stroke-color': ['coalesce', ['get', 'color'], '#00e5ff']
+        }
+      });
+
+      // 5. Threat Origin Nodes (Clustered Source)
       map.addSource('threat-origin-nodes', {
         type: 'geojson',
         data: initialNodes.origins,
@@ -354,21 +403,21 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
           visibility: visibleLayers.markers !== false ? 'visible' : 'none'
         },
         paint: {
-          'circle-radius': 11,
+          'circle-radius': 12,
           'circle-color': [
             'match',
-            ['get', 'severity'],
+            ['downcase', ['coalesce', ['get', 'severity'], 'critical']],
             'critical', SEVERITY_COLORS.critical,
             'high', SEVERITY_COLORS.high,
             'medium', SEVERITY_COLORS.medium,
             'low', SEVERITY_COLORS.low,
             SEVERITY_COLORS.info
           ],
-          'circle-opacity': 0.25,
-          'circle-stroke-width': 1,
+          'circle-opacity': 0.3,
+          'circle-stroke-width': 1.5,
           'circle-stroke-color': [
             'match',
-            ['get', 'severity'],
+            ['downcase', ['coalesce', ['get', 'severity'], 'critical']],
             'critical', SEVERITY_COLORS.critical,
             'high', SEVERITY_COLORS.high,
             'medium', SEVERITY_COLORS.medium,
@@ -388,10 +437,10 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
           visibility: visibleLayers.markers !== false ? 'visible' : 'none'
         },
         paint: {
-          'circle-radius': 5.5,
+          'circle-radius': 6,
           'circle-color': [
             'match',
-            ['get', 'severity'],
+            ['downcase', ['coalesce', ['get', 'severity'], 'critical']],
             'critical', SEVERITY_COLORS.critical,
             'high', SEVERITY_COLORS.high,
             'medium', SEVERITY_COLORS.medium,
@@ -403,7 +452,7 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
         }
       });
 
-      // 5. Target Infrastructure Nodes Source & Layer
+      // 6. Target Infrastructure Nodes Source & Layer
       map.addSource('threat-target-nodes', {
         type: 'geojson',
         data: initialNodes.targets
@@ -417,10 +466,10 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
           visibility: visibleLayers.targets !== false ? 'visible' : 'none'
         },
         paint: {
-          'circle-radius': 9,
+          'circle-radius': 10,
           'circle-color': '#00e5ff',
-          'circle-opacity': 0.22,
-          'circle-stroke-width': 1,
+          'circle-opacity': 0.25,
+          'circle-stroke-width': 1.2,
           'circle-stroke-color': '#00e5ff'
         }
       });
@@ -433,24 +482,71 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
           visibility: visibleLayers.targets !== false ? 'visible' : 'none'
         },
         paint: {
-          'circle-radius': 4.5,
+          'circle-radius': 5,
           'circle-color': '#00e5ff',
           'circle-stroke-width': 1.5,
           'circle-stroke-color': '#06090f'
         }
       });
 
-      // 6. Reference Labels Layer (Subtle country/city names over the dark map)
-      map.addLayer({
-        id: 'esri-dark-ref-tiles',
-        type: 'raster',
-        source: 'esri-dark-ref',
-        minzoom: 0,
-        maxzoom: 16,
-        paint: {
-          'raster-opacity': 0.72
+      // ─── START ATTACK FLOW ANIMATION LOOP ───
+      const animateAttackFlow = (time) => {
+        if (!mapRef.current) return;
+        const elapsed = (time - startTimeRef.current) / 1000.0;
+        const routes = getRoutesData();
+        const beaconFeatures = [];
+
+        if (routes && routes.features && routes.features.length > 0) {
+          routes.features.forEach((feature, idx) => {
+            const coords = feature.geometry?.coordinates;
+            if (!coords || coords.length < 2) return;
+
+            // Loop duration (seconds for full trajectory from source to target)
+            const cycleDuration = 3.2;
+            const phaseOffset = (idx * 0.38) % 1.0;
+            const progress = ((elapsed / cycleDuration) + phaseOffset) % 1.0;
+
+            const totalPoints = coords.length - 1;
+            const exactIndex = progress * totalPoints;
+            const baseIndex = Math.floor(exactIndex);
+            const nextIndex = Math.min(baseIndex + 1, totalPoints);
+            const subProgress = exactIndex - baseIndex;
+
+            const p1 = coords[baseIndex];
+            const p2 = coords[nextIndex];
+            const lng = p1[0] + (p2[0] - p1[0]) * subProgress;
+            const lat = p1[1] + (p2[1] - p1[1]) * subProgress;
+
+            const sev = (feature.properties?.severity || 'critical').toLowerCase();
+            const color = SEVERITY_COLORS[sev] || '#f43f5e';
+
+            beaconFeatures.push({
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [lng, lat]
+              },
+              properties: {
+                id: `beacon-${feature.id || idx}`,
+                color,
+                severity: sev
+              }
+            });
+          });
         }
-      });
+
+        const beaconSrc = mapRef.current.getSource('attack-flow-beacons');
+        if (beaconSrc) {
+          beaconSrc.setData({
+            type: 'FeatureCollection',
+            features: beaconFeatures
+          });
+        }
+
+        animFrameRef.current = requestAnimationFrame(animateAttackFlow);
+      };
+
+      animFrameRef.current = requestAnimationFrame(animateAttackFlow);
 
       // ─── INTERACTIVE EVENT HANDLERS ───
 
@@ -500,13 +596,12 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
         const p = e.features[0].properties;
         const coordinates = e.features[0].geometry.coordinates.slice();
 
-        // Ensure popup appears over the targeted point during multi-world wrap
         while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
           coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
         }
 
-        const sev = p.severity || 'info';
-        const sevColor = SEVERITY_COLORS[sev.toLowerCase()] || '#00e5ff';
+        const sev = (p.severity || 'info').toLowerCase();
+        const sevColor = SEVERITY_COLORS[sev] || '#00e5ff';
         const isTarget = p.nodeType === 'TARGET';
 
         const popupContent = `
@@ -536,16 +631,16 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
               <span style="color: #cbd5e1;">${p.asn}</span>
             </div>` : ''}
 
-            ${p.threatActor ? `
+            ${p.threatActor || p.threat_actor ? `
             <div style="margin-bottom: 4px;">
               <strong style="color: #94a3b8;">Verified Actor:</strong>
-              <span style="color: #fca5a5; font-weight: 700;">${p.threatActor}</span>
+              <span style="color: #fca5a5; font-weight: 700;">${p.threatActor || p.threat_actor}</span>
             </div>` : ''}
 
-            ${p.malware ? `
+            ${p.malware || p.malware_family ? `
             <div style="margin-bottom: 4px;">
               <strong style="color: #94a3b8;">Malware:</strong>
-              <span style="color: #fde047;">${p.malware}</span>
+              <span style="color: #fde047;">${p.malware || p.malware_family}</span>
             </div>` : ''}
 
             <div style="margin-bottom: 4px;">
@@ -575,7 +670,6 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
           .setHTML(popupContent)
           .addTo(map);
 
-        // Notify parent event selection
         const matchedEvt = events.find(ev => ev.id === p.eventId);
         if (matchedEvt && onSelectEvent) {
           onSelectEvent(matchedEvt);
@@ -589,8 +683,8 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
       map.on('click', 'attack-routes-glow', (e) => {
         if (!e.features || e.features.length === 0) return;
         const p = e.features[0].properties;
-        const sev = p.severity || 'critical';
-        const sevColor = SEVERITY_COLORS[sev.toLowerCase()] || '#f43f5e';
+        const sev = (p.severity || 'critical').toLowerCase();
+        const sevColor = SEVERITY_COLORS[sev] || '#f43f5e';
 
         const popupContent = `
           <div style="font-family: system-ui, -apple-system, sans-serif; font-size: 11px; color: #f8fafc; line-height: 1.45; padding: 4px;">
@@ -609,13 +703,13 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
             </div>
 
             <div style="margin-bottom: 4px; font-size: 10.5px;">
-              <span style="color: #f43f5e; font-weight: 700;">Origin:</span> ${p.sourceCity || 'Origin'}, ${p.sourceCountry || ''}
-              <code style="background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 3px; color: #fda4af;">(${p.sourceIp || 'N/A'})</code>
+              <span style="color: #f43f5e; font-weight: 700;">Origin:</span> ${p.sourceCity || p.source_city || 'Origin'}, ${p.sourceCountry || p.source_country || ''}
+              <code style="background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 3px; color: #fda4af;">(${p.sourceIp || p.source_ip || 'N/A'})</code>
             </div>
 
             <div style="margin-bottom: 4px; font-size: 10.5px;">
-              <span style="color: #00e5ff; font-weight: 700;">Target:</span> ${p.destCity || 'Target'}, ${p.destCountry || ''}
-              <code style="background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 3px; color: #a5f3fc;">(${p.destIp || 'N/A'})</code>
+              <span style="color: #00e5ff; font-weight: 700;">Target:</span> ${p.destCity || p.dest_city || 'Target'}, ${p.destCountry || p.dest_country || ''}
+              <code style="background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 3px; color: #a5f3fc;">(${p.destIp || p.dest_ip || 'N/A'})</code>
             </div>
 
             ${p.protocol ? `
@@ -669,8 +763,8 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
     });
 
     return () => {
-      if (popupRef.current) popupRef.current.remove();
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      if (popupRef.current) popupRef.current.remove();
       map.remove();
       mapRef.current = null;
     };
@@ -731,6 +825,8 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
 
     toggleVis('attack-routes-glow', visibleLayers.routes !== false);
     toggleVis('attack-routes-core', visibleLayers.routes !== false);
+    toggleVis('attack-flow-aura', visibleLayers.routes !== false);
+    toggleVis('attack-flow-core', visibleLayers.routes !== false);
     toggleVis('threat-clusters', visibleLayers.markers !== false);
     toggleVis('threat-cluster-count', visibleLayers.markers !== false);
     toggleVis('threat-origin-halo', visibleLayers.markers !== false);

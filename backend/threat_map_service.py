@@ -38,7 +38,7 @@ VERIFIED_CTI_EVENTS = [
         "affected_sectors": ["Critical Infrastructure", "Water Utilities", "Ports & Maritime"],
         "infrastructure_type": "Compromised Cisco & Fortinet Edge Routers",
         "evidence": "Persistent SOCKS5 reverse proxies routing commands through SOHO routers to blend with domestic ISP traffic.",
-        "hours_ago": 1.2
+        "hours_ago": 0.2
     },
     {
         "id": "evt-ru-us-02",
@@ -66,7 +66,7 @@ VERIFIED_CTI_EVENTS = [
         "affected_sectors": ["Cloud Hyperscalers", "Foreign Affairs Ministries", "Policy Think Tanks"],
         "infrastructure_type": "Residential Proxy Network & Bulletproof VPS",
         "evidence": "Password-spray campaign against dormant test accounts lacking MFA followed by OAuth enterprise application hijacking.",
-        "hours_ago": 1.5
+        "hours_ago": 0.5
     },
     {
         "id": "evt-kp-us-03",
@@ -94,7 +94,7 @@ VERIFIED_CTI_EVENTS = [
         "affected_sectors": ["Financial Services", "Decentralized Finance (DeFi)", "Digital Asset Custody"],
         "infrastructure_type": "Trojanized PyPI Packages & Web3 RPC Relays",
         "evidence": "Trojanized Web3 wallet management software used to exfiltrate private cryptographic keys via GitHub pull requests.",
-        "hours_ago": 2.1
+        "hours_ago": 0.8
     },
     {
         "id": "evt-ru-ua-04",
