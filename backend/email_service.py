@@ -112,3 +112,4 @@ ThreatLens Security Operations Team
     except Exception as e:
         print(f"❌ [SMTP ERROR] Failed to send email to {to_email}: {str(e)}")
         return False
+

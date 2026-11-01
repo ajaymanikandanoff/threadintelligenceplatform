@@ -382,17 +382,19 @@ export default function LoginView({ onSignIn, onCancel }) {
      ============================================================== */
   const executeGitHubLogin = async (username, email) => {
     setIsGitHubLoading(true);
-    const picture = `https://avatars.githubusercontent.com/u/${Math.floor(1000000 + Math.random() * 9000000)}?v=4`;
-    const name = username.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const uname = (username || 'ajay-sec').trim();
+    const uemail = (email || `${uname}@github.threatlens.io`).trim().toLowerCase();
+    const picture = `https://avatars.githubusercontent.com/u/9919?v=4`;
+    const name = uname === 'ajay-sec' ? 'Ajay M. (GitHub)' : uname.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
     try {
       const resp = await fetch(`${API_BASE}/api/auth/github`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: email || `${username}@github.threatlens.io`,
+          email: uemail,
           name,
-          username,
+          username: uname,
           picture
         })
       });
@@ -411,16 +413,18 @@ export default function LoginView({ onSignIn, onCancel }) {
         saveSession(sessionUser, true);
         setIsGitHubModalOpen(false);
         showAlert(`Authenticated via GitHub! Welcome, ${sessionUser.name}.`, 'success');
-        setTimeout(() => onSignIn(sessionUser), 400);
+        setTimeout(() => onSignIn(sessionUser), 300);
         return;
       }
     } catch {
       // Offline fallback
+    } finally {
+      setIsGitHubLoading(false);
     }
 
     const sessionUser = {
       name,
-      email: email || `${username}@github.threatlens.io`,
+      email: uemail,
       role: 'SecOps Engineer',
       authProvider: 'GITHUB',
       loggedIn: true,
@@ -429,7 +433,7 @@ export default function LoginView({ onSignIn, onCancel }) {
     saveSession(sessionUser, true);
     setIsGitHubModalOpen(false);
     showAlert(`Signed in via GitHub! Welcome, ${sessionUser.name}.`, 'success');
-    setTimeout(() => onSignIn(sessionUser), 400);
+    setTimeout(() => onSignIn(sessionUser), 300);
   };
 
   const handleTriggerGoogleAuth = async () => {
@@ -452,23 +456,9 @@ export default function LoginView({ onSignIn, onCancel }) {
     }
   };
 
-  const handleTriggerGitHubAuth = async () => {
+  const handleTriggerGitHubAuth = () => {
     hideAlert();
-    try {
-      showAlert('Connecting to GitHub OAuth...', 'info');
-      const result = await signInWithPopup(auth, githubProvider);
-      if (result && result.user) {
-        const u = result.user;
-        const email = u.email || `${u.uid}@github.threatlens.io`;
-        const name = u.displayName || email.split('@')[0];
-        await executeGitHubLogin(name, email);
-        return;
-      }
-    } catch (popupErr) {
-      console.warn('Firebase GitHub Auth popup error, opening GitHub authorization modal:', popupErr);
-      hideAlert();
-      setIsGitHubModalOpen(true);
-    }
+    setIsGitHubModalOpen(true);
   };
 
   const handleGuestLogin = () => {
@@ -1490,35 +1480,58 @@ export default function LoginView({ onSignIn, onCancel }) {
 
             {/* GitHub Account Selector & Scopes */}
             <div style={{ padding: '20px 24px' }}>
+              {/* Quick Account Cards */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#8b949e' }}>GitHub Username / Handle</label>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                  background: '#161b22', border: '1px solid #30363d', borderRadius: '8px', padding: '10px 12px'
-                }}>
-                  <User size={15} color="#8b949e" />
-                  <input
-                    type="text"
-                    value={githubCustomUser}
-                    onChange={e => setGithubCustomUser(e.target.value)}
-                    style={{ background: 'transparent', border: 'none', color: '#f0f6fc', fontSize: '13px', width: '100%', outline: 'none' }}
-                  />
+                <div style={{ fontSize: '11px', fontWeight: '700', color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Select GitHub Account:
                 </div>
-              </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '18px' }}>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#8b949e' }}>Email address</label>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                  background: '#161b22', border: '1px solid #30363d', borderRadius: '8px', padding: '10px 12px'
-                }}>
-                  <Mail size={15} color="#8b949e" />
-                  <input
-                    type="email"
-                    value={githubCustomEmail}
-                    onChange={e => setGithubCustomEmail(e.target.value)}
-                    style={{ background: 'transparent', border: 'none', color: '#f0f6fc', fontSize: '13px', width: '100%', outline: 'none' }}
-                  />
+                <div
+                  onClick={() => {
+                    setGithubCustomUser('ajay-sec');
+                    setGithubCustomEmail('ajay.security@github.com');
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    padding: '10px 14px', borderRadius: '8px',
+                    background: githubCustomUser === 'ajay-sec' ? 'rgba(56, 189, 248, 0.12)' : '#161b22',
+                    border: `1px solid ${githubCustomUser === 'ajay-sec' ? 'rgba(56, 189, 248, 0.4)' : '#30363d'}`,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#21262d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#f0f6fc">
+                      <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                    </svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#f0f6fc' }}>Ajay M. (@ajay-sec)</div>
+                    <div style={{ fontSize: '11px', color: '#8b949e' }}>ajay.security@github.com</div>
+                  </div>
+                  {githubCustomUser === 'ajay-sec' && <Check size={16} color="#38bdf8" />}
+                </div>
+
+                <div
+                  onClick={() => {
+                    setGithubCustomUser('threat-intel');
+                    setGithubCustomEmail('threat-intel@github.com');
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    padding: '10px 14px', borderRadius: '8px',
+                    background: githubCustomUser === 'threat-intel' ? 'rgba(56, 189, 248, 0.12)' : '#161b22',
+                    border: `1px solid ${githubCustomUser === 'threat-intel' ? 'rgba(56, 189, 248, 0.4)' : '#30363d'}`,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#21262d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Shield size={16} color="#38bdf8" />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#f0f6fc' }}>ThreatOps Intel (@threat-intel)</div>
+                    <div style={{ fontSize: '11px', color: '#8b949e' }}>threat-intel@github.com</div>
+                  </div>
+                  {githubCustomUser === 'threat-intel' && <Check size={16} color="#38bdf8" />}
                 </div>
               </div>
 
@@ -1529,7 +1542,7 @@ export default function LoginView({ onSignIn, onCancel }) {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#3fb950' }}>
                   <Check size={14} />
-                  <span>Verify public GitHub profile & handle</span>
+                  <span>Verify public GitHub identity ({githubCustomUser || 'ajay-sec'})</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#3fb950' }}>
                   <Check size={14} />
@@ -1546,12 +1559,13 @@ export default function LoginView({ onSignIn, onCancel }) {
                 onClick={() => executeGitHubLogin(githubCustomUser.trim(), githubCustomEmail.trim())}
                 style={{
                   background: '#238636', color: '#ffffff', border: '1px solid rgba(240, 246, 252, 0.1)',
-                  borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: '600',
+                  borderRadius: '8px', padding: '11px', fontSize: '13.5px', fontWeight: '700',
                   cursor: isGitHubLoading ? 'not-allowed' : 'pointer', width: '100%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  boxShadow: '0 0 16px rgba(35, 134, 54, 0.4)'
                 }}
               >
-                <span>{isGitHubLoading ? 'Authorizing GitHub session...' : `Authorize ${githubCustomUser}`}</span>
+                <span>{isGitHubLoading ? 'Authorizing GitHub session...' : `Authorize & Sign In (@${githubCustomUser || 'ajay-sec'})`}</span>
               </button>
 
               <button
