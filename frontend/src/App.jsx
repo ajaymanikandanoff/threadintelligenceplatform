@@ -238,7 +238,7 @@ export default function App() {
       />
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* ─── Sidebar Navigation (ThreatLens Brand & Exact Workspace Items) ─── */}
+        {/* ─── Sidebar Navigation (Clean Workspace Items) ─── */}
         <aside style={{
           width: '240px',
           flexShrink: 0,
@@ -246,40 +246,12 @@ export default function App() {
           background: 'var(--bg-glass)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          padding: '20px 14px',
+          padding: '16px 14px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '20px',
+          gap: '16px',
           overflowY: 'auto'
         }}>
-          {/* Brand Logo & Name */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 6px' }}>
-            <div style={{
-              width: '36px', height: '36px', borderRadius: '10px',
-              background: 'rgba(0, 229, 255, 0.08)',
-              border: '1px solid rgba(0, 229, 255, 0.3)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 0 16px var(--accent-glow)',
-              flexShrink: 0,
-              overflow: 'hidden',
-              padding: '2px'
-            }}>
-              <img
-                src="/logo.png"
-                alt="ThreatLens Cyber Shield Logo"
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-                ThreatLens
-              </span>
-              <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', letterSpacing: '0.02em', marginTop: '2px' }}>
-                AI Threat Intelligence
-              </span>
-            </div>
-          </div>
-
           {/* WORKSPACE Menu Section */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <div className="section-label" style={{ marginBottom: '4px', fontSize: '10px' }}>
@@ -549,30 +521,8 @@ export default function App() {
             })}
           </div>
 
-          {/* BOTTOM CARDS: Model Engine & User Profile */}
+          {/* BOTTOM: User Profile Card */}
           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {/* Model Engine Status Card */}
-            <div style={{
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--border)',
-              borderRadius: '12px',
-              padding: '12px 14px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '6px'
-            }}>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>
-                Model engine
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', lineHeight: '1.4' }}>
-                Risk scoring runs on your FastAPI backend.
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
-                <span style={{ fontSize: '11px', fontWeight: '600', color: '#10b981' }}>Connected</span>
-              </div>
-            </div>
-
             {/* User Profile Card */}
             <div
               onClick={() => handleNavigateTab('settings')}

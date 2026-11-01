@@ -403,4 +403,3 @@ def generate_pdf_report(data: Dict[str, Any]) -> bytes:
     # Build the document with our NumberedCanvas
     doc.build(story, canvasmaker=NumberedCanvas)
     return buf.getvalue()
-

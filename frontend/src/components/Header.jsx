@@ -48,8 +48,24 @@ export default function Header({
       zIndex: 100,
       flexShrink: 0
     }}>
-      {/* ─── Left: Platform Title ─── */}
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+      {/* ─── Left: Platform Title & Brand Logo ─── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{
+          width: '32px', height: '32px', borderRadius: '8px',
+          background: 'rgba(0, 229, 255, 0.08)',
+          border: '1px solid rgba(0, 229, 255, 0.3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 0 12px var(--accent-glow)',
+          flexShrink: 0,
+          overflow: 'hidden',
+          padding: '2px'
+        }}>
+          <img
+            src="/logo.png"
+            alt="AI ThreadLens Logo"
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          />
+        </div>
         <h1 style={{
           fontSize: '18px',
           fontWeight: '800',
