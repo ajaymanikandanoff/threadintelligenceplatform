@@ -5,7 +5,6 @@ import ThreatAnalyzerView from './views/ThreatAnalyzerView';
 import ThreatIntelligenceView from './views/ThreatIntelligenceView';
 import AttackMappingView from './views/AttackMappingView';
 import InvestigationHistoryView from './views/InvestigationHistoryView';
-import ReportsView from './views/ReportsView';
 import SettingsView from './views/SettingsView';
 import LoginView from './views/LoginView';
 
@@ -30,7 +29,6 @@ import {
   Globe,
   Crosshair,
   Clock,
-  FileText,
   Sliders,
   MessageSquare,
   ShieldCheck,
@@ -390,7 +388,6 @@ export default function App() {
             {[
               { id: 'intelligence',   label: 'Threat Intelligence',   icon: Globe },
               { id: 'attack-mapping', label: 'ATT&CK Matrix',         icon: Crosshair },
-              { id: 'reports',        label: 'Reports & Export',      icon: FileText },
             ].map(item => {
               const Icon = item.icon;
               const active = activeTab === item.id;
@@ -647,13 +644,6 @@ export default function App() {
               {activeTab === 'history' && (
                 <InvestigationHistoryView
                   onNavigateTab={handleNavigateTab}
-                />
-              )}
-
-              {activeTab === 'reports' && (
-                <ReportsView
-                  threatData={threatData}
-                  onOpenExecutiveModal={() => setIsReportOpen(true)}
                 />
               )}
 
