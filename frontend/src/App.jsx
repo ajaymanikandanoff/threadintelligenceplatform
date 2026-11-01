@@ -54,20 +54,15 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen]   = useState(false);
   const [isReportOpen, setIsReportOpen]       = useState(false);
   const [isGlossaryOpen, setIsGlossaryOpen]   = useState(false);
-  const [isAuthOpen, setIsAuthOpen]           = useState(false);
   const [currentUser, setCurrentUser]         = useState(() => {
     try {
       const stored = localStorage.getItem('user_session') || sessionStorage.getItem('user_session');
       if (stored) {
         const u = JSON.parse(stored);
-        if (u && u.name) return u;
+        if (u && (u.email || u.name)) return u;
       }
     } catch {}
-    return {
-      name: 'Ajay M.',
-      email: 'analyst@example.com',
-      role: 'Security analyst'
-    };
+    return null;
   });
 
   // Themes & Cybersecurity Colors
@@ -197,18 +192,16 @@ export default function App() {
   const handleSignOut = () => {
     localStorage.removeItem('user_session');
     sessionStorage.removeItem('user_session');
-    setIsAuthOpen(true);
+    setCurrentUser(null);
   };
 
-  // If Auth screen is active, show the Login View (matching Mockup)
-  if (isAuthOpen) {
+  // Mandatory Authentication Gate: First step is login or account creation
+  if (!currentUser) {
     return (
       <LoginView
         onSignIn={(user) => {
           setCurrentUser(user);
-          setIsAuthOpen(false);
         }}
-        onCancel={() => setIsAuthOpen(false)}
       />
     );
   }
@@ -548,7 +541,7 @@ export default function App() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0
               }}>
-                AM
+                {currentUser?.name ? currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'AM'}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                 <span style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

@@ -39,7 +39,7 @@ export default function SettingsView({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, name: displayName })
       });
-    } catch {}
+    } catch { }
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
   };

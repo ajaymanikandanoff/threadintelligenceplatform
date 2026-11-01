@@ -76,7 +76,7 @@ function passwordLevel(pw) {
   return Math.max(1, s);
 }
 
-export default function LoginView({ onSignIn, onCancel }) {
+export default function LoginView({ onSignIn }) {
   // Tabs: 'signin' | 'signup'
   const [activeTab, setActiveTab] = useState('signin');
 
@@ -1104,22 +1104,6 @@ export default function LoginView({ onSignIn, onCancel }) {
           }}>
             Credentials salted & hashed (SHA-256). Active session token securely maintained.
           </div>
-
-          {onCancel && (
-            <div style={{ textAlign: 'center', marginTop: '12px' }}>
-              <button
-                type="button"
-                onClick={onCancel}
-                style={{
-                  background: 'transparent', border: 'none',
-                  color: '#94a3b8', fontSize: '12px', cursor: 'pointer',
-                  textDecoration: 'underline'
-                }}
-              >
-                Return to platform
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
