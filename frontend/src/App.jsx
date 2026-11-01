@@ -1,190 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
-import OverviewTab from './components/OverviewTab';
+import DashboardView from './views/DashboardView';
+import ThreatAnalyzerView from './views/ThreatAnalyzerView';
+import ThreatIntelligenceView from './views/ThreatIntelligenceView';
+import AttackMappingView from './views/AttackMappingView';
+import InvestigationHistoryView from './views/InvestigationHistoryView';
+import LoginView from './views/LoginView';
+
 import DefenseCenter from './components/DefenseCenter';
-import IocExplorer from './components/IocExplorer';
 import ThreatCopilot from './components/ThreatCopilot';
-import TechnicalDeepDive from './components/TechnicalDeepDive';
 import IngestModal from './components/IngestModal';
 import SettingsModal from './components/SettingsModal';
 import ExecutiveReportModal from './components/ExecutiveReportModal';
 import CyberGlossaryModal from './components/CyberGlossaryModal';
+
 import {
+  Shield,
   LayoutDashboard,
-  ShieldCheck,
   Search,
+  Globe,
+  Crosshair,
+  Clock,
+  FileText,
+  Sliders,
   MessageSquare,
-  Cpu,
-  Loader,
-  Radio,
-  ChevronRight,
-  BookOpen,
-  FileUp
+  ShieldCheck,
+  Loader
 } from 'lucide-react';
 
-const NAV_SECTIONS = [
-  {
-    heading: 'OPERATIONS',
-    items: [
-      { id: 'overview',  label: 'Threat Overview',    icon: LayoutDashboard, sub: 'Incident dossier & metrics' },
-      { id: 'defense',   label: 'Defense Center',      icon: ShieldCheck,     sub: 'Firewall rules & SIEM detections' },
-    ]
-  },
-  {
-    heading: 'INTELLIGENCE',
-    items: [
-      { id: 'iocs',      label: 'Threat Indicators',   icon: Search,          sub: 'Malicious IPs, domains & hashes' },
-      { id: 'technical', label: 'Technical Deep Dive', icon: Cpu,             sub: 'MITRE matrix & knowledge graph' },
-    ]
-  },
-  {
-    heading: 'AI ASSISTANT',
-    items: [
-      { id: 'copilot',   label: 'AI Security Copilot', icon: MessageSquare,   sub: 'Interactive SOC intelligence' },
-    ]
-  }
-];
-
-function LoadingScreen() {
-  return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      height: '100%', minHeight: '60vh', gap: '24px', padding: '60px 20px'
-    }}>
-      <div style={{
-        position: 'relative',
-        width: '64px', height: '64px',
-        display: 'flex', alignItems: 'center', justifyContent: 'center'
-      }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          borderRadius: '50%',
-          border: '2px solid rgba(56, 189, 248, 0.2)',
-          borderTopColor: 'var(--accent)',
-          animation: 'spin 1s linear infinite'
-        }} />
-        <div style={{
-          position: 'absolute', inset: '8px',
-          borderRadius: '50%',
-          border: '2px dashed rgba(129, 140, 248, 0.3)',
-          borderBottomColor: 'var(--purple)',
-          animation: 'spin 2s linear infinite reverse'
-        }} />
-        <Loader size={20} color="var(--accent)" />
-      </div>
-
-      <div style={{ textAlign: 'center', maxWidth: '440px' }}>
-        <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>
-          Extracting Threat Intelligence
-        </div>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
-          Google Gemini AI is synthesizing adversary attribution, mapping enterprise MITRE ATT&CK vectors, and formulating defensive perimeter scripts.
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-        {['Attribution & CVEs', 'MITRE Heatmap Matrix', 'Perimeter Containment Rules'].map((s, i) => (
-          <div key={i} style={{
-            padding: '5px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: '600',
-            background: 'var(--bg-overlay)', border: '1px solid var(--border)',
-            color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)'
-          }}>
-            {s}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function EmptyState({ onOpenIngest, onSelectReport }) {
-  return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      minHeight: '70vh', gap: '28px', padding: '60px 20px', textAlign: 'center'
-    }}>
-      <div style={{
-        width: '72px', height: '72px', borderRadius: '20px',
-        background: 'linear-gradient(135deg, rgba(56,189,248,0.15), rgba(129,140,248,0.15))',
-        border: '1px solid rgba(56,189,248,0.3)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: '0 0 32px rgba(56,189,248,0.12)'
-      }}>
-        <ShieldCheck size={32} color="var(--accent)" strokeWidth={2.2} />
-      </div>
-
-      <div style={{ maxWidth: '480px' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 10px', letterSpacing: '-0.02em' }}>
-          No Threat Campaign Active
-        </h2>
-        <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', lineHeight: '1.65', margin: 0 }}>
-          Select a verified government cyber advisory below to inspect adversary techniques, or click <strong style={{ color: 'var(--accent)' }}>Analyze Advisory</strong> to upload an incident PDF or paste raw telemetry.
-        </p>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', maxWidth: '680px', width: '100%' }}>
-        {[
-          { label: '🏛️ CISA Advisory AA23-158A', desc: 'CL0P Ransomware / MOVEit Transfer', id: 'cisa-aa23-158a', badge: 'CRITICAL' },
-          { label: '🛡️ NSA / CISA Alert', desc: 'Volt Typhoon Living-off-the-Land APT', id: 'cisa-volt-typhoon', badge: 'NATION-STATE' },
-          { label: '🚨 FBI Cyber Alert', desc: 'ALPHV BlackCat Healthcare Extortion', id: 'alphv-blackcat-healthcare', badge: 'HIGH SEV' },
-        ].map(f => (
-          <button
-            key={f.id}
-            onClick={() => onSelectReport ? onSelectReport(f.id) : onOpenIngest?.()}
-            style={{
-              padding: '16px 18px', borderRadius: '12px', background: 'var(--bg-elevated)',
-              border: '1px solid var(--border)', textAlign: 'left', cursor: 'pointer',
-              transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
-              display: 'flex', flexDirection: 'column', gap: '6px'
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.borderColor = 'var(--accent)';
-              e.currentTarget.style.background = 'var(--bg-hover)';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.borderColor = 'var(--border)';
-              e.currentTarget.style.background = 'var(--bg-elevated)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: '700', padding: '2px 6px', borderRadius: '4px', background: 'rgba(56,189,248,0.1)', color: 'var(--accent)' }}>
-                {f.badge}
-              </span>
-            </div>
-            <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '13px', marginTop: '2px' }}>{f.label}</div>
-            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{f.desc}</div>
-          </button>
-        ))}
-      </div>
-
-      <button className="btn-primary" onClick={onOpenIngest} style={{ padding: '9px 20px', fontSize: '13px' }}>
-        <FileUp size={15} /> Ingest Custom Advisory / PDF
-      </button>
-    </div>
-  );
-}
-
 export default function App() {
-  const [activeTab, setActiveTab]             = useState('overview');
+  const [activeTab, setActiveTab]             = useState('dashboard');
   const [threatData, setThreatData]           = useState(null);
   const [sampleReports, setSampleReports]     = useState([]);
   const [activeReportId, setActiveReportId]   = useState(null);
-  const [tactics, setTactics]                 = useState([]);
+  const [_tactics, setTactics]               = useState([]);
+  const [selectedIndicator, setSelectedIndicator] = useState(null);
+
+  // Modals & Auth
   const [isIngestOpen, setIsIngestOpen]       = useState(false);
   const [isSettingsOpen, setIsSettingsOpen]   = useState(false);
   const [isReportOpen, setIsReportOpen]       = useState(false);
   const [isGlossaryOpen, setIsGlossaryOpen]   = useState(false);
+  const [isAuthOpen, setIsAuthOpen]           = useState(false);
+  const [currentUser, setCurrentUser]         = useState({
+    name: 'Ajay M.',
+    email: 'analyst@example.com',
+    role: 'Security analyst'
+  });
+
+  // Settings
   const [theme, setTheme]                     = useState(localStorage.getItem('CYBER_THEME') || 'dark');
   const [apiKey, setApiKey]                   = useState(localStorage.getItem('GEMINI_API_KEY') || '');
   const [selectedModel, setSelectedModel]     = useState(localStorage.getItem('GEMINI_MODEL') || 'gemini-2.5-flash');
+
+  // Loading States
   const [isAnalyzing, setIsAnalyzing]         = useState(false);
   const [isCopilotLoading, setIsCopilotLoading] = useState(false);
   const [externalCopilotQuery, setExternalCopilotQuery] = useState('');
   const [copilotMessages, setCopilotMessages] = useState([{
     role: 'assistant',
-    content: '👋 Hello! I\'m your AI Security Copilot. I can analyze threat incident reports, correlate MITRE ATT&CK techniques, provide step-by-step containment instructions, and generate defensive firewall rules.\n\nSelect a threat report from the left sidebar to get started, then ask me anything!'
+    content: '👋 Hello Ajay! I\'m your ThreatLens AI Copilot. I analyze suspicious indicators, correlate MITRE ATT&CK techniques, provide step-by-step containment instructions, and generate defensive firewall rules.\n\nHow can I help your investigation today?'
   }]);
 
   useEffect(() => {
@@ -206,15 +81,16 @@ export default function App() {
       setIsIngestOpen(false);
       setCopilotMessages(prev => [...prev, {
         role: 'assistant',
-        content: `✅ Threat ingested: **"${d.title}"**\n\nAttacker: ${d.threat_actor?.name || 'Unknown'} | CVEs: ${d.cves?.length || 0} | Attack Techniques: ${d.mitre_techniques?.length || 0} | Malicious Indicators: ${d.iocs?.length || 0}\n\nWhat would you like to know?`
+        content: `✅ Telemetry synthesized for: **"${d.title}"**\n\nAttribution: ${d.threat_actor?.name || 'Unknown'} | CVEs: ${d.cves?.length || 0} | MITRE Techniques: ${d.mitre_techniques?.length || 0} | IOCs: ${d.iocs?.length || 0}\n\nReady for analyst investigation.`
       }]);
-    } catch {
-      console.error('Backend unreachable on port 8000.');
+    } catch (e) {
+      console.error('Backend analysis error:', e);
     } finally {
       setIsAnalyzing(false);
     }
   };
 
+  // Load sample reports and MITRE tactics from backend on init
   useEffect(() => {
     (async () => {
       try {
@@ -230,7 +106,7 @@ export default function App() {
           analyzeThreatReport(rd.reports[0].content, rd.reports[0].title);
         }
       } catch (err) {
-        console.error('Init error:', err);
+        console.error('FastAPI Backend connection status:', err);
       }
     })();
   }, []);
@@ -250,10 +126,13 @@ export default function App() {
       setIsIngestOpen(false);
       setCopilotMessages(prev => [...prev, {
         role: 'assistant',
-        content: `✅ Analyzed "${file.name}" (${d.extracted_char_count?.toLocaleString()} chars)\n\nActor: ${d.threat_actor?.name || 'Unknown'} | CVEs: ${d.cves?.length || 0} | Techniques: ${d.mitre_techniques?.length || 0}\n\nReady for your questions.`
+        content: `✅ Ingested PDF "${file.name}" (${d.extracted_char_count?.toLocaleString()} chars)\n\nThreat Actor: ${d.threat_actor?.name || 'Unknown'} | CVEs: ${d.cves?.length || 0} | Techniques: ${d.mitre_techniques?.length || 0}`
       }]);
-    } catch (err) { alert(`Upload error: ${err.message}`); }
-    finally { setIsAnalyzing(false); }
+    } catch (err) {
+      alert(`Upload error: ${err.message}`);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleSendMessage = async (q) => {
@@ -270,176 +149,346 @@ export default function App() {
       setCopilotMessages(prev => [...prev, { role: 'assistant', content: d.reply || 'No response.' }]);
     } catch {
       setCopilotMessages(prev => [...prev, { role: 'assistant', content: '❌ Could not reach backend.' }]);
-    } finally { setIsCopilotLoading(false); }
-  };
-
-  const askCopilot = (text) => { setActiveTab('copilot'); setExternalCopilotQuery(text); };
-
-  const FEED_LABELS = {
-    moveit: 'CISA: CL0P / MOVEit',
-    '158a': 'CISA: CL0P / MOVEit',
-    volt: 'NSA: Volt Typhoon',
-    alphv: 'FBI: ALPHV Ransomware',
-    blackcat: 'FBI: ALPHV Ransomware',
-  };
-  const getFeedLabel = (rep) => {
-    for (const [key, label] of Object.entries(FEED_LABELS)) {
-      if (rep.id.toLowerCase().includes(key)) return label;
+    } finally {
+      setIsCopilotLoading(false);
     }
-    return rep.title.slice(0, 24);
   };
+
+  const handleGlobalSearch = (query) => {
+    setSelectedIndicator({ indicator: query });
+    setActiveTab('analyzer');
+  };
+
+  const handleNavigateTab = (tabId, params = null) => {
+    if (tabId === 'reports') {
+      setIsReportOpen(true);
+      return;
+    }
+    if (tabId === 'settings') {
+      setIsSettingsOpen(true);
+      return;
+    }
+    if (params) {
+      setSelectedIndicator(params);
+    }
+    setActiveTab(tabId);
+  };
+
+  // If Auth screen is active, show the Login View (matching Image 4)
+  if (isAuthOpen) {
+    return (
+      <LoginView
+        onSignIn={(user) => {
+          setCurrentUser(user);
+          setIsAuthOpen(false);
+        }}
+        onCancel={() => setIsAuthOpen(false)}
+      />
+    );
+  }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-base)' }}>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      background: 'var(--bg-base)',
+      backgroundImage: `
+        radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to right, rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.01) 1px, transparent 1px)
+      `,
+      backgroundSize: '28px 28px, 56px 56px, 56px 56px'
+    }}>
+      {/* ─── Top Header Bar ─── */}
       <Header
-        hasCustomKey={!!apiKey?.trim()}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenIngest={() => setIsIngestOpen(true)}
-        onOpenReport={() => setIsReportOpen(true)}
-        onOpenGlossary={() => setIsGlossaryOpen(true)}
-        threatData={threatData}
+        activeTab={activeTab}
         theme={theme}
         onToggleTheme={() => setTheme(p => p === 'dark' ? 'light' : 'dark')}
+        onSearchGlobal={handleGlobalSearch}
+        onOpenAuth={() => setIsAuthOpen(true)}
       />
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-
-        {/* ─── Categorized Enterprise Sidebar ─── */}
-        <nav style={{
+        {/* ─── Sidebar Navigation (ThreatLens Brand & Exact Workspace Items) ─── */}
+        <aside style={{
           width: '240px',
           flexShrink: 0,
           borderRight: '1px solid var(--border)',
           background: 'var(--bg-glass)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          padding: '16px 12px',
+          padding: '20px 14px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
-          overflowY: 'auto',
+          gap: '20px',
+          overflowY: 'auto'
         }}>
-          {NAV_SECTIONS.map((section, idx) => (
-            <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-              <div className="section-label" style={{ marginBottom: '4px' }}>
-                {section.heading}
-              </div>
-              {section.items.map(tab => {
-                const Icon = tab.icon;
-                const active = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    className={`nav-item ${active ? 'active' : ''}`}
-                    onClick={() => setActiveTab(tab.id)}
-                  >
-                    <Icon size={16} className="nav-icon" style={{ flexShrink: 0 }} />
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: '13px', lineHeight: '1.2' }}>
-                        {tab.label}
-                      </div>
-                      <div style={{
-                        fontSize: '10.5px',
-                        color: active ? 'rgba(56,189,248,0.75)' : 'var(--text-tertiary)',
-                        marginTop: '1px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        {tab.sub}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
+          {/* Brand Logo & Name */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 6px' }}>
+            <div style={{
+              width: '32px', height: '32px', borderRadius: '9px',
+              background: 'linear-gradient(135deg, #0284c7 0%, #00e5ff 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 0 16px rgba(0, 229, 255, 0.35)',
+              flexShrink: 0
+            }}>
+              <Shield size={18} color="#06090f" strokeWidth={2.6} />
             </div>
-          ))}
-
-          {/* Government Live Threat Feeds */}
-          <div style={{ marginTop: 'auto', paddingTop: '14px', borderTop: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', padding: '0 4px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Radio size={11} color="var(--red)" />
-                <span className="section-label">Live Advisory Feeds</span>
-              </div>
-              <span className="status-dot" style={{ background: 'var(--red)', width: '6px', height: '6px' }} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-              {sampleReports.map(rep => {
-                const sel = activeReportId === rep.id;
-                return (
-                  <button
-                    key={rep.id}
-                    onClick={() => analyzeThreatReport(rep.content, rep.title, rep.id)}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '8px 10px', borderRadius: '6px', textAlign: 'left', width: '100%',
-                      background: sel ? 'rgba(244,63,94,0.08)' : 'transparent',
-                      border: `1px solid ${sel ? 'rgba(244,63,94,0.25)' : 'transparent'}`,
-                      color: sel ? 'var(--red)' : 'var(--text-secondary)',
-                      fontSize: '11px', fontFamily: 'var(--font-mono)',
-                      cursor: 'pointer', transition: 'all 0.12s ease',
-                    }}
-                    onMouseEnter={e => { if (!sel) { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; } }}
-                    onMouseLeave={e => { if (!sel) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; } }}
-                    title={rep.title}
-                  >
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                      {getFeedLabel(rep)}
-                    </span>
-                    <ChevronRight size={11} style={{ flexShrink: 0, marginLeft: '4px', opacity: sel ? 1 : 0.4 }} />
-                  </button>
-                );
-              })}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                ThreatLens
+              </span>
+              <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', letterSpacing: '0.02em', marginTop: '2px' }}>
+                AI Threat Intelligence
+              </span>
             </div>
           </div>
 
-          {/* Feature Guide Shortcut */}
-          <div style={{ paddingTop: '8px' }}>
-            <button
-              onClick={() => setIsGlossaryOpen(true)}
+          {/* WORKSPACE Menu Section */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div className="section-label" style={{ marginBottom: '6px', fontSize: '10px' }}>
+              WORKSPACE
+            </div>
+
+            {[
+              { id: 'dashboard',      label: 'Dashboard',             icon: LayoutDashboard },
+              { id: 'analyzer',       label: 'Threat Analyzer',       icon: Search },
+              { id: 'intelligence',   label: 'Threat Intelligence',   icon: Globe },
+              { id: 'attack-mapping', label: 'Attack Mapping',        icon: Crosshair },
+              { id: 'history',        label: 'Investigation History', icon: Clock },
+              { id: 'reports',        label: 'Reports',               icon: FileText },
+              { id: 'settings',       label: 'Settings',              icon: Sliders },
+            ].map(item => {
+              const Icon = item.icon;
+              const active = activeTab === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavigateTab(item.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: active ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+                    color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                    fontWeight: active ? '600' : '500',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    outline: active ? '1px solid rgba(56, 189, 248, 0.3)' : 'none',
+                    transition: 'all 0.12s ease',
+                    textAlign: 'left'
+                  }}
+                  onMouseEnter={e => {
+                    if (!active) {
+                      e.currentTarget.style.background = 'var(--bg-hover)';
+                      e.currentTarget.style.color = 'var(--text-primary)';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!active) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = 'var(--text-secondary)';
+                    }
+                  }}
+                >
+                  <Icon size={16} style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* SECONDARY OPERATIONS */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', borderTop: '1px solid var(--border)', paddingTop: '14px' }}>
+            <div className="section-label" style={{ marginBottom: '6px', fontSize: '10px' }}>
+              ANALYST TOOLS
+            </div>
+
+            {[
+              { id: 'copilot', label: 'AI Security Copilot', icon: MessageSquare },
+              { id: 'defense', label: 'Defense Engineering', icon: ShieldCheck }
+            ].map(item => {
+              const Icon = item.icon;
+              const active = activeTab === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavigateTab(item.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: active ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+                    color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                    fontWeight: active ? '600' : '500',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    outline: active ? '1px solid rgba(56, 189, 248, 0.3)' : 'none',
+                    transition: 'all 0.12s ease',
+                    textAlign: 'left'
+                  }}
+                  onMouseEnter={e => {
+                    if (!active) {
+                      e.currentTarget.style.background = 'var(--bg-hover)';
+                      e.currentTarget.style.color = 'var(--text-primary)';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!active) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = 'var(--text-secondary)';
+                    }
+                  }}
+                >
+                  <Icon size={16} style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* BOTTOM CARDS: Model Engine & User Profile */}
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* Model Engine Status Card */}
+            <div style={{
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border)',
+              borderRadius: '12px',
+              padding: '12px 14px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px'
+            }}>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                Model engine
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', lineHeight: '1.4' }}>
+                Risk scoring runs on your FastAPI backend.
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
+                <span style={{ fontSize: '11px', fontWeight: '600', color: '#10b981' }}>Connected</span>
+              </div>
+            </div>
+
+            {/* User Profile Card */}
+            <div
+              onClick={() => setIsAuthOpen(true)}
               style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                width: '100%', padding: '9px 12px', borderRadius: '8px',
-                background: 'var(--bg-overlay)', border: '1px solid var(--border)',
-                color: 'var(--text-secondary)', cursor: 'pointer',
-                fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: '500',
-                transition: 'all 0.15s ease'
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '8px 10px',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                transition: 'background 0.12s ease'
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-accent)'; e.currentTarget.style.color = 'var(--accent)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              title="Click to manage analyst session"
             >
-              <BookOpen size={13} color="var(--accent)" />
-              <span>Platform Feature Guide</span>
-            </button>
+              <div style={{
+                width: '32px', height: '32px', borderRadius: '50%',
+                background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 100%)',
+                color: '#ffffff',
+                fontWeight: '800',
+                fontSize: '12px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                AM
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                <span style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {currentUser.name}
+                </span>
+                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                  {currentUser.role}
+                </span>
+              </div>
+            </div>
           </div>
-        </nav>
+        </aside>
 
         {/* ─── Main Content Canvas ─── */}
         <main style={{
           flex: 1,
           padding: '24px 32px',
           overflowY: 'auto',
-          maxHeight: 'calc(100vh - 56px)',
+          maxHeight: 'calc(100vh - 56px)'
         }}>
-          {isAnalyzing ? <LoadingScreen /> : (
+          {isAnalyzing ? (
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              minHeight: '60vh', gap: '20px', textAlign: 'center'
+            }}>
+              <Loader size={36} color="var(--accent)" className="spin" />
+              <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>
+                Synthesizing Threat Intelligence
+              </div>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', maxWidth: '420px', margin: 0 }}>
+                FastAPI engine and Gemini AI are formulating adversary attribution, extracting indicators, and generating detection artifacts.
+              </p>
+            </div>
+          ) : (
             <>
-              {!threatData && activeTab !== 'copilot' && (
-                <EmptyState
-                  onOpenIngest={() => setIsIngestOpen(true)}
+              {activeTab === 'dashboard' && (
+                <DashboardView
+                  onNavigateTab={handleNavigateTab}
+                  onOpenNewAnalysis={() => setIsIngestOpen(true)}
+                  onOpenReport={() => setIsReportOpen(true)}
+                  onSelectIndicator={(t) => setSelectedIndicator({ indicator: t.indicator, type: t.type })}
+                />
+              )}
+
+              {activeTab === 'analyzer' && (
+                <ThreatAnalyzerView
+                  initialIndicator={selectedIndicator}
+                  onAnalyzeReport={analyzeThreatReport}
+                  isAnalyzingBackend={isAnalyzing}
+                />
+              )}
+
+              {activeTab === 'intelligence' && (
+                <ThreatIntelligenceView
+                  threatData={threatData}
+                  onNavigateTab={handleNavigateTab}
+                  onOpenReport={() => setIsReportOpen(true)}
+                />
+              )}
+
+              {activeTab === 'attack-mapping' && (
+                <AttackMappingView
+                  threatData={threatData}
+                  onNavigateTab={handleNavigateTab}
+                />
+              )}
+
+              {activeTab === 'history' && (
+                <InvestigationHistoryView
+                  sampleReports={sampleReports}
+                  activeReportId={activeReportId}
                   onSelectReport={(repId) => {
                     const rep = sampleReports.find(x => x.id === repId);
                     if (rep) analyzeThreatReport(rep.content, rep.title, rep.id);
                   }}
+                  onOpenIngest={() => setIsIngestOpen(true)}
+                  onOpenReport={() => setIsReportOpen(true)}
+                  threatData={threatData}
                 />
               )}
-              {(threatData || activeTab === 'copilot') && (
-                <>
-                  {activeTab === 'overview'  && <OverviewTab threatData={threatData} onSwitchTab={setActiveTab} _onOpenIngest={() => setIsIngestOpen(true)} />}
-                  {activeTab === 'defense'   && <DefenseCenter defenseArtifacts={threatData?.defense_artifacts} threatData={threatData} />}
-                  {activeTab === 'iocs'      && <IocExplorer iocs={threatData?.iocs || []} threatData={threatData} />}
-                  {activeTab === 'technical' && <TechnicalDeepDive tactics={tactics} threatData={threatData} onAskCopilot={askCopilot} />}
-                </>
-              )}
+
               {activeTab === 'copilot' && (
                 <ThreatCopilot
                   messages={copilotMessages}
@@ -450,16 +499,47 @@ export default function App() {
                   onClearExternalQuery={() => setExternalCopilotQuery('')}
                 />
               )}
+
+              {activeTab === 'defense' && (
+                <DefenseCenter
+                  defenseArtifacts={threatData?.defense_artifacts}
+                  threatData={threatData}
+                />
+              )}
             </>
           )}
         </main>
       </div>
 
-      {/* Modals */}
-      <IngestModal isOpen={isIngestOpen} onClose={() => setIsIngestOpen(false)} sampleReports={sampleReports} onAnalyze={analyzeThreatReport} onUploadFile={handleUploadFile} isAnalyzing={isAnalyzing} />
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} apiKey={apiKey} setApiKey={setApiKey} selectedModel={selectedModel} setSelectedModel={setSelectedModel} />
-      <ExecutiveReportModal isOpen={isReportOpen} onClose={() => setIsReportOpen(false)} threatData={threatData} />
-      <CyberGlossaryModal isOpen={isGlossaryOpen} onClose={() => setIsGlossaryOpen(false)} />
+      {/* ─── Integrated Modals ─── */}
+      <IngestModal
+        isOpen={isIngestOpen}
+        onClose={() => setIsIngestOpen(false)}
+        sampleReports={sampleReports}
+        onAnalyze={analyzeThreatReport}
+        onUploadFile={handleUploadFile}
+        isAnalyzing={isAnalyzing}
+      />
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        apiKey={apiKey}
+        setApiKey={setApiKey}
+        selectedModel={selectedModel}
+        setSelectedModel={setSelectedModel}
+      />
+
+      <ExecutiveReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        threatData={threatData}
+      />
+
+      <CyberGlossaryModal
+        isOpen={isGlossaryOpen}
+        onClose={() => setIsGlossaryOpen(false)}
+      />
     </div>
   );
 }

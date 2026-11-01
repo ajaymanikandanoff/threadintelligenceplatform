@@ -1,16 +1,55 @@
-import React from 'react';
-import { Shield, Settings, FileText, BookOpen, Sun, Moon, Zap, Activity, Cpu } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  Search,
+  Bell,
+  Sun,
+  Moon
+} from 'lucide-react';
 
 export default function Header({
-  hasCustomKey,
-  onOpenSettings,
-  onOpenIngest,
-  onOpenReport,
-  onOpenGlossary,
-  threatData,
+  activeTab,
   theme,
-  onToggleTheme
+  onToggleTheme,
+  onSearchGlobal,
+  onOpenAuth
 }) {
+  const [searchValue, setSearchValue] = useState('');
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Map active tab to Breadcrumb
+  const getBreadcrumb = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return { section: 'Overview', title: 'Dashboard' };
+      case 'analyzer':
+        return { section: 'Analyzer', title: 'Threat Analyzer' };
+      case 'intelligence':
+        return { section: 'Intelligence', title: 'Threat Intelligence' };
+      case 'attack-mapping':
+        return { section: 'Attack Mapping', title: 'Attack Mapping' };
+      case 'history':
+        return { section: 'History', title: 'Investigation History' };
+      case 'reports':
+        return { section: 'Reports', title: 'Executive Reports' };
+      case 'settings':
+        return { section: 'Settings', title: 'Platform Settings' };
+      case 'defense':
+        return { section: 'Defense', title: 'Defense Engineering' };
+      case 'copilot':
+        return { section: 'Copilot', title: 'AI SOC Copilot' };
+      default:
+        return { section: 'Workspace', title: 'ThreatLens' };
+    }
+  };
+
+  const breadcrumb = getBreadcrumb();
+
+  const handleSearchSubmit = (e) => {
+    if (e.key === 'Enter' && searchValue.trim()) {
+      if (onSearchGlobal) onSearchGlobal(searchValue.trim());
+    }
+  };
+
   return (
     <header style={{
       height: '56px',
@@ -25,183 +64,180 @@ export default function Header({
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      flexShrink: 0,
+      flexShrink: 0
     }}>
-      {/* Brand & Active Threat Status */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <div style={{
-          width: '32px',
-          height: '32px',
-          borderRadius: '9px',
-          background: 'linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(129,140,248,0.2) 100%)',
-          border: '1px solid rgba(56,189,248,0.35)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 0 16px rgba(56,189,248,0.18)',
-          flexShrink: 0
-        }}>
-          <Shield size={17} color="var(--accent)" strokeWidth={2.4} />
+      {/* ─── Left: Breadcrumb Navigation ─── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+        <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', letterSpacing: '0.01em' }}>
+          ThreatLens / {breadcrumb.section}
         </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-              <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-                CYBERINTEL<span style={{ color: 'var(--accent)' }}>.AI</span>
-              </span>
-              <span style={{
-                fontSize: '9.5px',
-                padding: '1.5px 6px',
-                borderRadius: '3px',
-                background: 'rgba(56,189,248,0.1)',
-                color: 'var(--accent)',
-                border: '1px solid rgba(56,189,248,0.22)',
-                fontFamily: 'var(--font-mono)',
-                fontWeight: '700',
-                letterSpacing: '0.04em'
-              }}>
-                ENTERPRISE CTI
-              </span>
-            </div>
-            <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', letterSpacing: '0.02em', marginTop: '1px' }}>
-              Threat Intelligence & Defense Engineering
-            </span>
-          </div>
+        <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+          {breadcrumb.title}
         </div>
-
-        {/* Dynamic Threat Feed Status */}
-        {threatData ? (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            marginLeft: '16px',
-            paddingLeft: '16px',
-            borderLeft: '1px solid var(--border)',
-            background: 'rgba(244,63,94,0.06)',
-            padding: '5px 12px',
-            borderRadius: '6px',
-            border: '1px solid rgba(244,63,94,0.2)'
-          }}>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span className="status-dot" style={{ background: 'var(--red)', width: '7px', height: '7px' }} />
-              <span className="status-dot status-dot-pulse" style={{ background: 'var(--red)', position: 'absolute', width: '7px', height: '7px' }} />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', fontSize: '10px', fontWeight: '700', letterSpacing: '0.05em' }}>
-                Active Incident:
-              </span>
-              <span style={{ color: 'var(--red)', fontWeight: '700', fontFamily: 'var(--font-mono)' }}>
-                {threatData.threat_actor?.name || 'Unattributed Threat Campaign'}
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            marginLeft: '16px',
-            paddingLeft: '16px',
-            borderLeft: '1px solid var(--border)',
-            fontSize: '11px',
-            color: 'var(--text-tertiary)'
-          }}>
-            <Activity size={12} color="var(--green)" />
-            <span>Telemetry Ingestion Ready</span>
-          </div>
-        )}
       </div>
 
-      {/* Actions & Utilities */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {/* Gemini Engine Indicator */}
+      {/* ─── Right: Global Search & Operational Status Bar ─── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        {/* Global Search Bar */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '5px',
-          padding: '4px 10px',
-          borderRadius: '20px',
-          background: 'var(--bg-overlay)',
+          gap: '8px',
+          background: 'var(--bg-input)',
           border: '1px solid var(--border)',
-          fontSize: '11px',
-          color: 'var(--text-secondary)',
-          fontFamily: 'var(--font-mono)',
-          marginRight: '4px'
+          borderRadius: '8px',
+          padding: '6px 12px',
+          width: '260px'
         }}>
-          <Cpu size={12} color="var(--accent)" />
-          <span>Gemini 2.5 Flash</span>
+          <Search size={14} color="var(--text-tertiary)" />
+          <input
+            type="text"
+            placeholder="Search IPs, domains, URLs"
+            value={searchValue}
+            onChange={e => setSearchValue(e.target.value)}
+            onKeyDown={handleSearchSubmit}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              color: 'var(--text-primary)',
+              fontSize: '12px',
+              width: '100%'
+            }}
+          />
+          <kbd style={{
+            background: 'var(--bg-overlay)',
+            border: '1px solid var(--border)',
+            borderRadius: '4px',
+            padding: '1px 5px',
+            fontSize: '10px',
+            fontFamily: 'var(--font-mono)',
+            color: 'var(--text-tertiary)'
+          }}>
+            /
+          </kbd>
         </div>
 
-        <button
-          className="btn-ghost"
-          onClick={onOpenGlossary}
-          style={{ fontSize: '12px', padding: '6px 11px' }}
-        >
-          <BookOpen size={13} color="var(--text-secondary)" />
-          <span>Platform Guide</span>
-        </button>
+        {/* Operational Status Pill */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '7px',
+          background: 'rgba(16, 185, 129, 0.08)',
+          border: '1px solid rgba(16, 185, 129, 0.25)',
+          padding: '5px 12px',
+          borderRadius: '20px',
+          fontSize: '12px',
+          color: '#10b981',
+          fontWeight: '600'
+        }}>
+          <span style={{
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            background: '#10b981',
+            boxShadow: '0 0 6px #10b981'
+          }} />
+          <span>All systems operational</span>
+        </div>
 
-        {threatData && (
+        {/* Notification Bell */}
+        <div style={{ position: 'relative' }}>
           <button
-            className="btn-ghost"
-            onClick={onOpenReport}
-            style={{ fontSize: '12px', padding: '6px 11px', borderColor: 'rgba(56,189,248,0.2)' }}
+            onClick={() => setShowNotifications(p => !p)}
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--border)',
+              borderRadius: '8px',
+              width: '32px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: 'var(--text-secondary)',
+              position: 'relative'
+            }}
+            title="Notifications"
           >
-            <FileText size={13} color="var(--accent)" />
-            <span>Export CTI Dossier</span>
-          </button>
-        )}
-
-        <button
-          className="btn-primary"
-          onClick={onOpenIngest}
-          style={{ padding: '6px 14px', fontSize: '12px' }}
-        >
-          <Zap size={13} />
-          <span>Analyze Advisory</span>
-        </button>
-
-        <div style={{ width: '1px', height: '22px', background: 'var(--border)', margin: '0 4px' }} />
-
-        {/* Theme Toggle */}
-        <button
-          className="btn-ghost"
-          onClick={onToggleTheme}
-          style={{ padding: '7px 9px' }}
-          title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-        >
-          {theme === 'light'
-            ? <Moon size={14} color="var(--purple)" />
-            : <Sun size={14} color="var(--amber)" />
-          }
-        </button>
-
-        {/* API Settings */}
-        <button
-          className="btn-ghost"
-          onClick={onOpenSettings}
-          style={{
-            padding: '7px 9px',
-            borderColor: hasCustomKey ? 'rgba(16,185,129,0.3)' : undefined,
-            color: hasCustomKey ? 'var(--green)' : undefined,
-            position: 'relative'
-          }}
-          title={hasCustomKey ? "Custom API Key Active" : "Configure Gemini API Key"}
-        >
-          <Settings size={14} />
-          {hasCustomKey && (
+            <Bell size={15} />
             <span style={{
               position: 'absolute',
-              top: '4px',
-              right: '4px',
-              width: '5px',
-              height: '5px',
+              top: '6px',
+              right: '6px',
+              width: '6px',
+              height: '6px',
               borderRadius: '50%',
-              background: 'var(--green)'
+              background: '#f43f5e',
+              boxShadow: '0 0 6px #f43f5e'
             }} />
+          </button>
+
+          {showNotifications && (
+            <div style={{
+              position: 'absolute',
+              top: '40px',
+              right: 0,
+              width: '280px',
+              background: 'var(--bg-glass-card)',
+              border: '1px solid var(--border)',
+              borderRadius: '12px',
+              padding: '14px',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+              zIndex: 200
+            }}>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>System Notifications</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                FastAPI threat engine connected on <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent)' }}>:8000</code>. Ready for automated indicator triage.
+              </div>
+            </div>
           )}
+        </div>
+
+        {/* Theme Toggle Button */}
+        <button
+          onClick={onToggleTheme}
+          style={{
+            background: 'transparent',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            width: '32px',
+            height: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: 'var(--text-secondary)'
+          }}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+        </button>
+
+        {/* User Avatar Circle */}
+        <button
+          onClick={onOpenAuth}
+          style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 100%)',
+            border: '1px solid rgba(129, 140, 248, 0.4)',
+            color: '#ffffff',
+            fontWeight: '800',
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 0 12px rgba(99, 102, 241, 0.35)'
+          }}
+          title="Analyst Profile (Ajay M.) - Click to switch/view auth"
+        >
+          AM
         </button>
       </div>
     </header>
