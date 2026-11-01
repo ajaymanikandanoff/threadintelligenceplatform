@@ -171,6 +171,52 @@ def google_login(email: str, name: Optional[str] = None, picture: Optional[str] 
         }
     }
 
+def github_login(email: str, name: Optional[str] = None, username: Optional[str] = None, picture: Optional[str] = None) -> Dict[str, Any]:
+    if not email or "@" not in email:
+        return {"success": False, "error": "GitHub account email is required."}
+
+    email_key = email.strip().lower()
+    users = _load_users()
+    user = users.get(email_key)
+
+    display_name = name.strip() if name and name.strip() else (username.strip() if username else email_key.split("@")[0])
+
+    if not user:
+        user = {
+            "id": f"usr-github-{secrets.token_hex(4)}",
+            "name": display_name,
+            "email": email_key,
+            "password_hash": None,
+            "salt": None,
+            "auth_provider": "GITHUB",
+            "role": "SecOps Engineer",
+            "phone": "",
+            "occupation": "Threat Intelligence Engineer",
+            "picture_url": picture or "https://avatars.githubusercontent.com/u/9919?v=4"
+        }
+        users[email_key] = user
+        _save_users(users)
+    else:
+        user["auth_provider"] = "GITHUB"
+        if picture:
+            user["picture_url"] = picture
+        _save_users(users)
+
+    return {
+        "success": True,
+        "message": "GitHub authentication successful",
+        "user": {
+            "id": user["id"],
+            "name": user["name"],
+            "email": user["email"],
+            "role": user.get("role", "SecOps Engineer"),
+            "phone": user.get("phone", ""),
+            "occupation": user.get("occupation", "Threat Intelligence Engineer"),
+            "pictureUrl": user.get("picture_url", ""),
+            "authProvider": "GITHUB"
+        }
+    }
+
 def get_profile(email: str) -> Dict[str, Any]:
     email_key = email.strip().lower()
     users = _load_users()
@@ -224,10 +270,27 @@ def update_profile(email: str, name: Optional[str] = None, phone: Optional[str] 
     }
 
 def request_password_otp(email: str) -> Dict[str, Any]:
+    if not email or "@" not in email:
+        return {"success": False, "error": "Invalid email address format."}
+
     email_key = email.strip().lower()
     users = _load_users()
     if email_key not in users:
-        return {"success": False, "error": "No account registered with this email."}
+        # Create user record so analyst can complete registration / reset
+        display_name = email_key.split("@")[0].replace(".", " ").title()
+        users[email_key] = {
+            "id": f"usr-{secrets.token_hex(6)}",
+            "name": display_name,
+            "email": email_key,
+            "password_hash": None,
+            "salt": secrets.token_hex(8),
+            "auth_provider": "LOCAL",
+            "role": "Security analyst",
+            "phone": "",
+            "occupation": "Threat Intelligence Analyst",
+            "picture_url": ""
+        }
+        _save_users(users)
 
     # Generate 6-digit code
     code = str(secrets.randbelow(900000) + 100000)
@@ -238,8 +301,8 @@ def request_password_otp(email: str) -> Dict[str, Any]:
 
     return {
         "success": True,
-        "message": "A 6-digit OTP verification code has been sent. Valid for 5 minutes.",
-        "otp_hint": code # provided for developer/demo visibility
+        "message": f"A 6-digit OTP verification code has been generated for {email_key}. Valid for 5 minutes.",
+        "otp_hint": code
     }
 
 def reset_password_with_otp(email: str, otp: str, new_password: str) -> Dict[str, Any]:

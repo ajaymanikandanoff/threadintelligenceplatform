@@ -71,6 +71,12 @@ class GoogleAuthPayload(BaseModel):
     name: Optional[str] = None
     picture: Optional[str] = None
 
+class GitHubAuthPayload(BaseModel):
+    email: str
+    name: Optional[str] = None
+    username: Optional[str] = None
+    picture: Optional[str] = None
+
 class ProfileUpdatePayload(BaseModel):
     email: str
     name: Optional[str] = None
@@ -213,6 +219,18 @@ def google_auth(payload: GoogleAuthPayload):
     res = auth_service.google_login(email=payload.email, name=payload.name, picture=payload.picture)
     if not res.get("success"):
         raise HTTPException(status_code=400, detail=res.get("error", "Google auth failed"))
+    return res
+
+@app.post("/api/auth/github")
+def github_auth(payload: GitHubAuthPayload):
+    res = auth_service.github_login(
+        email=payload.email,
+        name=payload.name,
+        username=payload.username,
+        picture=payload.picture
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "GitHub auth failed"))
     return res
 
 @app.get("/api/auth/profile")

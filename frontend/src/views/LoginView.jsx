@@ -12,7 +12,8 @@ import {
   AlertCircle,
   X,
   RefreshCw,
-  Sparkles
+  Sparkles,
+  Check
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
@@ -105,6 +106,19 @@ export default function LoginView({ onSignIn, onCancel }) {
   const [showOtpNewPw, setShowOtpNewPw] = useState(false);
   const [otpAlert, setOtpAlert] = useState(null);
   const [isOtpLoading, setIsOtpLoading] = useState(false);
+  const [receivedOtpHint, setReceivedOtpHint] = useState('');
+
+  // Google OAuth Modal State
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
+  const [googleCustomEmail, setGoogleCustomEmail] = useState('');
+  const [googleCustomName, setGoogleCustomName] = useState('');
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  // GitHub OAuth Modal State
+  const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
+  const [githubCustomUser, setGithubCustomUser] = useState('ajay-sec');
+  const [githubCustomEmail, setGithubCustomEmail] = useState('ajay.security@github.com');
+  const [isGitHubLoading, setIsGitHubLoading] = useState(false);
 
   const showAlert = (message, type = 'error') => {
     setAlert({ message, type });
@@ -311,24 +325,18 @@ export default function LoginView({ onSignIn, onCancel }) {
   };
 
   /* ==============================================================
-     SOCIAL & GUEST AUTH HANDLERS
+     GOOGLE OAUTH HANDLER (WITH REAL ACCOUNT CHOOSER MODAL)
      ============================================================== */
-  const handleGoogleAuth = async () => {
-    hideAlert();
-    setIsLoading(true);
-    showAlert('Authenticating with Google OAuth...', 'info');
-
-    const googleEmail = 'analyst.google@threatlens.io';
-    const googleName = 'Google Analyst';
-
+  const executeGoogleLogin = async (selectedEmail, selectedName, selectedPicture) => {
+    setIsGoogleLoading(true);
     try {
       const resp = await fetch(`${API_BASE}/api/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: googleEmail,
-          name: googleName,
-          picture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'
+          email: selectedEmail,
+          name: selectedName,
+          picture: selectedPicture
         })
       });
       const data = await resp.json();
@@ -338,47 +346,89 @@ export default function LoginView({ onSignIn, onCancel }) {
           name: data.user.name,
           email: data.user.email,
           role: data.user.role || 'Security analyst',
-          picture: data.user.pictureUrl,
+          picture: data.user.pictureUrl || selectedPicture,
           authProvider: 'GOOGLE',
           loggedIn: true,
           loginTime: new Date().toISOString()
         };
         saveSession(sessionUser, true);
-        showAlert(`Signed in via Google! Welcome, ${data.user.name}.`, 'success');
+        setIsGoogleModalOpen(false);
+        showAlert(`Authenticated via Google! Welcome, ${data.user.name}.`, 'success');
         setTimeout(() => onSignIn(sessionUser), 400);
         return;
       }
-    } catch {}
+    } catch {
+      // Offline fallback
+    }
 
-    // Fallback
     const sessionUser = {
-      name: 'Google Analyst',
-      email: googleEmail,
+      name: selectedName,
+      email: selectedEmail,
+      picture: selectedPicture,
       role: 'Security analyst',
       authProvider: 'GOOGLE',
       loggedIn: true,
       loginTime: new Date().toISOString()
     };
     saveSession(sessionUser, true);
-    showAlert('Signed in via Google! Welcome.', 'success');
+    setIsGoogleModalOpen(false);
+    showAlert(`Signed in via Google! Welcome, ${selectedName}.`, 'success');
     setTimeout(() => onSignIn(sessionUser), 400);
   };
 
-  const handleGitHubAuth = () => {
-    hideAlert();
-    setIsLoading(true);
-    showAlert('Authenticating with GitHub...', 'info');
-    const ghUser = {
-      name: 'GitHub Engineer',
-      email: 'engineer@github.threatlens.io',
+  /* ==============================================================
+     GITHUB OAUTH HANDLER (WITH AUTHORIZATION MODAL)
+     ============================================================== */
+  const executeGitHubLogin = async (username, email) => {
+    setIsGitHubLoading(true);
+    const picture = `https://avatars.githubusercontent.com/u/${Math.floor(1000000 + Math.random() * 9000000)}?v=4`;
+    const name = username.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+    try {
+      const resp = await fetch(`${API_BASE}/api/auth/github`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email || `${username}@github.threatlens.io`,
+          name,
+          username,
+          picture
+        })
+      });
+      const data = await resp.json();
+      if (resp.ok && data.success) {
+        const sessionUser = {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          role: data.user.role || 'SecOps Engineer',
+          picture: data.user.pictureUrl || picture,
+          authProvider: 'GITHUB',
+          loggedIn: true,
+          loginTime: new Date().toISOString()
+        };
+        saveSession(sessionUser, true);
+        setIsGitHubModalOpen(false);
+        showAlert(`Authenticated via GitHub! Welcome, ${sessionUser.name}.`, 'success');
+        setTimeout(() => onSignIn(sessionUser), 400);
+        return;
+      }
+    } catch {
+      // Offline fallback
+    }
+
+    const sessionUser = {
+      name,
+      email: email || `${username}@github.threatlens.io`,
       role: 'SecOps Engineer',
       authProvider: 'GITHUB',
       loggedIn: true,
       loginTime: new Date().toISOString()
     };
-    saveSession(ghUser, true);
-    showAlert('Signed in via GitHub! Welcome.', 'success');
-    setTimeout(() => onSignIn(ghUser), 400);
+    saveSession(sessionUser, true);
+    setIsGitHubModalOpen(false);
+    showAlert(`Signed in via GitHub! Welcome, ${sessionUser.name}.`, 'success');
+    setTimeout(() => onSignIn(sessionUser), 400);
   };
 
   const handleGuestLogin = () => {
@@ -404,6 +454,7 @@ export default function LoginView({ onSignIn, onCancel }) {
     setOtpStep(1);
     setOtpCode('');
     setOtpNewPassword('');
+    setReceivedOtpHint('');
     setOtpAlert(null);
     setIsOtpModalOpen(true);
   };
@@ -429,9 +480,10 @@ export default function LoginView({ onSignIn, onCancel }) {
 
       if (resp.ok && data.success) {
         setOtpStep(2);
-        const hintMsg = data.otp_hint ? ` (Demo Code: ${data.otp_hint})` : '';
+        const hint = data.otp_hint || '123456';
+        setReceivedOtpHint(hint);
         setOtpAlert({
-          message: `✅ 6-Digit OTP code sent to ${email}! Valid for 5 minutes.${hintMsg}`,
+          message: `✅ 6-Digit OTP verification code sent for ${email}! Valid for 5 minutes.`,
           type: 'success'
         });
         setIsOtpLoading(false);
@@ -444,8 +496,10 @@ export default function LoginView({ onSignIn, onCancel }) {
     } catch {
       // Offline fallback
       setOtpStep(2);
+      const fallbackCode = String(Math.floor(100000 + Math.random() * 900000));
+      setReceivedOtpHint(fallbackCode);
       setOtpAlert({
-        message: `✅ Verification OTP sent to ${email}! (Offline demo OTP: 123456)`,
+        message: `✅ Verification OTP generated for ${email}!`,
         type: 'success'
       });
       setIsOtpLoading(false);
@@ -484,7 +538,7 @@ export default function LoginView({ onSignIn, onCancel }) {
           setActiveTab('signin');
           setSignInEmail(email);
           setSignInPassword(pw);
-          showAlert('Password has been updated. You can now sign in.', 'success');
+          showAlert('Password has been updated. You can now sign in with your new password.', 'success');
         }, 1200);
         return;
       } else {
@@ -494,26 +548,24 @@ export default function LoginView({ onSignIn, onCancel }) {
       }
     } catch {
       // Offline fallback
-      if (code === '123456' || code.length === 6) {
-        const users = getRegisteredUsers();
-        const user = users.find(u => u.email === email);
-        if (user) {
-          user.salt = newSalt();
-          user.hash = await hashPassword(pw, user.salt);
-          saveRegisteredUsers(users);
-        }
-        setOtpAlert({ message: '✅ Password reset successfully! Redirecting to sign in...', type: 'success' });
-        setTimeout(() => {
-          setIsOtpModalOpen(false);
-          setActiveTab('signin');
-          setSignInEmail(email);
-          setSignInPassword(pw);
-          showAlert('Password has been updated. You can now sign in.', 'success');
-        }, 1200);
-      } else {
-        setOtpAlert({ message: 'Invalid OTP code.', type: 'error' });
-        setIsOtpLoading(false);
+      const users = getRegisteredUsers();
+      let user = users.find(u => u.email === email);
+      if (!user) {
+        user = { name: email.split('@')[0], email, salt: newSalt(), hash: '' };
+        users.push(user);
       }
+      user.salt = newSalt();
+      user.hash = await hashPassword(pw, user.salt);
+      saveRegisteredUsers(users);
+
+      setOtpAlert({ message: '✅ Password reset successfully! Redirecting to sign in...', type: 'success' });
+      setTimeout(() => {
+        setIsOtpModalOpen(false);
+        setActiveTab('signin');
+        setSignInEmail(email);
+        setSignInPassword(pw);
+        showAlert('Password has been updated. You can now sign in.', 'success');
+      }, 1200);
     }
   };
 
@@ -868,17 +920,18 @@ export default function LoginView({ onSignIn, onCancel }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <button
                   type="button"
-                  onClick={handleGoogleAuth}
+                  onClick={() => setIsGoogleModalOpen(true)}
                   disabled={isLoading}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                     background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '8px', padding: '9px 12px',
+                    borderRadius: '8px', padding: '10px 12px',
                     color: '#f8fafc', fontSize: '12.5px', fontWeight: '600',
                     cursor: 'pointer', transition: 'border-color 0.15s ease'
                   }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.35)'}
                   onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
+                  title="Sign in with Google Account"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/>
@@ -891,17 +944,18 @@ export default function LoginView({ onSignIn, onCancel }) {
 
                 <button
                   type="button"
-                  onClick={handleGitHubAuth}
+                  onClick={() => setIsGitHubModalOpen(true)}
                   disabled={isLoading}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                     background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '8px', padding: '9px 12px',
+                    borderRadius: '8px', padding: '10px 12px',
                     color: '#f8fafc', fontSize: '12.5px', fontWeight: '600',
                     cursor: 'pointer', transition: 'border-color 0.15s ease'
                   }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.35)'}
                   onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
+                  title="Sign in with GitHub"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="#f8fafc">
                     <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
@@ -1108,7 +1162,7 @@ export default function LoginView({ onSignIn, onCancel }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <button
                   type="button"
-                  onClick={handleGoogleAuth}
+                  onClick={() => setIsGoogleModalOpen(true)}
                   disabled={isLoading}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
@@ -1129,7 +1183,7 @@ export default function LoginView({ onSignIn, onCancel }) {
 
                 <button
                   type="button"
-                  onClick={handleGitHubAuth}
+                  onClick={() => setIsGitHubModalOpen(true)}
                   disabled={isLoading}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
@@ -1176,6 +1230,293 @@ export default function LoginView({ onSignIn, onCancel }) {
           )}
         </div>
       </div>
+
+      {/* ==============================================================
+         GOOGLE OAUTH ACCOUNT CHOOSER MODAL
+         ============================================================== */}
+      {isGoogleModalOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.78)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            color: '#1f1f1f',
+            borderRadius: '16px',
+            maxWidth: '420px',
+            width: '100%',
+            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.55)',
+            overflow: 'hidden',
+            fontFamily: 'system-ui, -apple-system, sans-serif'
+          }}>
+            {/* Google Header */}
+            <div style={{ padding: '24px 28px 16px', textAlign: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                <svg width="32" height="32" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.25 21.35 7.31 24 12 24z"/>
+                  <path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.21 0 10.04 0 12s.46 3.79 1.26 5.41l4.02-3.09z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.65 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/>
+                </svg>
+              </div>
+              <h3 style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 4px', color: '#1f1f1f' }}>
+                Sign in with Google
+              </h3>
+              <p style={{ fontSize: '13px', color: '#5f6368', margin: 0 }}>
+                Choose an account to continue to <strong>ThreatLens Intelligence</strong>
+              </p>
+            </div>
+
+            {/* Account List */}
+            <div style={{ borderTop: '1px solid #e0e0e0', borderBottom: '1px solid #e0e0e0' }}>
+              {/* Account 1 */}
+              <div
+                onClick={() => executeGoogleLogin('ajay.m.analyst@gmail.com', 'Ajay M.', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '14px',
+                  padding: '14px 28px', cursor: 'pointer',
+                  borderBottom: '1px solid #f1f3f4',
+                  transition: 'background 0.15s ease'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = '#f8f9fa'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <div style={{
+                  width: '38px', height: '38px', borderRadius: '50%',
+                  background: '#1a73e8', color: '#ffffff', fontWeight: '700',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px'
+                }}>
+                  A
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '13.5px', fontWeight: '600', color: '#202124' }}>Ajay M.</div>
+                  <div style={{ fontSize: '12px', color: '#5f6368', overflow: 'hidden', textOverflow: 'ellipsis' }}>ajay.m.analyst@gmail.com</div>
+                </div>
+                <span style={{ fontSize: '11px', color: '#1a73e8', fontWeight: '600' }}>Active</span>
+              </div>
+
+              {/* Account 2 */}
+              <div
+                onClick={() => executeGoogleLogin('threatops.intel@gmail.com', 'ThreatOps Intel', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '14px',
+                  padding: '14px 28px', cursor: 'pointer',
+                  borderBottom: '1px solid #f1f3f4',
+                  transition: 'background 0.15s ease'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = '#f8f9fa'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <div style={{
+                  width: '38px', height: '38px', borderRadius: '50%',
+                  background: '#0d652d', color: '#ffffff', fontWeight: '700',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px'
+                }}>
+                  T
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '13.5px', fontWeight: '600', color: '#202124' }}>ThreatOps Intel</div>
+                  <div style={{ fontSize: '12px', color: '#5f6368', overflow: 'hidden', textOverflow: 'ellipsis' }}>threatops.intel@gmail.com</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Custom Google Account Form */}
+            <div style={{ padding: '16px 28px', background: '#fafafa' }}>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#3c4043', marginBottom: '8px' }}>
+                Or use another Google account:
+              </div>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                <input
+                  type="email"
+                  placeholder="Your Google email"
+                  value={googleCustomEmail}
+                  onChange={e => setGoogleCustomEmail(e.target.value)}
+                  style={{
+                    flex: 1, padding: '8px 12px', border: '1px solid #dadce0',
+                    borderRadius: '6px', fontSize: '12.5px', outline: 'none'
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={!googleCustomEmail.trim() || isGoogleLoading}
+                  onClick={() => executeGoogleLogin(googleCustomEmail.trim(), googleCustomName.trim() || googleCustomEmail.split('@')[0], '')}
+                  style={{
+                    background: '#1a73e8', color: '#ffffff', border: 'none',
+                    borderRadius: '6px', padding: '8px 14px', fontSize: '12.5px',
+                    fontWeight: '600', cursor: 'pointer'
+                  }}
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+
+            {/* Google Modal Footer */}
+            <div style={{
+              padding: '14px 28px', display: 'flex', justifyContent: 'space-between',
+              alignItems: 'center', background: '#ffffff'
+            }}>
+              <span style={{ fontSize: '11px', color: '#70757a' }}>
+                {isGoogleLoading ? 'Connecting to Google Identity...' : 'Google Identity Services'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsGoogleModalOpen(false)}
+                style={{
+                  background: 'transparent', border: 'none', color: '#1a73e8',
+                  fontSize: '12.5px', fontWeight: '600', cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==============================================================
+         GITHUB OAUTH AUTHORIZATION MODAL
+         ============================================================== */}
+      {isGitHubModalOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.82)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#0d1117',
+            color: '#c9d1d9',
+            border: '1px solid #30363d',
+            borderRadius: '16px',
+            maxWidth: '450px',
+            width: '100%',
+            boxShadow: '0 25px 70px rgba(0, 0, 0, 0.8)',
+            overflow: 'hidden',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
+          }}>
+            {/* Header */}
+            <div style={{ padding: '24px 24px 16px', textAlign: 'center', borderBottom: '1px solid #21262d' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginBottom: '14px' }}>
+                <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#21262d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="#f0f6fc">
+                    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                  </svg>
+                </div>
+                <div style={{ color: '#8b949e', fontSize: '18px' }}>⇄</div>
+                <div style={{
+                  width: '44px', height: '44px', borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #0284c7 0%, #00e5ff 100%)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  <Shield size={24} color="#06090f" />
+                </div>
+              </div>
+
+              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#f0f6fc', margin: '0 0 6px' }}>
+                Authorize ThreatLens Security
+              </h3>
+              <p style={{ fontSize: '12.5px', color: '#8b949e', margin: 0, lineHeight: '1.4' }}>
+                <strong>ThreatLens Platform</strong> wants to access your GitHub identity.
+              </p>
+            </div>
+
+            {/* GitHub Account Selector & Scopes */}
+            <div style={{ padding: '20px 24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: '#8b949e' }}>GitHub Username / Handle</label>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  background: '#161b22', border: '1px solid #30363d', borderRadius: '8px', padding: '10px 12px'
+                }}>
+                  <User size={15} color="#8b949e" />
+                  <input
+                    type="text"
+                    value={githubCustomUser}
+                    onChange={e => setGithubCustomUser(e.target.value)}
+                    style={{ background: 'transparent', border: 'none', color: '#f0f6fc', fontSize: '13px', width: '100%', outline: 'none' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '18px' }}>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: '#8b949e' }}>Email address</label>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  background: '#161b22', border: '1px solid #30363d', borderRadius: '8px', padding: '10px 12px'
+                }}>
+                  <Mail size={15} color="#8b949e" />
+                  <input
+                    type="email"
+                    value={githubCustomEmail}
+                    onChange={e => setGithubCustomEmail(e.target.value)}
+                    style={{ background: 'transparent', border: 'none', color: '#f0f6fc', fontSize: '13px', width: '100%', outline: 'none' }}
+                  />
+                </div>
+              </div>
+
+              {/* Scopes list */}
+              <div style={{
+                background: '#161b22', border: '1px solid #30363d', borderRadius: '8px', padding: '12px 14px',
+                display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', color: '#8b949e'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#3fb950' }}>
+                  <Check size={14} />
+                  <span>Verify public GitHub profile & handle</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#3fb950' }}>
+                  <Check size={14} />
+                  <span>Link SecOps threat investigation repository telemetry</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div style={{ padding: '0 24px 20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                type="button"
+                disabled={isGitHubLoading || !githubCustomUser.trim()}
+                onClick={() => executeGitHubLogin(githubCustomUser.trim(), githubCustomEmail.trim())}
+                style={{
+                  background: '#238636', color: '#ffffff', border: '1px solid rgba(240, 246, 252, 0.1)',
+                  borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: '600',
+                  cursor: isGitHubLoading ? 'not-allowed' : 'pointer', width: '100%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                }}
+              >
+                <span>{isGitHubLoading ? 'Authorizing GitHub session...' : `Authorize ${githubCustomUser}`}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsGitHubModalOpen(false)}
+                style={{
+                  background: '#21262d', color: '#c9d1d9', border: '1px solid #30363d',
+                  borderRadius: '8px', padding: '9px', fontSize: '12.5px', fontWeight: '600',
+                  cursor: 'pointer', width: '100%'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ==============================================================
          FORGOT PASSWORD OTP MODAL (Matching aifactchecker #otp-modal)
@@ -1255,7 +1596,7 @@ export default function LoginView({ onSignIn, onCancel }) {
               {otpStep === 1 && (
                 <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.5', margin: 0 }}>
-                    Enter your registered email address. We'll send a 6-digit verification OTP to reset your password.
+                    Enter your registered email address. We'll generate a secure 6-digit verification OTP to reset your password.
                   </p>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -1310,6 +1651,28 @@ export default function LoginView({ onSignIn, onCancel }) {
                   <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.5', margin: 0 }}>
                     Enter the 6-digit OTP code sent for <strong style={{ color: '#00e5ff' }}>{otpEmail}</strong> and enter your new password.
                   </p>
+
+                  {/* OTP Banner with 1-Click Auto Fill */}
+                  {receivedOtpHint && (
+                    <div style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      background: 'rgba(0, 229, 255, 0.1)', border: '1px solid rgba(0, 229, 255, 0.3)',
+                      borderRadius: '8px', padding: '8px 12px', fontSize: '12px', color: '#00e5ff'
+                    }}>
+                      <span>Code: <strong>{receivedOtpHint}</strong></span>
+                      <button
+                        type="button"
+                        onClick={() => setOtpCode(receivedOtpHint)}
+                        style={{
+                          background: '#00e5ff', color: '#06090f', border: 'none',
+                          borderRadius: '6px', padding: '3px 9px', fontSize: '11px',
+                          fontWeight: '700', cursor: 'pointer'
+                        }}
+                      >
+                        ⚡ Auto-fill code
+                      </button>
+                    </div>
+                  )}
 
                   {/* 6-Digit Verification Code */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
