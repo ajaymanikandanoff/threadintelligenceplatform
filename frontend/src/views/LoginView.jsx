@@ -15,7 +15,7 @@ import {
   Sparkles,
   Check
 } from 'lucide-react';
-import { auth, googleProvider, githubProvider, signInWithPopup } from '../utils/firebase';
+import { auth, googleProvider, signInWithPopup } from '../utils/firebase';
 
 const API_BASE = 'http://localhost:8000';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -459,21 +459,6 @@ export default function LoginView({ onSignIn, onCancel }) {
   const handleTriggerGitHubAuth = () => {
     hideAlert();
     setIsGitHubModalOpen(true);
-  };
-
-  const handleGuestLogin = () => {
-    hideAlert();
-    const guestUser = {
-      name: 'Guest Analyst',
-      email: 'guest@threatlens.io',
-      role: 'Guest Analyst',
-      isGuest: true,
-      loggedIn: true,
-      loginTime: new Date().toISOString()
-    };
-    saveSession(guestUser, false);
-    showAlert('Starting a fresh guest session...', 'success');
-    setTimeout(() => onSignIn(guestUser), 400);
   };
 
   /* ==============================================================
@@ -994,28 +979,7 @@ export default function LoginView({ onSignIn, onCancel }) {
                 </button>
               </div>
 
-              {/* Guest Session Button */}
-              <button
-                type="button"
-                onClick={handleGuestLogin}
-                style={{
-                  background: 'transparent',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '10px',
-                  padding: '10px',
-                  color: '#cbd5e1',
-                  fontSize: '12.5px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  marginTop: '4px'
-                }}
-              >
-                Continue as guest
-              </button>
-              <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', marginTop: '-6px' }}>
-                A guest session starts with an empty temporary investigation cache.
-              </div>
+
             </form>
           )}
 
