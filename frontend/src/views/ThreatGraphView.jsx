@@ -133,3 +133,4 @@ export default function ThreatGraphView({ onAskCopilot }) {
     </div>
   );
 }
+

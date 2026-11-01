@@ -266,3 +266,4 @@ def extract_mitre_mappings(text: str, page_number: Optional[int] = None) -> List
     # Sort so highest confidence explicit facts appear first
     mappings.sort(key=lambda x: (x["type"] == "Explicit Report Fact", x["confidence"]), reverse=True)
     return mappings
+

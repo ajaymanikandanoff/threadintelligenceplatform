@@ -498,3 +498,4 @@ export default function PdfResearchView({ onSelectIndicator }) {
     </div>
   );
 }
+

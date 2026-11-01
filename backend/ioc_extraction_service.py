@@ -234,3 +234,4 @@ def extract_all_iocs(text: str, page_number: Optional[int] = None) -> Dict[str, 
             })
 
     return extracted
+

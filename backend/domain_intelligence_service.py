@@ -322,3 +322,4 @@ def scan_domain_intelligence(domain_input: str) -> Dict[str, Any]:
         "recommended_actions": actions,
         "summary": f"Domain {cleaned} (.{tld}) registered via '{rdap.get('registrar')}'. Resolved {len(resolved_ips)} host IP(s). Risk assessment: {classification} ({risk_score}/100)."
     }
+

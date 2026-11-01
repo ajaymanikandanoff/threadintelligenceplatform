@@ -195,3 +195,4 @@ def build_graph_for_investigation(record: Dict[str, Any]) -> Dict[str, Any]:
             "type": itype
         }
     }
+

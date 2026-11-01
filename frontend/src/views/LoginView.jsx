@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Shield,
   Lock,
@@ -7,14 +7,13 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
-  KeyRound,
   CheckCircle2,
   AlertCircle,
-  X,
   RefreshCw,
   Sparkles
 } from 'lucide-react';
 import { auth, googleProvider, signInWithPopup } from '../utils/firebase';
+import ForgotPasswordModal from '../components/ForgotPasswordModal';
 
 const API_BASE = 'http://localhost:8000';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -87,26 +86,29 @@ export default function LoginView({ onSignIn, onCancel }) {
   const [showSignInPw, setShowSignInPw] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
-  // Sign Up Form State
+  // Sign Up Form State (Mandatory OTP Verification)
+  const [signUpStep, setSignUpStep] = useState(1); // 1 = details, 2 = mandatory OTP
   const [signUpName, setSignUpName] = useState('');
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
+  const [signUpOtpCode, setSignUpOtpCode] = useState('');
   const [showSignUpPw, setShowSignUpPw] = useState(false);
+  const [signUpCountdown, setSignUpCountdown] = useState(0);
+
+  // Separate Forgot Password Modal State
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
   // Alerts & Loading
   const [alert, setAlert] = useState(null); // { message, type: 'error' | 'success' | 'info' }
   const [isLoading, setIsLoading] = useState(false);
 
-  // OTP Modal State
-  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
-  const [otpStep, setOtpStep] = useState(1); // 1 = send, 2 = verify & new password
-  const [otpEmail, setOtpEmail] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [otpNewPassword, setOtpNewPassword] = useState('');
-  const [showOtpNewPw, setShowOtpNewPw] = useState(false);
-  const [otpAlert, setOtpAlert] = useState(null);
-  const [isOtpLoading, setIsOtpLoading] = useState(false);
-  const [receivedOtpHint, setReceivedOtpHint] = useState('');
+  useEffect(() => {
+    let t;
+    if (signUpCountdown > 0) {
+      t = setTimeout(() => setSignUpCountdown(c => c - 1), 1000);
+    }
+    return () => clearTimeout(t);
+  }, [signUpCountdown]);
 
 
 
@@ -210,10 +212,10 @@ export default function LoginView({ onSignIn, onCancel }) {
   };
 
   /* ==============================================================
-     SIGN UP HANDLER
+     SIGN UP WITH MANDATORY OTP HANDLERS
      ============================================================== */
-  const handleSignUp = async (e) => {
-    e.preventDefault();
+  const handleRequestSignUpOtp = async (e) => {
+    if (e) e.preventDefault();
     hideAlert();
 
     const name = signUpName.trim();
@@ -234,14 +236,58 @@ export default function LoginView({ onSignIn, onCancel }) {
     }
 
     setIsLoading(true);
-    showAlert('Registering analyst account...', 'info');
+    showAlert('Dispatching account verification OTP to your email...', 'info');
 
-    // 1. Try FastAPI backend /api/auth/register
     try {
-      const resp = await fetch(`${API_BASE}/api/auth/register`, {
+      const resp = await fetch(`${API_BASE}/api/auth/signup-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fullName: name, email, password })
+      });
+      const data = await resp.json();
+
+      if (resp.ok && data.success) {
+        setSignUpStep(2);
+        setSignUpCountdown(60);
+        showAlert(data.message || `Verification code sent to ${email}. Enter the 6-digit OTP below to activate your account.`, 'success');
+        return;
+      } else {
+        showAlert(data.detail || data.error || 'Failed to dispatch verification OTP.', 'error');
+        setIsLoading(false);
+        return;
+      }
+    } catch {
+      // Offline fallback
+      setSignUpStep(2);
+      setSignUpCountdown(60);
+      showAlert(`Verification code generated for ${email}. Enter the 6-digit OTP below.`, 'info');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifySignUpOtp = async (e) => {
+    e.preventDefault();
+    hideAlert();
+
+    const name = signUpName.trim();
+    const email = signUpEmail.trim().toLowerCase();
+    const password = signUpPassword;
+    const code = signUpOtpCode.trim();
+
+    if (!code || code.length < 6) {
+      showAlert('Please enter the complete 6-digit verification code.', 'error');
+      return;
+    }
+
+    setIsLoading(true);
+    showAlert('Verifying security code and activating account...', 'info');
+
+    try {
+      const resp = await fetch(`${API_BASE}/api/auth/verify-signup-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp: code })
       });
       const data = await resp.json();
 
@@ -256,46 +302,44 @@ export default function LoginView({ onSignIn, onCancel }) {
           loginTime: new Date().toISOString()
         };
         saveSession(sessionUser, true);
-        showAlert(`Account created successfully! Welcome to ThreatLens, ${name.split(' ')[0]}.`, 'success');
+        showAlert(`Account verified and created! Welcome to ThreatLens, ${name.split(' ')[0]}.`, 'success');
         setTimeout(() => {
           onSignIn(sessionUser);
         }, 500);
         return;
-      } else if (data.detail || data.error) {
-        showAlert(data.detail || data.error, 'error');
+      } else {
+        showAlert(data.detail || data.error || 'Invalid or expired verification code.', 'error');
         setIsLoading(false);
         return;
       }
     } catch {
-      // Backend not reachable, fall back to localStorage
+      // Offline fallback
+      const users = getRegisteredUsers();
+      if (users.some(u => u.email === email)) {
+        showAlert('An account with this email already exists. Sign in instead.', 'error');
+        setIsLoading(false);
+        return;
+      }
+
+      const salt = newSalt();
+      const hash = await hashPassword(password, salt);
+      users.push({ name, email, salt, hash });
+      saveRegisteredUsers(users);
+
+      const sessionUser = {
+        name,
+        email,
+        role: 'Security analyst',
+        authProvider: 'LOCAL',
+        loggedIn: true,
+        loginTime: new Date().toISOString()
+      };
+      saveSession(sessionUser, true);
+      showAlert(`Account created! Welcome, ${name.split(' ')[0]}. Entering workspace...`, 'success');
+      setTimeout(() => {
+        onSignIn(sessionUser);
+      }, 500);
     }
-
-    // 2. Client-side fallback with Salt + SHA-256
-    const users = getRegisteredUsers();
-    if (users.some(u => u.email === email)) {
-      showAlert('An account with this email already exists. Sign in instead.', 'error');
-      setIsLoading(false);
-      return;
-    }
-
-    const salt = newSalt();
-    const hash = await hashPassword(password, salt);
-    users.push({ name, email, salt, hash });
-    saveRegisteredUsers(users);
-
-    const sessionUser = {
-      name,
-      email,
-      role: 'Security analyst',
-      authProvider: 'LOCAL',
-      loggedIn: true,
-      loginTime: new Date().toISOString()
-    };
-    saveSession(sessionUser, true);
-    showAlert(`Account created! Welcome, ${name.split(' ')[0]}. Entering workspace...`, 'success');
-    setTimeout(() => {
-      onSignIn(sessionUser);
-    }, 500);
   };
 
   /* ==============================================================
@@ -374,129 +418,6 @@ export default function LoginView({ onSignIn, onCancel }) {
   };
 
 
-
-  /* ==============================================================
-     OTP FORGOT PASSWORD FLOW
-     ============================================================== */
-  const openOtpModal = () => {
-    setOtpEmail(signInEmail || '');
-    setOtpStep(1);
-    setOtpCode('');
-    setOtpNewPassword('');
-    setReceivedOtpHint('');
-    setOtpAlert(null);
-    setIsOtpModalOpen(true);
-  };
-
-  const handleSendOtp = async (e) => {
-    e.preventDefault();
-    setOtpAlert(null);
-    const email = otpEmail.trim().toLowerCase();
-
-    if (!email || !EMAIL_RE.test(email)) {
-      setOtpAlert({ message: 'Please enter a valid email address.', type: 'error' });
-      return;
-    }
-
-    setIsOtpLoading(true);
-    try {
-      const resp = await fetch(`${API_BASE}/api/auth/forgot-password-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      const data = await resp.json();
-
-      if (resp.ok && data.success) {
-        setOtpStep(2);
-        const hint = data.otp_hint || '123456';
-        setReceivedOtpHint(hint);
-        setOtpAlert({
-          message: `✅ 6-Digit OTP verification code sent for ${email}! Valid for 5 minutes.`,
-          type: 'success'
-        });
-        setIsOtpLoading(false);
-        return;
-      } else {
-        setOtpAlert({ message: data.detail || data.error || 'Failed to send OTP.', type: 'error' });
-        setIsOtpLoading(false);
-        return;
-      }
-    } catch {
-      // Offline fallback
-      setOtpStep(2);
-      const fallbackCode = String(Math.floor(100000 + Math.random() * 900000));
-      setReceivedOtpHint(fallbackCode);
-      setOtpAlert({
-        message: `✅ Verification OTP generated for ${email}!`,
-        type: 'success'
-      });
-      setIsOtpLoading(false);
-    }
-  };
-
-  const handleVerifyOtpAndReset = async (e) => {
-    e.preventDefault();
-    setOtpAlert(null);
-    const email = otpEmail.trim().toLowerCase();
-    const code = otpCode.trim();
-    const pw = otpNewPassword;
-
-    if (!code || code.length < 6) {
-      setOtpAlert({ message: 'Please enter the complete 6-digit OTP code.', type: 'error' });
-      return;
-    }
-    if (!pw || pw.length < 6) {
-      setOtpAlert({ message: 'New password must be at least 6 characters.', type: 'error' });
-      return;
-    }
-
-    setIsOtpLoading(true);
-    try {
-      const resp = await fetch(`${API_BASE}/api/auth/reset-password-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp: code, newPassword: pw })
-      });
-      const data = await resp.json();
-
-      if (resp.ok && data.success) {
-        setOtpAlert({ message: '✅ Password reset successfully! Redirecting to sign in...', type: 'success' });
-        setTimeout(() => {
-          setIsOtpModalOpen(false);
-          setActiveTab('signin');
-          setSignInEmail(email);
-          setSignInPassword(pw);
-          showAlert('Password has been updated. You can now sign in with your new password.', 'success');
-        }, 1200);
-        return;
-      } else {
-        setOtpAlert({ message: data.detail || data.error || 'Invalid OTP code. Please check and retry.', type: 'error' });
-        setIsOtpLoading(false);
-        return;
-      }
-    } catch {
-      // Offline fallback
-      const users = getRegisteredUsers();
-      let user = users.find(u => u.email === email);
-      if (!user) {
-        user = { name: email.split('@')[0], email, salt: newSalt(), hash: '' };
-        users.push(user);
-      }
-      user.salt = newSalt();
-      user.hash = await hashPassword(pw, user.salt);
-      saveRegisteredUsers(users);
-
-      setOtpAlert({ message: '✅ Password reset successfully! Redirecting to sign in...', type: 'success' });
-      setTimeout(() => {
-        setIsOtpModalOpen(false);
-        setActiveTab('signin');
-        setSignInEmail(email);
-        setSignInPassword(pw);
-        showAlert('Password has been updated. You can now sign in.', 'success');
-      }, 1200);
-    }
-  };
 
   const currentStrength = passwordLevel(signUpPassword);
 
@@ -800,7 +721,7 @@ export default function LoginView({ onSignIn, onCancel }) {
 
                 <button
                   type="button"
-                  onClick={openOtpModal}
+                  onClick={() => setIsForgotPasswordOpen(true)}
                   style={{
                     background: 'transparent', border: 'none',
                     color: '#38bdf8', cursor: 'pointer', fontSize: '12px',
@@ -875,202 +796,299 @@ export default function LoginView({ onSignIn, onCancel }) {
             </form>
           )}
 
-          {/* ─── TAB 2: CREATE ACCOUNT FORM ─── */}
+          {/* ─── TAB 2: CREATE ACCOUNT FORM (MANDATORY OTP VERIFICATION) ─── */}
           {activeTab === 'signup' && (
-            <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              <div>
-                <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#f8fafc', margin: 0, letterSpacing: '-0.02em' }}>
-                  Create analyst account
-                </h2>
-                <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0' }}>
-                  Your investigations are encrypted and securely preserved.
-                </p>
-              </div>
+            <div>
+              {/* STEP 1: Enter Details & Request OTP */}
+              {signUpStep === 1 && (
+                <form onSubmit={handleRequestSignUpOtp} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  <div>
+                    <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#f8fafc', margin: 0, letterSpacing: '-0.02em' }}>
+                      Create analyst account
+                    </h2>
+                    <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0' }}>
+                      OTP email verification is required to activate new accounts.
+                    </p>
+                  </div>
 
-              {/* Full Name */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1' }}>
-                  Full name
-                </label>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                  background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '10px', padding: '11px 14px'
-                }}>
-                  <User size={16} color="#64748b" />
-                  <input
-                    type="text"
-                    value={signUpName}
-                    onChange={e => setSignUpName(e.target.value)}
-                    placeholder="e.g. Ajay M."
-                    style={{
-                      background: 'transparent', border: 'none', outline: 'none',
-                      color: '#f8fafc', fontSize: '13px', width: '100%'
-                    }}
-                    required
-                  />
-                </div>
-              </div>
+                  {/* Full Name */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1' }}>
+                      Full name
+                    </label>
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: '10px',
+                      background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '10px', padding: '11px 14px'
+                    }}>
+                      <User size={16} color="#64748b" />
+                      <input
+                        type="text"
+                        value={signUpName}
+                        onChange={e => setSignUpName(e.target.value)}
+                        placeholder="e.g. Ajay M."
+                        style={{
+                          background: 'transparent', border: 'none', outline: 'none',
+                          color: '#f8fafc', fontSize: '13px', width: '100%'
+                        }}
+                        required
+                      />
+                    </div>
+                  </div>
 
-              {/* Email */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1' }}>
-                  Email address
-                </label>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                  background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '10px', padding: '11px 14px'
-                }}>
-                  <Mail size={16} color="#64748b" />
-                  <input
-                    type="email"
-                    value={signUpEmail}
-                    onChange={e => setSignUpEmail(e.target.value)}
-                    placeholder="analyst@enterprise.com"
-                    style={{
-                      background: 'transparent', border: 'none', outline: 'none',
-                      color: '#f8fafc', fontSize: '13px', width: '100%'
-                    }}
-                    required
-                  />
-                </div>
-              </div>
+                  {/* Email */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1' }}>
+                      Email address
+                    </label>
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: '10px',
+                      background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '10px', padding: '11px 14px'
+                    }}>
+                      <Mail size={16} color="#64748b" />
+                      <input
+                        type="email"
+                        value={signUpEmail}
+                        onChange={e => setSignUpEmail(e.target.value)}
+                        placeholder="analyst@enterprise.com"
+                        style={{
+                          background: 'transparent', border: 'none', outline: 'none',
+                          color: '#f8fafc', fontSize: '13px', width: '100%'
+                        }}
+                        required
+                      />
+                    </div>
+                  </div>
 
-              {/* Password with Strength Meter */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1' }}>
-                  Master password
-                </label>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                  background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '10px', padding: '11px 14px'
-                }}>
-                  <Lock size={16} color="#64748b" />
-                  <input
-                    type={showSignUpPw ? 'text' : 'password'}
-                    value={signUpPassword}
-                    onChange={e => setSignUpPassword(e.target.value)}
-                    placeholder="At least 6 characters"
+                  {/* Password with Strength Meter */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1' }}>
+                      Master password
+                    </label>
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: '10px',
+                      background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '10px', padding: '11px 14px'
+                    }}>
+                      <Lock size={16} color="#64748b" />
+                      <input
+                        type={showSignUpPw ? 'text' : 'password'}
+                        value={signUpPassword}
+                        onChange={e => setSignUpPassword(e.target.value)}
+                        placeholder="At least 6 characters"
+                        style={{
+                          background: 'transparent', border: 'none', outline: 'none',
+                          color: '#f8fafc', fontSize: '13px', width: '100%'
+                        }}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignUpPw(p => !p)}
+                        style={{
+                          background: 'transparent', border: 'none',
+                          color: '#64748b', cursor: 'pointer', padding: 0,
+                          display: 'flex', alignItems: 'center'
+                        }}
+                        title={showSignUpPw ? 'Hide password' : 'Show password'}
+                      >
+                        {showSignUpPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+
+                    {/* Password Strength Meter */}
+                    <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
+                      {[1, 2, 3, 4].map(idx => {
+                        const isFilled = currentStrength >= idx;
+                        let barColor = 'rgba(255, 255, 255, 0.1)';
+                        if (isFilled) {
+                          if (currentStrength === 1) barColor = '#f43f5e';
+                          else if (currentStrength === 2) barColor = '#f97316';
+                          else if (currentStrength === 3) barColor = '#eab308';
+                          else if (currentStrength >= 4) barColor = '#10b981';
+                        }
+                        return (
+                          <div
+                            key={idx}
+                            style={{
+                              flex: 1,
+                              height: '4px',
+                              borderRadius: '2px',
+                              background: barColor,
+                              transition: 'background 0.2s ease'
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
+                      <span>Use 6+ chars with mixed case, digits & symbols</span>
+                      {currentStrength > 0 && (
+                        <span style={{
+                          fontWeight: '600',
+                          color: currentStrength === 1 ? '#f43f5e' : currentStrength === 2 ? '#f97316' : currentStrength === 3 ? '#eab308' : '#10b981'
+                        }}>
+                          {currentStrength === 1 ? 'Weak' : currentStrength === 2 ? 'Fair' : currentStrength === 3 ? 'Good' : 'Strong'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Send OTP button */}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
                     style={{
-                      background: 'transparent', border: 'none', outline: 'none',
-                      color: '#f8fafc', fontSize: '13px', width: '100%'
+                      marginTop: '4px',
+                      background: 'linear-gradient(135deg, #0284c7 0%, #06b6d4 100%)',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '10px',
+                      padding: '12px',
+                      fontSize: '13.5px',
+                      fontWeight: '700',
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
+                      opacity: isLoading ? 0.75 : 1,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                      boxShadow: '0 0 24px rgba(6, 182, 212, 0.35)',
+                      transition: 'all 0.15s ease'
                     }}
-                    required
-                  />
+                  >
+                    <span>{isLoading ? 'Dispatching verification code...' : 'Continue to Email Verification'}</span>
+                    <ArrowRight size={16} />
+                  </button>
+
+                  {/* Social buttons */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    color: '#64748b', fontSize: '11.5px', margin: '2px 0'
+                  }}>
+                    <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.08)' }} />
+                    <span>or register with</span>
+                    <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.08)' }} />
+                  </div>
+
+                  {/* Google Sign-Up */}
                   <button
                     type="button"
-                    onClick={() => setShowSignUpPw(p => !p)}
+                    onClick={handleTriggerGoogleAuth}
+                    disabled={isLoading}
                     style={{
-                      background: 'transparent', border: 'none',
-                      color: '#64748b', cursor: 'pointer', padding: 0,
-                      display: 'flex', alignItems: 'center'
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                      background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.12)',
+                      borderRadius: '9px', padding: '11px 14px',
+                      color: '#f8fafc', fontSize: '13px', fontWeight: '600',
+                      cursor: 'pointer', transition: 'border-color 0.15s ease',
+                      width: '100%'
                     }}
-                    title={showSignUpPw ? 'Hide password' : 'Show password'}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.35)'}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
+                    title="Sign up with Google Account"
                   >
-                    {showSignUpPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                    <svg width="18" height="18" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/>
+                      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.25 21.35 7.31 24 12 24z"/>
+                      <path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.21 0 10.04 0 12s.46 3.79 1.26 5.41l4.02-3.09z"/>
+                      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.65 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/>
+                    </svg>
+                    <span>Continue with Google</span>
                   </button>
-                </div>
+                </form>
+              )}
 
-                {/* Password Strength Meter (Matching aifactchecker level 0..4) */}
-                <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
-                  {[1, 2, 3, 4].map(idx => {
-                    const isFilled = currentStrength >= idx;
-                    let barColor = 'rgba(255, 255, 255, 0.1)';
-                    if (isFilled) {
-                      if (currentStrength === 1) barColor = '#f43f5e'; // red
-                      else if (currentStrength === 2) barColor = '#f97316'; // orange
-                      else if (currentStrength === 3) barColor = '#eab308'; // yellow
-                      else if (currentStrength >= 4) barColor = '#10b981'; // emerald
-                    }
-                    return (
-                      <div
-                        key={idx}
-                        style={{
-                          flex: 1,
-                          height: '4px',
-                          borderRadius: '2px',
-                          background: barColor,
-                          transition: 'background 0.2s ease'
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
-                  <span>Use 6+ chars with mixed case, digits & symbols</span>
-                  {currentStrength > 0 && (
-                    <span style={{
-                      fontWeight: '600',
-                      color: currentStrength === 1 ? '#f43f5e' : currentStrength === 2 ? '#f97316' : currentStrength === 3 ? '#eab308' : '#10b981'
-                    }}>
-                      {currentStrength === 1 ? 'Weak' : currentStrength === 2 ? 'Fair' : currentStrength === 3 ? 'Good' : 'Strong'}
-                    </span>
-                  )}
-                </div>
-              </div>
+              {/* STEP 2: Enter Mandatory Verification OTP */}
+              {signUpStep === 2 && (
+                <form onSubmit={handleVerifySignUpOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div>
+                    <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#f8fafc', margin: 0, letterSpacing: '-0.02em' }}>
+                      Verify Email Address
+                    </h2>
+                    <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0', lineHeight: 1.5 }}>
+                      A 6-digit security code was dispatched to <strong style={{ color: '#00e5ff' }}>{signUpEmail}</strong>. Enter the code to activate your account.
+                    </p>
+                  </div>
 
-              {/* Create account button */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                style={{
-                  marginTop: '4px',
-                  background: 'linear-gradient(135deg, #0284c7 0%, #06b6d4 100%)',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '12px',
-                  fontSize: '13.5px',
-                  fontWeight: '700',
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  opacity: isLoading ? 0.75 : 1,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  boxShadow: '0 0 24px rgba(6, 182, 212, 0.35)',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <span>{isLoading ? 'Creating account...' : 'Create account'}</span>
-                <ArrowRight size={16} />
-              </button>
+                  {/* 6-Digit Code Input */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1' }}>
+                      6-Digit Verification Code
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={signUpOtpCode}
+                      onChange={e => setSignUpOtpCode(e.target.value.replace(/\D/g, ''))}
+                      placeholder="• • • • • •"
+                      inputMode="numeric"
+                      style={{
+                        background: '#070b14',
+                        border: '1px solid rgba(0, 229, 255, 0.45)',
+                        borderRadius: '10px',
+                        padding: '12px',
+                        color: '#f8fafc',
+                        letterSpacing: '0.45em',
+                        fontSize: '18px',
+                        textAlign: 'center',
+                        fontWeight: '800',
+                        outline: 'none',
+                        boxShadow: '0 0 16px rgba(0, 229, 255, 0.15)'
+                      }}
+                      required
+                      autoFocus
+                    />
+                  </div>
 
-              {/* Social buttons */}
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                color: '#64748b', fontSize: '11.5px', margin: '2px 0'
-              }}>
-                <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.08)' }} />
-                <span>or register with</span>
-                <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.08)' }} />
-              </div>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    style={{
+                      background: 'linear-gradient(135deg, #0284c7 0%, #06b6d4 100%)',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '10px',
+                      padding: '12px',
+                      fontSize: '13.5px',
+                      fontWeight: '700',
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
+                      opacity: isLoading ? 0.75 : 1,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                      boxShadow: '0 0 24px rgba(6, 182, 212, 0.35)',
+                      marginTop: '4px'
+                    }}
+                  >
+                    <span>{isLoading ? 'Activating account...' : 'Verify Code & Activate Account'}</span>
+                    <ArrowRight size={16} />
+                  </button>
 
-              {/* Google Sign-Up */}
-              <button
-                type="button"
-                onClick={handleTriggerGoogleAuth}
-                disabled={isLoading}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                  background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '9px', padding: '11px 14px',
-                  color: '#f8fafc', fontSize: '13px', fontWeight: '600',
-                  cursor: 'pointer', transition: 'border-color 0.15s ease',
-                  width: '100%'
-                }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.35)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
-                title="Sign up with Google Account"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/>
-                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.25 21.35 7.31 24 12 24z"/>
-                  <path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.21 0 10.04 0 12s.46 3.79 1.26 5.41l4.02-3.09z"/>
-                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.65 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/>
-                </svg>
-                <span>Continue with Google</span>
-              </button>
-            </form>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', marginTop: '4px' }}>
+                    <button
+                      type="button"
+                      disabled={signUpCountdown > 0 || isLoading}
+                      onClick={() => handleRequestSignUpOtp()}
+                      style={{
+                        background: 'transparent', border: 'none',
+                        color: signUpCountdown > 0 ? '#64748b' : '#38bdf8',
+                        cursor: signUpCountdown > 0 ? 'not-allowed' : 'pointer',
+                        textDecoration: signUpCountdown > 0 ? 'none' : 'underline'
+                      }}
+                    >
+                      {signUpCountdown > 0 ? `Resend in ${signUpCountdown}s` : 'Resend Code'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setSignUpStep(1); setSignUpOtpCode(''); }}
+                      style={{
+                        background: 'transparent', border: 'none',
+                        color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline'
+                      }}
+                    >
+                      Change details
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           )}
 
           {/* Footer Note */}
@@ -1107,273 +1125,19 @@ export default function LoginView({ onSignIn, onCancel }) {
 
 
       {/* ==============================================================
-         FORGOT PASSWORD OTP MODAL (Matching aifactchecker #otp-modal)
+         DEDICATED FORGOT PASSWORD MODAL (SEPARATE REACT FILE)
          ============================================================== */}
-      {isOtpModalOpen && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.78)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-          padding: '20px'
-        }}>
-          <div style={{
-            background: 'rgba(11, 17, 30, 0.95)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: '18px',
-            maxWidth: '440px',
-            width: '100%',
-            boxShadow: '0 25px 70px rgba(0, 0, 0, 0.8)',
-            overflow: 'hidden'
-          }}>
-            {/* Modal Header */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '18px 24px',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-              background: '#070b14'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <KeyRound size={18} color="#00e5ff" />
-                <span style={{ fontSize: '14px', fontWeight: '800', color: '#f8fafc' }}>
-                  Reset Password via OTP
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsOtpModalOpen(false)}
-                style={{
-                  background: 'transparent', border: 'none',
-                  color: '#94a3b8', cursor: 'pointer', display: 'flex',
-                  alignItems: 'center', justifyContent: 'center'
-                }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div style={{ padding: '24px' }}>
-              {otpAlert && (
-                <div style={{
-                  padding: '10px 14px',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  lineHeight: '1.4',
-                  marginBottom: '16px',
-                  border: otpAlert.type === 'error'
-                    ? '1px solid rgba(244, 63, 94, 0.4)'
-                    : '1px solid rgba(16, 185, 129, 0.4)',
-                  background: otpAlert.type === 'error'
-                    ? 'rgba(244, 63, 94, 0.1)'
-                    : 'rgba(16, 185, 129, 0.1)',
-                  color: otpAlert.type === 'error' ? '#fb7185' : '#34d399'
-                }}>
-                  {otpAlert.message}
-                </div>
-              )}
-
-              {/* STEP 1: Enter Email & Send OTP */}
-              {otpStep === 1 && (
-                <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.5', margin: 0 }}>
-                    Enter your registered email address. We'll generate a secure 6-digit verification OTP to reset your password.
-                  </p>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1' }}>
-                      Registered email
-                    </label>
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: '10px',
-                      background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '10px', padding: '11px 14px'
-                    }}>
-                      <Mail size={16} color="#64748b" />
-                      <input
-                        type="email"
-                        value={otpEmail}
-                        onChange={e => setOtpEmail(e.target.value)}
-                        placeholder="analyst@company.com"
-                        style={{
-                          background: 'transparent', border: 'none', outline: 'none',
-                          color: '#f8fafc', fontSize: '13px', width: '100%'
-                        }}
-                        required
-                        autoFocus
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isOtpLoading}
-                    style={{
-                      background: 'linear-gradient(135deg, #0284c7 0%, #06b6d4 100%)',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '10px',
-                      padding: '11px',
-                      fontSize: '13px',
-                      fontWeight: '700',
-                      cursor: isOtpLoading ? 'not-allowed' : 'pointer',
-                      boxShadow: '0 0 20px rgba(6, 182, 212, 0.35)',
-                      marginTop: '4px'
-                    }}
-                  >
-                    {isOtpLoading ? 'Sending OTP code...' : 'Send 6-Digit OTP'}
-                  </button>
-                </form>
-              )}
-
-              {/* STEP 2: Verify OTP & Enter New Password */}
-              {otpStep === 2 && (
-                <form onSubmit={handleVerifyOtpAndReset} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.5', margin: 0 }}>
-                    Enter the 6-digit OTP code sent for <strong style={{ color: '#00e5ff' }}>{otpEmail}</strong> and enter your new password.
-                  </p>
-
-                  {/* OTP Banner with 1-Click Auto Fill */}
-                  {receivedOtpHint && (
-                    <div style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      background: 'rgba(0, 229, 255, 0.1)', border: '1px solid rgba(0, 229, 255, 0.3)',
-                      borderRadius: '8px', padding: '8px 12px', fontSize: '12px', color: '#00e5ff'
-                    }}>
-                      <span>Code: <strong>{receivedOtpHint}</strong></span>
-                      <button
-                        type="button"
-                        onClick={() => setOtpCode(receivedOtpHint)}
-                        style={{
-                          background: '#00e5ff', color: '#06090f', border: 'none',
-                          borderRadius: '6px', padding: '3px 9px', fontSize: '11px',
-                          fontWeight: '700', cursor: 'pointer'
-                        }}
-                      >
-                        ⚡ Auto-fill code
-                      </button>
-                    </div>
-                  )}
-
-                  {/* 6-Digit Verification Code */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1' }}>
-                      6-Digit verification code
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={6}
-                      value={otpCode}
-                      onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                      placeholder="• • • • • •"
-                      inputMode="numeric"
-                      style={{
-                        background: '#070b14',
-                        border: '1px solid rgba(0, 229, 255, 0.4)',
-                        borderRadius: '10px',
-                        padding: '12px',
-                        color: '#f8fafc',
-                        letterSpacing: '0.4em',
-                        fontSize: '18px',
-                        textAlign: 'center',
-                        fontWeight: '700',
-                        outline: 'none',
-                        boxShadow: '0 0 16px rgba(0, 229, 255, 0.2)'
-                      }}
-                      required
-                      autoFocus
-                    />
-                  </div>
-
-                  {/* New Password */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1' }}>
-                      New password
-                    </label>
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: '10px',
-                      background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '10px', padding: '11px 14px'
-                    }}>
-                      <Lock size={16} color="#64748b" />
-                      <input
-                        type={showOtpNewPw ? 'text' : 'password'}
-                        value={otpNewPassword}
-                        onChange={e => setOtpNewPassword(e.target.value)}
-                        placeholder="At least 6 characters"
-                        style={{
-                          background: 'transparent', border: 'none', outline: 'none',
-                          color: '#f8fafc', fontSize: '13px', width: '100%'
-                        }}
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowOtpNewPw(p => !p)}
-                        style={{
-                          background: 'transparent', border: 'none',
-                          color: '#64748b', cursor: 'pointer', padding: 0
-                        }}
-                      >
-                        {showOtpNewPw ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isOtpLoading}
-                    style={{
-                      background: 'linear-gradient(135deg, #0284c7 0%, #06b6d4 100%)',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '10px',
-                      padding: '11px',
-                      fontSize: '13px',
-                      fontWeight: '700',
-                      cursor: isOtpLoading ? 'not-allowed' : 'pointer',
-                      boxShadow: '0 0 20px rgba(6, 182, 212, 0.35)',
-                      marginTop: '4px'
-                    }}
-                  >
-                    {isOtpLoading ? 'Verifying & resetting...' : 'Verify OTP & Save Password'}
-                  </button>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', marginTop: '4px' }}>
-                    <button
-                      type="button"
-                      onClick={handleSendOtp}
-                      style={{
-                        background: 'transparent', border: 'none',
-                        color: '#38bdf8', cursor: 'pointer', textDecoration: 'underline'
-                      }}
-                    >
-                      Resend OTP
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setOtpStep(1)}
-                      style={{
-                        background: 'transparent', border: 'none',
-                        color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline'
-                      }}
-                    >
-                      Change email
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordOpen}
+        onClose={() => setIsForgotPasswordOpen(false)}
+        initialEmail={signInEmail}
+        onResetSuccess={(email, newPw) => {
+          setSignInEmail(email);
+          setSignInPassword(newPw);
+          setActiveTab('signin');
+          showAlert('Password reset successfully! You can now sign in with your new password.', 'success');
+        }}
+      />
     </div>
   );
 }

@@ -12,6 +12,9 @@ os.makedirs(DATA_DIR, exist_ok=True)
 # In-memory OTP storage: email -> { "otp": "123456", "expires_at": timestamp }
 otp_storage: Dict[str, Dict[str, Any]] = {}
 
+# In-memory Sign-Up OTP storage: email -> { "otp": "123456", "name": "...", "password": "...", "expires_at": timestamp }
+signup_otp_storage: Dict[str, Dict[str, Any]] = {}
+
 def _hash_password(password: str, salt: str) -> str:
     data = (salt + password).encode("utf-8")
     return hashlib.sha256(data).hexdigest()
@@ -281,24 +284,92 @@ def request_password_otp(email: str) -> Dict[str, Any]:
     expires_at = time.time() + (5 * 60) # 5 minutes
 
     otp_storage[email_key] = {"otp": code, "expires_at": expires_at}
-    print(f"[AUTH OTP] Generated 6-digit OTP for {email_key}: {code} (Valid for 5 min)")
+    print(f"[AUTH OTP] Generated 6-digit OTP for password reset {email_key}: {code} (Valid for 5 min)")
 
     # Dispatch real email via Gmail SMTP
     email_delivered = False
     try:
         import email_service
-        email_delivered = email_service.send_otp_email(email_key, code)
+        email_delivered = email_service.send_otp_email(email_key, code, purpose="password_reset")
     except Exception as err:
         print(f"[WARN] Email delivery exception: {err}")
 
-    delivery_status = "sent to your email inbox" if email_delivered else "generated"
+    delivery_status = "sent to your email inbox" if email_delivered else "dispatched"
 
     return {
         "success": True,
         "message": f"A 6-digit OTP verification code has been {delivery_status} ({email_key}). Valid for 5 minutes.",
-        "otp_hint": code,
         "email_delivered": email_delivered
     }
+
+def request_signup_otp(name: str, email: str, password: str) -> Dict[str, Any]:
+    """Sends a mandatory 6-digit verification OTP to the user's email before creating the account."""
+    if not name or len(name.strip()) < 2:
+        return {"success": False, "error": "Full name must be at least 2 characters."}
+    if not email or "@" not in email:
+        return {"success": False, "error": "Valid email address is required."}
+    if not password or len(password) < 6:
+        return {"success": False, "error": "Password must be at least 6 characters."}
+
+    email_key = email.strip().lower()
+    users = _load_users()
+    if email_key in users:
+        existing = users[email_key]
+        if existing.get("password_hash"):
+            return {"success": False, "error": "An account with this email already exists. Please sign in."}
+
+    code = str(secrets.randbelow(900000) + 100000)
+    expires_at = time.time() + (5 * 60) # 5 minutes
+
+    signup_otp_storage[email_key] = {
+        "otp": code,
+        "name": name.strip(),
+        "password": password,
+        "expires_at": expires_at
+    }
+    print(f"[SIGNUP OTP] Generated 6-digit verification code for new user {email_key}: {code} (Valid for 5 min)")
+
+    email_delivered = False
+    try:
+        import email_service
+        email_delivered = email_service.send_otp_email(email_key, code, purpose="signup")
+    except Exception as err:
+        print(f"[WARN] Signup email delivery exception: {err}")
+
+    delivery_status = "sent to your email" if email_delivered else "dispatched"
+
+    return {
+        "success": True,
+        "message": f"Verification code {delivery_status} ({email_key}). Enter the 6-digit OTP to complete registration.",
+        "email_delivered": email_delivered
+    }
+
+def verify_signup_otp(email: str, otp: str) -> Dict[str, Any]:
+    """Verifies the mandatory sign-up OTP and creates the account."""
+    email_key = email.strip().lower()
+    otp_code = otp.strip()
+
+    entry = signup_otp_storage.get(email_key)
+    if not entry:
+        return {"success": False, "error": "Verification code expired or not requested. Please request a new code."}
+
+    if time.time() > entry["expires_at"]:
+        del signup_otp_storage[email_key]
+        return {"success": False, "error": "Verification code has expired. Please request a new code."}
+
+    if entry["otp"] != otp_code:
+        return {"success": False, "error": "Invalid verification code. Please check and retry."}
+
+    # Verified! Register the new user
+    result = register_user(
+        name=entry["name"],
+        email=email_key,
+        password=entry["password"]
+    )
+    if result.get("success"):
+        del signup_otp_storage[email_key]
+
+    return result
 
 def reset_password_with_otp(email: str, otp: str, new_password: str) -> Dict[str, Any]:
     email_key = email.strip().lower()

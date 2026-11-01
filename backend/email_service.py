@@ -9,9 +9,14 @@ SMTP_USER = os.environ.get("SMTP_USER", "m.ajaysundharaperumal@gmail.com")
 SMTP_PASS = os.environ.get("SMTP_PASS", "rjizwyllhhixukqd")
 FROM_NAME = "ThreatLens Security Operations"
 
-def send_otp_email(to_email: str, otp_code: str) -> bool:
+def send_otp_email(to_email: str, otp_code: str, purpose: str = "password_reset") -> bool:
+    is_signup = purpose == "signup"
+    subject_title = "Account Verification Code" if is_signup else "Password Reset Verification Code"
+    header_title = "Activate Your Analyst Account" if is_signup else "Password Reset Verification"
+    purpose_desc = "activate your new analyst account" if is_signup else "reset the master credentials for your account"
+
     print("===================================================================")
-    print(f"📧 [OTP EMAIL SERVICE] Sending real 6-digit OTP to: {to_email}")
+    print(f"📧 [OTP EMAIL SERVICE] Sending {purpose} 6-digit OTP to: {to_email}")
     print(f"🔑 [OTP CODE]: {otp_code} (Valid for 5 minutes)")
     print("===================================================================")
 
@@ -21,21 +26,19 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
 
     try:
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"Your ThreatLens Security Verification Code: {otp_code}"
+        msg["Subject"] = f"Your ThreatLens {subject_title}: {otp_code}"
         msg["From"] = f"{FROM_NAME} <{SMTP_USER}>"
         msg["To"] = to_email
 
-        text_content = f"""Hello,
+        text_content = f"""Hello Analyst,
 
-We received a request to reset the master password for your ThreatLens account: {to_email}.
+We received a request to {purpose_desc} ({to_email}).
 
 Your 6-Digit OTP Verification Code is:
 {otp_code}
 
 This code is valid for 5 minutes only.
-Do not share this code with anyone. ThreatLens analysts will never ask for your verification code.
-
-If you did not request this reset, your account remains secure.
+Do not share this code with anyone. ThreatLens analysts and administrators will never ask for your verification code.
 
 ThreatLens Security Operations Team
 """
@@ -56,17 +59,17 @@ ThreatLens Security Operations Team
             <div style="display: inline-block; background-color: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 20px; padding: 5px 14px; margin-bottom: 12px;">
                 <span style="color: #38bdf8; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">🛡️ THREATLENS SECURITY PLATFORM</span>
             </div>
-            <h1 style="color: #f8fafc; font-size: 22px; font-weight: 800; margin: 6px 0 0 0; letter-spacing: -0.02em;">Password Reset Verification</h1>
+            <h1 style="color: #f8fafc; font-size: 22px; font-weight: 800; margin: 6px 0 0 0; letter-spacing: -0.02em;">{header_title}</h1>
         </div>
         
         <!-- Main Body -->
         <div style="padding: 26px 30px; text-align: left;">
             <p style="color: #f8fafc; font-size: 14px; font-weight: 600; margin: 0 0 10px 0;">Hello Analyst,</p>
             <p style="color: #94a3b8; font-size: 13.5px; line-height: 1.6; margin: 0 0 20px 0;">
-                We received a request to verify your identity and reset the credentials for your account: <strong style="color: #00e5ff;">{to_email}</strong>.
+                We received a request to <strong style="color: #f8fafc;">{purpose_desc}</strong>: <strong style="color: #00e5ff;">{to_email}</strong>.
             </p>
             
-            <p style="color: #64748b; font-size: 11.5px; margin: 0 0 10px 0; text-align: center; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;">Your 6-Digit One-Time Code (OTP)</p>
+            <p style="color: #64748b; font-size: 11.5px; margin: 0 0 10px 0; text-align: center; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;">Your 6-Digit Verification Code (OTP)</p>
             
             <!-- Large Clear Cyan OTP Box -->
             <div style="background-color: #070b14; border: 2px dashed #00e5ff; border-radius: 12px; padding: 20px 14px; text-align: center; margin-bottom: 22px;">
@@ -80,7 +83,7 @@ ThreatLens Security Operations Team
             </div>
 
             <p style="color: #64748b; font-size: 12px; line-height: 1.5; margin: 0;">
-                If you did not initiate this password reset, please ignore this advisory. Your credentials remain uncompromised.
+                If you did not initiate this request, please ignore this email. No action will be taken on your account.
             </p>
         </div>
 
@@ -96,6 +99,7 @@ ThreatLens Security Operations Team
     </div>
 </body>
 </html>
+"""
 """
 
         msg.attach(MIMEText(text_content, "plain"))

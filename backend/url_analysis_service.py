@@ -291,3 +291,4 @@ async def analyze_url_threat(raw_url: str) -> Dict[str, Any]:
         "sources": sources,
         "summary": f"URL {cleaned_url} parsed with target host {hostname} (IPs: {', '.join(resolved_ips[:2])}). Evaluated {len(redirect_chain)} redirect hop(s). Classification: {classification} ({risk_score}/100)."
     }
+

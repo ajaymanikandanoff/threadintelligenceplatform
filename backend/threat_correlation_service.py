@@ -134,3 +134,4 @@ def delete_investigation(inv_id: str) -> bool:
         _save_investigations(items)
         return True
     return False
+

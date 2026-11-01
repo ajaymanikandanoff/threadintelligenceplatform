@@ -112,6 +112,16 @@ class ResetOtpPayload(BaseModel):
     newPassword: Optional[str] = None
     new_password: Optional[str] = None
 
+class SignupOtpRequestPayload(BaseModel):
+    name: Optional[str] = None
+    fullName: Optional[str] = None
+    email: str
+    password: str
+
+class VerifySignupOtpPayload(BaseModel):
+    email: str
+    otp: str
+
 class ChangePasswordPayload(BaseModel):
     email: str
     currentPassword: str
@@ -285,6 +295,21 @@ def reset_password_otp(payload: ResetOtpPayload):
     res = auth_service.reset_password_with_otp(email=payload.email, otp=payload.otp, new_password=pw)
     if not res.get("success"):
         raise HTTPException(status_code=400, detail=res.get("error", "Failed to reset password"))
+    return res
+
+@app.post("/api/auth/signup-otp")
+def request_signup_otp(payload: SignupOtpRequestPayload):
+    name = payload.fullName or payload.name or ""
+    res = auth_service.request_signup_otp(name=name, email=payload.email, password=payload.password)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Failed to send signup verification OTP"))
+    return res
+
+@app.post("/api/auth/verify-signup-otp")
+def verify_signup_otp(payload: VerifySignupOtpPayload):
+    res = auth_service.verify_signup_otp(email=payload.email, otp=payload.otp)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Failed to verify signup code"))
     return res
 
 @app.post("/api/auth/change-password")
