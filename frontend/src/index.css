@@ -652,3 +652,35 @@ pre, code { font-family: var(--font-mono); }
   #printable-briefing { padding: 0 !important; color: #111827 !important; }
   #printable-briefing * { color: #111827 !important; background: transparent !important; border-color: #d1d5db !important; box-shadow: none !important; }
 }
+
+/* MapLibre Dark SOC Threat Popup Styling */
+.maplibregl-popup.threat-intel-soc-popup .maplibregl-popup-content {
+  background: rgba(8, 14, 26, 0.96) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(0, 229, 255, 0.35) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 20px rgba(0, 229, 255, 0.15) !important;
+  padding: 12px 14px !important;
+  color: #f1f5f9 !important;
+}
+
+.maplibregl-popup.threat-intel-soc-popup .maplibregl-popup-tip {
+  border-top-color: rgba(8, 14, 26, 0.96) !important;
+  border-bottom-color: rgba(8, 14, 26, 0.96) !important;
+}
+
+.maplibregl-popup.threat-intel-soc-popup .maplibregl-popup-close-button {
+  color: #94a3b8 !important;
+  font-size: 16px !important;
+  padding: 4px 8px !important;
+  right: 4px !important;
+  top: 4px !important;
+  border-radius: 4px !important;
+  transition: all 0.15s ease !important;
+}
+
+.maplibregl-popup.threat-intel-soc-popup .maplibregl-popup-close-button:hover {
+  color: #00e5ff !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+

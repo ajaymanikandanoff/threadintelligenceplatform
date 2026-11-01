@@ -152,7 +152,9 @@ export default function ThreatMapControls({
         {[
           { key: 'routes', label: 'Attack Routes' },
           { key: 'markers', label: 'Threat Nodes' },
-          { key: 'borders', label: 'Borders' }
+          { key: 'targets', label: 'Target Bastions' },
+          { key: 'borders', label: 'Country Borders' },
+          { key: 'heatmap', label: 'Density Heatmap' }
         ].map(layer => {
           const isVisible = visibleLayers[layer.key] !== false;
           return (

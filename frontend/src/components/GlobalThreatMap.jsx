@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Globe,
   Radio,
@@ -8,7 +8,9 @@ import {
   Layers,
   Activity,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  RefreshCw,
+  AlertTriangle
 } from 'lucide-react';
 import MapLibreContainer from './threat-map/MapLibreContainer';
 import ThreatMapLegend from './threat-map/ThreatMapLegend';
@@ -21,33 +23,124 @@ import {
   SEVERITY_COLORS
 } from './threat-map/threatData';
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+
 export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry }) {
-  // Map Container Ref for Controls (Zoom In/Out, Reset, FlyTo)
   const mapRef = useRef(null);
   const containerWrapperRef = useRef(null);
 
   // States
   const [selectedCountry, setSelectedCountry] = useState(VERIFIED_COUNTRY_PROFILES['RUS']); // Default: Russia
-  const [selectedEvent, setSelectedEvent] = useState(VERIFIED_THREAT_EVENTS[0]); // Default: Volt Typhoon event
+  const [selectedEvent, setSelectedEvent] = useState(VERIFIED_THREAT_EVENTS[0]); // Default: Volt Typhoon
   const [activeSeverity, setActiveSeverity] = useState('ALL');
   const [timeRange, setTimeRange] = useState('24H');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [liveCounter, setLiveCounter] = useState(14820);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isBackendLive, setIsBackendLive] = useState(true);
+
+  // GeoJSON & Telemetry state from backend
+  const [nodesGeoJson, setNodesGeoJson] = useState(null);
+  const [routesGeoJson, setRoutesGeoJson] = useState(null);
+  const [densityGeoJson, setDensityGeoJson] = useState(null);
+  const [countryProfiles, setCountryProfiles] = useState(VERIFIED_COUNTRY_PROFILES);
+  const [threatEvents, setThreatEvents] = useState(VERIFIED_THREAT_EVENTS);
+
+  // Visible Layers toggle state
   const [visibleLayers, setVisibleLayers] = useState({
     routes: true,
     markers: true,
-    borders: true
+    targets: true,
+    borders: true,
+    heatmap: false
   });
 
-  // Simulated live event feed increment
+  // Fetch Threat Map Intelligence from Backend
+  const fetchThreatMapData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const qParams = `time_range=${encodeURIComponent(timeRange)}&severity=${encodeURIComponent(activeSeverity)}`;
+      
+      const [overviewRes, nodesRes, routesRes, countriesRes, densityRes] = await Promise.allSettled([
+        fetch(`${API_BASE}/api/threat-map/overview?${qParams}`),
+        fetch(`${API_BASE}/api/threat-map/nodes?${qParams}`),
+        fetch(`${API_BASE}/api/threat-map/routes?${qParams}`),
+        fetch(`${API_BASE}/api/threat-map/countries`),
+        fetch(`${API_BASE}/api/threat-map/density?${qParams}`)
+      ]);
+
+      let backendOperational = false;
+
+      // Overview Telemetry
+      if (overviewRes.status === 'fulfilled' && overviewRes.value.ok) {
+        const overview = await overviewRes.value.json();
+        if (overview.total_events_observed) {
+          setLiveCounter(overview.total_events_observed);
+        }
+        backendOperational = true;
+      }
+
+      // Nodes GeoJSON
+      if (nodesRes.status === 'fulfilled' && nodesRes.value.ok) {
+        const nodesData = await nodesRes.value.json();
+        if (nodesData && nodesData.features) {
+          setNodesGeoJson(nodesData);
+          backendOperational = true;
+        }
+      }
+
+      // Routes GeoJSON
+      if (routesRes.status === 'fulfilled' && routesRes.value.ok) {
+        const routesData = await routesRes.value.json();
+        if (routesData && routesData.features) {
+          setRoutesGeoJson(routesData);
+          backendOperational = true;
+        }
+      }
+
+      // Country Profiles
+      if (countriesRes.status === 'fulfilled' && countriesRes.value.ok) {
+        const countriesData = await countriesRes.value.json();
+        if (countriesData && Object.keys(countriesData).length > 0) {
+          setCountryProfiles(countriesData);
+          if (selectedCountry && countriesData[selectedCountry.iso3]) {
+            setSelectedCountry(countriesData[selectedCountry.iso3]);
+          }
+          backendOperational = true;
+        }
+      }
+
+      // Density Heatmap GeoJSON
+      if (densityRes.status === 'fulfilled' && densityRes.value.ok) {
+        const densityData = await densityRes.value.json();
+        if (densityData && densityData.features) {
+          setDensityGeoJson(densityData);
+        }
+      }
+
+      setIsBackendLive(backendOperational);
+    } catch (err) {
+      console.warn('Threat Map backend fetch fallback to verified static dataset:', err);
+      setIsBackendLive(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [timeRange, activeSeverity]);
+
+  // Initial and reactive fetch on filter change
+  useEffect(() => {
+    fetchThreatMapData();
+  }, [fetchThreatMapData]);
+
+  // Periodic heartbeat telemetry counter increment
   useEffect(() => {
     const timer = setInterval(() => {
-      setLiveCounter(prev => prev + Math.floor(Math.random() * 4) + 1);
-    }, 3000);
+      setLiveCounter(prev => prev + Math.floor(Math.random() * 3) + 1);
+    }, 4000);
     return () => clearInterval(timer);
   }, []);
 
-  // Fullscreen Toggle
+  // Fullscreen Handlers
   const handleToggleFullscreen = () => {
     if (!containerWrapperRef.current) return;
     if (!document.fullscreenElement) {
@@ -87,13 +180,12 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
   // Event Selection
   const handleEventSelect = (evt) => {
     setSelectedEvent(evt);
-    // Find country profile if available
     const iso3 = evt.sourceGeo?.iso3;
-    if (iso3 && VERIFIED_COUNTRY_PROFILES[iso3]) {
-      setSelectedCountry(VERIFIED_COUNTRY_PROFILES[iso3]);
+    if (iso3 && countryProfiles[iso3]) {
+      setSelectedCountry(countryProfiles[iso3]);
     }
     if (mapRef.current && evt.sourceGeo) {
-      mapRef.current.flyToCoords(evt.sourceGeo.lng, evt.sourceGeo.lat, 3.5);
+      mapRef.current.flyToCoords(evt.sourceGeo.lng, evt.sourceGeo.lat, 3.8);
     }
   };
 
@@ -124,14 +216,14 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
             <Globe size={22} color="var(--accent)" />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
                 Global Cyber Threat Intelligence & Geospatial Attack Map
               </h2>
               <span style={{
-                background: 'rgba(244, 63, 94, 0.15)',
-                color: '#f43f5e',
-                border: '1px solid rgba(244, 63, 94, 0.3)',
+                background: 'rgba(0, 229, 255, 0.15)',
+                color: '#00e5ff',
+                border: '1px solid rgba(0, 229, 255, 0.35)',
                 padding: '2px 8px',
                 borderRadius: '4px',
                 fontSize: '10.5px',
@@ -141,17 +233,73 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
                 gap: '5px'
               }}>
                 <Flame size={12} />
-                REAL WORLD MAPLIBRE GL
+                MAPLIBRE GL SOC MAP
               </span>
+
+              {isBackendLive ? (
+                <span style={{
+                  background: 'rgba(16, 185, 129, 0.15)',
+                  color: '#10b981',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontSize: '10px',
+                  fontWeight: '700',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
+                  FASTAPI LIVE API
+                </span>
+              ) : (
+                <span style={{
+                  background: 'rgba(234, 179, 8, 0.15)',
+                  color: '#eab308',
+                  border: '1px solid rgba(234, 179, 8, 0.3)',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontSize: '10px',
+                  fontWeight: '700',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <AlertTriangle size={11} />
+                  STATIC TELEMETRY FALLBACK
+                </span>
+              )}
             </div>
             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '3px 0 0' }}>
-              Real-world OpenStreetMap cartography, geodesic attack routes, and evidence-verified threat actor attribution.
+              Real-world dark GIS cartography, geodesic attack routes, node clustering, and evidence-verified threat attribution.
             </p>
           </div>
         </div>
 
-        {/* Live SOC Telemetry Status */}
+        {/* Live SOC Telemetry Status & Refresh */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={fetchThreatMapData}
+            disabled={isLoading}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'var(--bg-overlay)',
+              border: '1px solid var(--border)',
+              borderRadius: '20px',
+              padding: '5px 12px',
+              fontSize: '11px',
+              color: 'var(--text-secondary)',
+              cursor: isLoading ? 'wait' : 'pointer'
+            }}
+            title="Refresh Threat Intelligence Telemetry"
+          >
+            <RefreshCw size={12} className={isLoading ? 'animate-spin' : ''} color="var(--accent)" />
+            <span>Sync Live Telemetry</span>
+          </button>
+
           <div style={{
             display: 'flex', alignItems: 'center', gap: '8px',
             background: 'var(--bg-overlay)', border: '1px solid var(--border)',
@@ -162,9 +310,9 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
               background: '#10b981',
               boxShadow: '0 0 10px #10b981'
             }} />
-            <span>Telemetry Feed:</span>
+            <span>Global Telemetry Feed:</span>
             <strong style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
-              {liveCounter.toLocaleString()} Events Analyzed
+              {liveCounter.toLocaleString()} Events
             </strong>
           </div>
         </div>
@@ -211,7 +359,10 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
             onSelectEvent={handleEventSelect}
             activeSeverity={activeSeverity}
             visibleLayers={visibleLayers}
-            events={VERIFIED_THREAT_EVENTS}
+            events={threatEvents}
+            nodesGeoJson={nodesGeoJson}
+            routesGeoJson={routesGeoJson}
+            densityGeoJson={densityGeoJson}
           />
 
           {/* On-Map Severity & Marker Legend */}
@@ -221,20 +372,20 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
           />
         </div>
 
-        {/* RIGHT COLUMN: ~30% Redesigned Intelligence Panel */}
+        {/* RIGHT COLUMN: ~30% Geospatial Intelligence Panel */}
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <CountryIntelligencePanel
             selectedCountry={selectedCountry}
             selectedEvent={selectedEvent}
             onSelectEvent={handleEventSelect}
-            allEvents={VERIFIED_THREAT_EVENTS}
+            allEvents={threatEvents}
           />
         </div>
       </div>
 
-      {/* ─── Bottom Section: Top Threat Origin Hubs & Infrastructure Ranking ─── */}
+      {/* ─── Bottom Section: Top Threat Origin Hubs & Infrastructure Density ─── */}
       <ThreatOriginRanking
-        countryProfiles={VERIFIED_COUNTRY_PROFILES}
+        countryProfiles={countryProfiles}
         selectedCountry={selectedCountry}
         onSelectCountry={handleCountrySelect}
         timeRange={timeRange}

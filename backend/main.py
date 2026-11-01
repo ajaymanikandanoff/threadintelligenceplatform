@@ -15,6 +15,7 @@ import pdf_research_service
 import threat_correlation_service
 import threat_graph_service
 import pdf_report_generator
+import threat_map_service
 
 load_dotenv()
 
@@ -521,6 +522,50 @@ def get_global_threat_graph_endpoint(limit: int = 25):
                 seen_e.add(e["id"])
                 edges.append(e)
     return {"nodes": nodes, "edges": edges, "summary": {"total_nodes": len(nodes), "total_edges": len(edges)}}
+
+# ==============================================================================
+# GEOSPATIAL CYBER THREAT MAP ENDPOINTS
+# ==============================================================================
+
+@app.get("/api/threat-map/overview")
+def get_threat_map_overview_endpoint(time_range: str = "24H", severity: str = "ALL"):
+    """
+    Returns global threat map overview statistics, active route counts,
+    origin country breakdown, and top threat actors.
+    """
+    return threat_map_service.get_threat_map_overview(time_range=time_range, severity=severity)
+
+@app.get("/api/threat-map/nodes")
+def get_threat_map_nodes_endpoint(time_range: str = "24H", severity: str = "ALL"):
+    """
+    Returns GeoJSON FeatureCollection containing all Threat Origin Nodes
+    and Target Infrastructure Bastions with full CTI attribution metadata.
+    """
+    return threat_map_service.get_threat_nodes_geojson(time_range=time_range, severity=severity)
+
+@app.get("/api/threat-map/routes")
+def get_threat_map_routes_endpoint(time_range: str = "24H", severity: str = "ALL"):
+    """
+    Returns GeoJSON FeatureCollection of curved geodesic LineStrings representing
+    active attack vectors and C2 command channels.
+    """
+    return threat_map_service.get_threat_routes_geojson(time_range=time_range, severity=severity)
+
+@app.get("/api/threat-map/countries")
+def get_threat_map_countries_endpoint():
+    """
+    Returns verified country profiles, national threat indices, associated threat actors,
+    and MITRE ATT&CK techniques for geospatial intelligence sidebar.
+    """
+    return threat_map_service.get_threat_countries_data()
+
+@app.get("/api/threat-map/density")
+def get_threat_map_density_endpoint(time_range: str = "24H", severity: str = "ALL"):
+    """
+    Returns GeoJSON FeatureCollection with weighted threat density points
+    for WebGL heatmap visualization.
+    """
+    return threat_map_service.get_threat_density_geojson(time_range=time_range, severity=severity)
 
 if __name__ == "__main__":
     import uvicorn
