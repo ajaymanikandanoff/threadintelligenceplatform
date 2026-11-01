@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, HTTPException, File, UploadFile, Form
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
@@ -14,6 +14,7 @@ import url_analysis_service
 import pdf_research_service
 import threat_correlation_service
 import threat_graph_service
+import pdf_report_generator
 
 load_dotenv()
 
@@ -426,6 +427,44 @@ async def research_pdf_endpoint(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process PDF report: {str(e)}")
+
+@app.post("/api/research/download-pdf")
+async def download_research_pdf_report(payload: Dict[str, Any]):
+    """Generates and serves a real binary PDF threat intelligence report."""
+    try:
+        pdf_bytes = pdf_report_generator.generate_pdf_report(payload)
+        fname = payload.get("filename") or payload.get("target") or "Threat_Intelligence_Dossier"
+        clean_base = str(fname).replace(".pdf", "").replace(" ", "_")
+        headers = {
+            "Content-Disposition": f'attachment; filename="{clean_base}_Dossier.pdf"',
+            "Content-Type": "application/pdf"
+        }
+        return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF report: {str(e)}")
+
+@app.get("/api/investigations/{inv_id}/download-pdf")
+def download_investigation_pdf_report(inv_id: str):
+    """Generates and downloads the official PDF dossier for any past investigation."""
+    item = threat_correlation_service.get_investigation_by_id(inv_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Investigation record not found.")
+
+    details = item.get("details", {})
+    merged = {**item, **details}
+    if not merged.get("filename"):
+        merged["filename"] = f"{item.get('type')}_{item.get('indicator')}.pdf"
+
+    try:
+        pdf_bytes = pdf_report_generator.generate_pdf_report(merged)
+        clean_base = f"Investigation_{inv_id}"
+        headers = {
+            "Content-Disposition": f'attachment; filename="{clean_base}_Dossier.pdf"',
+            "Content-Type": "application/pdf"
+        }
+        return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF report: {str(e)}")
 
 @app.get("/api/investigations")
 def list_investigations_endpoint(

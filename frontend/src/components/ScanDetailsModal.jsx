@@ -10,13 +10,17 @@ import {
   Copy,
   Check,
   ExternalLink,
-  Share2
+  Share2,
+  FileDown
 } from 'lucide-react';
 import KnowledgeGraph from './KnowledgeGraph';
+
+const API_BASE = 'http://localhost:8000';
 
 export default function ScanDetailsModal({ investigation, onClose }) {
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'graph' | 'raw'
   const [hasCopied, setHasCopied] = useState(false);
+  const [isPdfDownloading, setIsPdfDownloading] = useState(false);
 
   if (!investigation) return null;
 
@@ -26,6 +30,28 @@ export default function ScanDetailsModal({ investigation, onClose }) {
     navigator.clipboard.writeText(JSON.stringify(investigation, null, 2));
     setHasCopied(true);
     setTimeout(() => setHasCopied(false), 2000);
+  };
+
+  const downloadPdf = async () => {
+    setIsPdfDownloading(true);
+    try {
+      const resp = await fetch(`${API_BASE}/api/investigations/${investigation.id}/download-pdf`);
+      if (!resp.ok) throw new Error('Failed to generate PDF');
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const cleanInd = (indicator || investigation.id).replace(/[^a-zA-Z0-9_-]/g, '_');
+      a.href = url;
+      a.download = `Investigation_${cleanInd}_Dossier.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(`Could not download investigation PDF: ${err.message}`);
+    } finally {
+      setIsPdfDownloading(false);
+    }
   };
 
   return (
@@ -78,6 +104,30 @@ export default function ScanDetailsModal({ investigation, onClose }) {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={downloadPdf}
+              disabled={isPdfDownloading}
+              style={{
+                background: 'linear-gradient(135deg, #0284c7 0%, var(--accent) 100%)',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '6px 14px',
+                color: '#06090f',
+                fontSize: '11.5px',
+                fontWeight: '700',
+                cursor: isPdfDownloading ? 'not-allowed' : 'pointer',
+                opacity: isPdfDownloading ? 0.75 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+              title="Download formal PDF investigation dossier"
+            >
+              <FileDown size={14} />
+              <span>{isPdfDownloading ? 'Generating...' : 'PDF Dossier'}</span>
+            </button>
+
             <button
               type="button"
               onClick={copyJson}
