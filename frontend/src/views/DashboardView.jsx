@@ -592,7 +592,7 @@ export default function DashboardView({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', flex: 1 }}>
             {/* Analyze URL */}
             <button
-              onClick={() => onNavigateTab('analyzer', { type: 'url' })}
+              onClick={() => onNavigateTab('url-scanner')}
               style={{
                 background: 'var(--bg-elevated)',
                 border: '1px solid var(--border)',
@@ -615,13 +615,13 @@ export default function DashboardView({
               </div>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Analyze a URL</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>Check a link for phishing</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>SSRF protection & redirect tracer</div>
               </div>
             </button>
 
             {/* Investigate IP */}
             <button
-              onClick={() => onNavigateTab('analyzer', { type: 'ip' })}
+              onClick={() => onNavigateTab('ip-scanner')}
               style={{
                 background: 'var(--bg-elevated)',
                 border: '1px solid var(--border)',
@@ -644,13 +644,13 @@ export default function DashboardView({
               </div>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Investigate an IP</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>Reputation and activity</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>GeoIP, ASN, DNSBL & Port probe</div>
               </div>
             </button>
 
             {/* Check a Domain */}
             <button
-              onClick={() => onNavigateTab('analyzer', { type: 'domain' })}
+              onClick={() => onNavigateTab('domain-scanner')}
               style={{
                 background: 'var(--bg-elevated)',
                 border: '1px solid var(--border)',
@@ -673,13 +673,13 @@ export default function DashboardView({
               </div>
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Check a domain</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>Age, hosting, reputation</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>DNS records, RDAP, SSL & DGA</div>
               </div>
             </button>
 
-            {/* View Recent Reports */}
+            {/* PDF Threat Research */}
             <button
-              onClick={onOpenReport}
+              onClick={() => onNavigateTab('pdf-research')}
               style={{
                 background: 'var(--bg-elevated)',
                 border: '1px solid var(--border)',
@@ -701,8 +701,8 @@ export default function DashboardView({
                 <FileText size={16} color="#eab308" />
               </div>
               <div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>View recent reports</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>Open generated reports</div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>PDF Threat Research</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>TTPMapper MITRE & IOC extractor</div>
               </div>
             </button>
           </div>

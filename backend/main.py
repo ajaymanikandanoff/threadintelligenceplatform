@@ -8,6 +8,12 @@ from dotenv import load_dotenv
 from sample_data import SAMPLE_REPORTS, MITRE_ENTERPRISE_TACTICS
 from gemini_service import analyze_threat_text, chat_with_copilot, call_gemini_api
 import auth_service
+import ip_intelligence_service
+import domain_intelligence_service
+import url_analysis_service
+import pdf_research_service
+import threat_correlation_service
+import threat_graph_service
 
 load_dotenv()
 
@@ -54,6 +60,19 @@ class CustomDefenseRequest(BaseModel):
     technique: str
     rule_type: str # 'sigma' or 'yara' or 'snort'
     api_key: Optional[str] = None
+
+# --- SCAN & RESEARCH REQUEST MODELS ---
+class ScanIpPayload(BaseModel):
+    ip: str
+    user_email: Optional[str] = "analyst@threatlens.io"
+
+class ScanDomainPayload(BaseModel):
+    domain: str
+    user_email: Optional[str] = "analyst@threatlens.io"
+
+class ScanUrlPayload(BaseModel):
+    url: str
+    user_email: Optional[str] = "analyst@threatlens.io"
 
 # --- AUTH REQUEST MODELS ---
 class RegisterPayload(BaseModel):
@@ -278,6 +297,161 @@ def change_password(payload: ChangePasswordPayload):
     if not res.get("success"):
         raise HTTPException(status_code=400, detail=res.get("error", "Failed to change password"))
     return res
+
+# ==========================================
+# MODULE 1-6: SCANNING, RESEARCH & UNIFIED INVESTIGATIONS
+# ==========================================
+
+@app.post("/api/scan/ip")
+def scan_ip_endpoint(payload: ScanIpPayload):
+    if not payload.ip or not payload.ip.strip():
+        raise HTTPException(status_code=400, detail="IP address cannot be empty.")
+    result = ip_intelligence_service.scan_ip_intelligence(payload.ip)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "IP scan failed."))
+
+    # Save to persistent investigation database
+    record = threat_correlation_service.save_investigation_record(
+        indicator=result["indicator"],
+        indicator_type="IP",
+        risk_score=result["abuse_score"],
+        classification=result["risk_classification"],
+        severity=result["severity"],
+        details=result,
+        user_email=payload.user_email
+    )
+    graph = threat_graph_service.build_graph_for_investigation(record)
+    result["investigation_id"] = record["id"]
+    result["graph"] = graph
+    return result
+
+@app.post("/api/scan/domain")
+def scan_domain_endpoint(payload: ScanDomainPayload):
+    if not payload.domain or not payload.domain.strip():
+        raise HTTPException(status_code=400, detail="Domain cannot be empty.")
+    result = domain_intelligence_service.scan_domain_intelligence(payload.domain)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Domain scan failed."))
+
+    record = threat_correlation_service.save_investigation_record(
+        indicator=result["indicator"],
+        indicator_type="Domain",
+        risk_score=result["risk_score"],
+        classification=result["classification"],
+        severity=result["severity"],
+        details=result,
+        user_email=payload.user_email
+    )
+    graph = threat_graph_service.build_graph_for_investigation(record)
+    result["investigation_id"] = record["id"]
+    result["graph"] = graph
+    return result
+
+@app.post("/api/scan/url")
+async def scan_url_endpoint(payload: ScanUrlPayload):
+    if not payload.url or not payload.url.strip():
+        raise HTTPException(status_code=400, detail="URL cannot be empty.")
+    result = await url_analysis_service.analyze_url_threat(payload.url)
+    if not result.get("success"):
+        status_code = 403 if result.get("is_ssrf_blocked") else 400
+        raise HTTPException(status_code=status_code, detail=result.get("error", "URL analysis failed."))
+
+    record = threat_correlation_service.save_investigation_record(
+        indicator=result["indicator"],
+        indicator_type="URL",
+        risk_score=result["risk_score"],
+        classification=result["classification"],
+        severity=result["severity"],
+        details=result,
+        user_email=payload.user_email
+    )
+    graph = threat_graph_service.build_graph_for_investigation(record)
+    result["investigation_id"] = record["id"]
+    result["graph"] = graph
+    return result
+
+@app.post("/api/research/pdf")
+async def research_pdf_endpoint(
+    file: UploadFile = File(...),
+    user_email: Optional[str] = Form("analyst@threatlens.io")
+):
+    try:
+        content_bytes = await file.read()
+        if len(content_bytes) > 25 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="File too large. Maximum supported upload size is 25MB.")
+
+        result = pdf_research_service.process_pdf_threat_report(content_bytes, file.filename or "uploaded_threat_report.pdf")
+        if not result.get("success"):
+            raise HTTPException(status_code=400, detail=result.get("error", "PDF processing failed."))
+
+        record = threat_correlation_service.save_investigation_record(
+            indicator=result["filename"],
+            indicator_type="PDF",
+            risk_score=result["risk_score"],
+            classification=result["classification"],
+            severity=result["severity"],
+            details=result,
+            user_email=user_email
+        )
+        graph = threat_graph_service.build_graph_for_investigation(record)
+        result["investigation_id"] = record["id"]
+        result["graph"] = graph
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process PDF report: {str(e)}")
+
+@app.get("/api/investigations")
+def list_investigations_endpoint(
+    query: Optional[str] = None,
+    type: Optional[str] = None,
+    severity: Optional[str] = None,
+    limit: int = 50
+):
+    items = threat_correlation_service.get_all_investigations(query=query, ioc_type=type, severity=severity, limit=limit)
+    return {"investigations": items, "count": len(items)}
+
+@app.get("/api/investigations/{inv_id}")
+def get_investigation_detail_endpoint(inv_id: str):
+    item = threat_correlation_service.get_investigation_by_id(inv_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Investigation record not found.")
+    item["graph"] = threat_graph_service.build_graph_for_investigation(item)
+    return item
+
+@app.delete("/api/investigations/{inv_id}")
+def delete_investigation_endpoint(inv_id: str):
+    success = threat_correlation_service.delete_investigation(inv_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Investigation record not found.")
+    return {"success": True, "message": "Investigation record removed."}
+
+@app.get("/api/graph/investigation/{inv_id}")
+def get_investigation_graph_endpoint(inv_id: str):
+    item = threat_correlation_service.get_investigation_by_id(inv_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Investigation record not found.")
+    return threat_graph_service.build_graph_for_investigation(item)
+
+@app.get("/api/graph/global")
+def get_global_threat_graph_endpoint(limit: int = 25):
+    items = threat_correlation_service.get_all_investigations(limit=limit)
+    nodes = []
+    edges = []
+    seen_n = set()
+    seen_e = set()
+    for item in items:
+        subg = threat_graph_service.build_graph_for_investigation(item)
+        for n in subg.get("nodes", []):
+            if n["id"] not in seen_n:
+                seen_n.add(n["id"])
+                nodes.append(n)
+        for e in subg.get("edges", []):
+            if e["id"] not in seen_e:
+                seen_e.add(e["id"])
+                edges.append(e)
+    return {"nodes": nodes, "edges": edges, "summary": {"total_nodes": len(nodes), "total_edges": len(edges)}}
 
 if __name__ == "__main__":
     import uvicorn

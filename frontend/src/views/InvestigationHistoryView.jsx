@@ -1,454 +1,306 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search,
   Calendar,
   ChevronLeft,
   ChevronRight,
-  ArrowRight
+  ArrowRight,
+  RotateCcw,
+  ExternalLink,
+  Shield,
+  Layers,
+  Radio,
+  Clock
 } from 'lucide-react';
+import ScanDetailsModal from '../components/ScanDetailsModal';
 
-const HISTORY_RECORDS = [
+const API_BASE = 'http://localhost:8000';
+
+const FALLBACK_HISTORY = [
   {
     id: 'h-1',
     indicator: 'hxxp://secure-login.example-verify.com',
     type: 'URL',
-    score: 94,
+    risk_score: 94,
     severity: 'critical',
-    analyzed: 'Today, 10:02',
+    created_at: '2026-11-01T10:02:00Z',
     classification: 'Phishing',
-    timeline: [
-      { color: '#00e5ff', title: 'Analysis requested', time: 'Today, 10:02' },
-      { color: '#818cf8', title: 'Risk score calculated', time: 'Classified as Phishing' },
-      { color: '#f43f5e', title: 'Result stored', time: 'Available to reopen' }
-    ]
+    details: {
+      summary: 'Automated phishing credential harvest page.',
+      evidence: ['Lookalike domain mimicking security portal', 'Unencrypted POST credential form'],
+      recommended_actions: ['Block URL on edge proxy', 'Purge emails with this link']
+    }
   },
   {
     id: 'h-2',
     indicator: '203.0.113.42',
     type: 'IP',
-    score: 88,
+    risk_score: 88,
     severity: 'critical',
-    analyzed: 'Today, 09:48',
+    created_at: '2026-11-01T09:48:00Z',
     classification: 'Command and control',
-    timeline: [
-      { color: '#00e5ff', title: 'Analysis requested', time: 'Today, 09:48' },
-      { color: '#818cf8', title: 'Risk score calculated', time: 'Classified as C2 Server' },
-      { color: '#f43f5e', title: 'Result stored', time: 'Available to reopen' }
-    ]
+    details: {
+      summary: 'Active C2 listener receiving encrypted beacon traffic.',
+      evidence: ['High-frequency heartbeats observed', 'Reverse DNS resolves to bulletproof network'],
+      recommended_actions: ['Sever sockets to 203.0.113.42', 'Isolate affected host']
+    }
   },
   {
     id: 'h-3',
     indicator: 'files-share.example.co',
     type: 'Domain',
-    score: 81,
+    risk_score: 81,
     severity: 'high',
-    analyzed: 'Today, 09:21',
+    created_at: '2026-11-01T09:21:00Z',
     classification: 'Malware distribution',
-    timeline: [
-      { color: '#00e5ff', title: 'Analysis requested', time: 'Today, 09:21' },
-      { color: '#818cf8', title: 'Risk score calculated', time: 'Classified as Payload Dropper' },
-      { color: '#f43f5e', title: 'Result stored', time: 'Available to reopen' }
-    ]
-  },
-  {
-    id: 'h-4',
-    indicator: 'login-update.example.net',
-    type: 'Domain',
-    score: 76,
-    severity: 'high',
-    analyzed: 'Today, 08:55',
-    classification: 'Credential harvesting',
-    timeline: [
-      { color: '#00e5ff', title: 'Analysis requested', time: 'Today, 08:55' },
-      { color: '#818cf8', title: 'Risk score calculated', time: 'Classified as Login Phishing' },
-      { color: '#f43f5e', title: 'Result stored', time: 'Available to reopen' }
-    ]
-  },
-  {
-    id: 'h-5',
-    indicator: '198.51.100.17',
-    type: 'IP',
-    score: 58,
-    severity: 'medium',
-    analyzed: 'Yesterday, 17:30',
-    classification: 'Port scanning',
-    timeline: [
-      { color: '#00e5ff', title: 'Analysis requested', time: 'Yesterday, 17:30' },
-      { color: '#818cf8', title: 'Risk score calculated', time: 'Classified as Reconnaissance' },
-      { color: '#f43f5e', title: 'Result stored', time: 'Available to reopen' }
-    ]
-  },
-  {
-    id: 'h-6',
-    indicator: '192.0.2.88',
-    type: 'IP',
-    score: 52,
-    severity: 'medium',
-    analyzed: 'Yesterday, 14:12',
-    classification: 'Brute force',
-    timeline: [
-      { color: '#00e5ff', title: 'Analysis requested', time: 'Yesterday, 14:12' },
-      { color: '#818cf8', title: 'Risk score calculated', time: 'Classified as Password Spray' },
-      { color: '#f43f5e', title: 'Result stored', time: 'Available to reopen' }
-    ]
-  },
-  {
-    id: 'h-7',
-    indicator: 'cdn.example.org',
-    type: 'Domain',
-    score: 6,
-    severity: 'safe',
-    analyzed: 'Yesterday, 11:05',
-    classification: 'No threat found',
-    timeline: [
-      { color: '#00e5ff', title: 'Analysis requested', time: 'Yesterday, 11:05' },
-      { color: '#818cf8', title: 'Risk score calculated', time: 'Classified as Benign Domain' },
-      { color: '#10b981', title: 'Result stored', time: 'Available to reopen' }
-    ]
+    details: {
+      summary: 'Domain delivers multi-stage payload droppers.',
+      evidence: ['Registered recently with privacy protection', 'Hosts disguised payload archive'],
+      recommended_actions: ['Sinkhole DNS queries for domain', 'Detonate payload in sandbox']
+    }
   }
 ];
 
-export default function InvestigationHistoryView({ onNavigateTab }) {
-  const [records] = useState(HISTORY_RECORDS);
-  const [selectedId, setSelectedId] = useState(HISTORY_RECORDS[0].id);
-  const [search, setSearch] = useState('');
-  const [filterSeverity, setFilterSeverity] = useState('All');
-  const [fromDate, setFromDate] = useState('10/25/2026');
-  const [toDate, setToDate] = useState('11/01/2026');
-  const [page, setPage] = useState(1);
+export default function InvestigationHistoryView({ onOpenInvestigation }) {
+  const [investigations, setInvestigations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [severityFilter, setSeverityFilter] = useState('all');
+  const [selectedRecord, setSelectedRecord] = useState(null);
 
-  const selectedItem = records.find(r => r.id === selectedId) || records[0];
-
-  const filteredRecords = records.filter(item => {
-    if (filterSeverity !== 'All' && item.severity.toLowerCase() !== filterSeverity.toLowerCase()) {
-      return false;
-    }
-    if (search) {
-      const q = search.toLowerCase();
-      return (
-        item.indicator.toLowerCase().includes(q) ||
-        item.type.toLowerCase().includes(q) ||
-        item.classification.toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
-
-  const getSeverityStyle = (sev) => {
-    switch (sev) {
-      case 'critical':
-        return { bg: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.25)', dot: '#f43f5e' };
-      case 'high':
-        return { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.25)', dot: '#f59e0b' };
-      case 'medium':
-        return { bg: 'rgba(234, 179, 8, 0.1)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.25)', dot: '#eab308' };
-      case 'safe':
-      default:
-        return { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.25)', dot: '#10b981' };
+  const fetchInvestigations = async () => {
+    setIsLoading(true);
+    try {
+      const resp = await fetch(`${API_BASE}/api/investigations?limit=100`);
+      const data = await resp.json();
+      if (resp.ok && data.investigations && data.investigations.length > 0) {
+        setInvestigations(data.investigations);
+      } else {
+        setInvestigations(FALLBACK_HISTORY);
+      }
+    } catch {
+      setInvestigations(FALLBACK_HISTORY);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const getScoreColor = (score) => {
-    if (score >= 85) return '#f43f5e';
-    if (score >= 70) return '#f97316';
-    if (score >= 50) return '#eab308';
-    return '#10b981';
+  useEffect(() => {
+    fetchInvestigations();
+  }, []);
+
+  const filtered = investigations.filter(item => {
+    const q = searchQuery.toLowerCase().trim();
+    const ind = (item.indicator || '').toLowerCase();
+    const cls = (item.classification || '').toLowerCase();
+    const matchQ = !q || ind.includes(q) || cls.includes(q);
+
+    const matchType = typeFilter === 'all' || (item.type || '').toLowerCase() === typeFilter.toLowerCase();
+    const matchSev = severityFilter === 'all' || (item.severity || '').toLowerCase().includes(severityFilter.toLowerCase());
+
+    return matchQ && matchType && matchSev;
+  });
+
+  const getScoreBadge = (score) => {
+    const s = Number(score) || 0;
+    if (s >= 80) return { bg: 'rgba(244, 63, 94, 0.15)', text: '#f43f5e', border: 'rgba(244, 63, 94, 0.3)' };
+    if (s >= 50) return { bg: 'rgba(249, 115, 22, 0.15)', text: '#f97316', border: 'rgba(249, 115, 22, 0.3)' };
+    if (s >= 25) return { bg: 'rgba(245, 158, 11, 0.15)', text: '#f59e0b', border: 'rgba(245, 158, 11, 0.3)' };
+    return { bg: 'rgba(16, 185, 129, 0.15)', text: '#10b981', border: 'rgba(16, 185, 129, 0.3)' };
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
-      {/* ─── Top Header ─── */}
-      <div>
-        <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
-          Investigation History
-        </h1>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
-          Review past analyses and reopen any investigation.
-        </p>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+            Investigation History & Evidence Store
+          </h1>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+            Unified archive of all IP scans, domain lookups, URL crawls, and PDF threat research dossiers.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={fetchInvestigations}
+          disabled={isLoading}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            background: 'var(--bg-glass-card)', border: '1px solid var(--border)',
+            borderRadius: '8px', padding: '8px 14px', color: 'var(--text-primary)',
+            fontSize: '12.5px', fontWeight: '600', cursor: 'pointer'
+          }}
+        >
+          <RotateCcw size={14} className={isLoading ? 'animate-spin' : ''} />
+          <span>Refresh Store</span>
+        </button>
       </div>
 
-      {/* ─── Search & Date Range Filters Bar ─── */}
+      {/* Filter and Search Bar */}
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: '14px',
         background: 'var(--bg-glass-card)', border: '1px solid var(--border)',
-        borderRadius: '14px', padding: '12px 18px'
+        borderRadius: '14px', padding: '16px 20px', display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center'
       }}>
-        {/* Search Input */}
+        {/* Search */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '8px',
-          background: 'var(--bg-input)', border: '1px solid var(--border)',
-          borderRadius: '8px', padding: '7px 12px', minWidth: '220px', flex: '1 1 200px'
+          flex: 1, minWidth: '240px', display: 'flex', alignItems: 'center', gap: '10px',
+          background: 'var(--bg-base)', border: '1px solid var(--border)',
+          borderRadius: '8px', padding: '9px 14px'
         }}>
-          <Search size={14} color="var(--text-tertiary)" />
+          <Search size={16} color="var(--text-tertiary)" />
           <input
             type="text"
-            placeholder="Search indicator"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search indicator, hash, or classification..."
             style={{
-              background: 'transparent', border: 'none', outline: 'none',
-              color: 'var(--text-primary)', fontSize: '12.5px', width: '100%'
+              flex: 1, background: 'transparent', border: 'none', outline: 'none',
+              color: 'var(--text-primary)', fontSize: '13px'
             }}
           />
         </div>
 
-        {/* Date Pickers & Severity Pills */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          {/* From Date */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-            <span>From</span>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              background: 'var(--bg-input)', border: '1px solid var(--border)',
-              borderRadius: '6px', padding: '5px 10px', fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--text-primary)'
-            }}>
-              <input
-                type="text"
-                value={fromDate}
-                onChange={e => setFromDate(e.target.value)}
-                style={{ width: '80px', background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
-              />
-              <Calendar size={13} color="var(--text-tertiary)" />
-            </div>
-          </div>
+        {/* Type Filter */}
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {['all', 'IP', 'Domain', 'URL', 'PDF'].map(t => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTypeFilter(t)}
+              style={{
+                padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600',
+                border: typeFilter === t ? '1px solid var(--border-accent)' : '1px solid var(--border)',
+                background: typeFilter === t ? 'var(--accent-dim)' : 'var(--bg-overlay)',
+                color: typeFilter === t ? 'var(--accent)' : 'var(--text-secondary)',
+                cursor: 'pointer'
+              }}
+            >
+              {t === 'all' ? 'All Types' : t}
+            </button>
+          ))}
+        </div>
 
-          {/* To Date */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-            <span>To</span>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              background: 'var(--bg-input)', border: '1px solid var(--border)',
-              borderRadius: '6px', padding: '5px 10px', fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--text-primary)'
-            }}>
-              <input
-                type="text"
-                value={toDate}
-                onChange={e => setToDate(e.target.value)}
-                style={{ width: '80px', background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
-              />
-              <Calendar size={13} color="var(--text-tertiary)" />
-            </div>
-          </div>
-
-          {/* Severity Pills */}
-          <div style={{ display: 'flex', background: 'var(--bg-overlay)', borderRadius: '6px', padding: '3px', border: '1px solid var(--border)' }}>
-            {['All', 'Critical', 'High', 'Medium', 'Safe'].map(s => (
-              <button
-                key={s}
-                onClick={() => setFilterSeverity(s)}
-                style={{
-                  padding: '4px 10px',
-                  borderRadius: '4px',
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  border: 'none',
-                  cursor: 'pointer',
-                  background: filterSeverity === s ? 'rgba(56, 189, 248, 0.18)' : 'transparent',
-                  color: filterSeverity === s ? 'var(--accent)' : 'var(--text-tertiary)',
-                  outline: filterSeverity === s ? '1px solid rgba(56, 189, 248, 0.4)' : 'none',
-                  transition: 'all 0.12s ease'
-                }}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
+        {/* Severity Filter */}
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {['all', 'critical', 'high', 'safe'].map(s => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setSeverityFilter(s)}
+              style={{
+                padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600',
+                border: severityFilter === s ? '1px solid var(--border-accent)' : '1px solid var(--border)',
+                background: severityFilter === s ? 'var(--accent-dim)' : 'var(--bg-overlay)',
+                color: severityFilter === s ? 'var(--accent)' : 'var(--text-secondary)',
+                cursor: 'pointer'
+              }}
+            >
+              {s.toUpperCase()}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* ─── Two-Column Layout: Table + Selected Investigation Drawer ─── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.75fr) minmax(0, 1.1fr)',
-        gap: '20px'
-      }}>
-        {/* Left Column: Data Table Card */}
-        <div style={{
-          background: 'var(--bg-glass-card)',
-          border: '1px solid var(--border)',
-          borderRadius: '16px',
-          padding: '20px 24px',
-          display: 'flex', flexDirection: 'column', gap: '16px'
-        }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-tertiary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  <th style={{ padding: '12px 14px' }}>Indicator</th>
-                  <th style={{ padding: '12px 14px' }}>Type</th>
-                  <th style={{ padding: '12px 14px' }}>Score</th>
-                  <th style={{ padding: '12px 14px' }}>Severity</th>
-                  <th style={{ padding: '12px 14px' }}>Analyzed</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRecords.map(item => {
-                  const isSelected = item.id === selectedId;
-                  const sevStyle = getSeverityStyle(item.severity);
-                  const scoreColor = getScoreColor(item.score);
-
-                  return (
-                    <tr
-                      key={item.id}
-                      onClick={() => setSelectedId(item.id)}
-                      style={{
-                        borderBottom: '1px solid var(--border)',
-                        background: isSelected ? 'rgba(56, 189, 248, 0.08)' : 'transparent',
-                        fontSize: '12.5px',
-                        cursor: 'pointer',
-                        transition: 'background 0.12s ease'
-                      }}
-                      onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--bg-hover)'; }}
-                      onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
-                    >
-                      <td style={{ padding: '13px 14px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontWeight: '500' }}>
+      {/* History Items List */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {filtered.length > 0 ? (
+          filtered.map((item, idx) => {
+            const badge = getScoreBadge(item.risk_score || item.score);
+            return (
+              <div
+                key={item.id || idx}
+                style={{
+                  background: 'var(--bg-glass-card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '16px',
+                  transition: 'border-color 0.15s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--border-accent)'}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
+              >
+                {/* Indicator & Classification */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    width: '36px', height: '36px', borderRadius: '8px', background: 'var(--accent-dim)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                  }}>
+                    <Shield size={18} color="var(--accent)" />
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {item.indicator}
-                      </td>
-                      <td style={{ padding: '13px 14px', color: 'var(--text-secondary)' }}>
+                      </span>
+                      <span style={{
+                        padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '700',
+                        background: 'var(--bg-overlay)', color: 'var(--text-tertiary)'
+                      }}>
                         {item.type}
-                      </td>
-                      <td style={{ padding: '13px 14px', fontFamily: 'var(--font-mono)', fontWeight: '700', color: scoreColor }}>
-                        {item.score}
-                      </td>
-                      <td style={{ padding: '13px 14px' }}>
-                        <span style={{
-                          display: 'inline-flex', alignItems: 'center', gap: '5px',
-                          background: sevStyle.bg, border: sevStyle.border, color: sevStyle.color,
-                          padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '600'
-                        }}>
-                          <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: sevStyle.dot }} />
-                          {item.severity}
-                        </span>
-                      </td>
-                      <td style={{ padding: '13px 14px', color: 'var(--text-tertiary)', fontSize: '12px' }}>
-                        {item.analyzed}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Table Footer */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', fontSize: '12px', color: 'var(--text-tertiary)' }}>
-            <span>Page {page} of 6</span>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                style={{
-                  width: '28px', height: '28px', borderRadius: '6px',
-                  border: '1px solid var(--border)', background: 'var(--bg-elevated)',
-                  color: 'var(--text-secondary)', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}
-              >
-                <ChevronLeft size={14} />
-              </button>
-              <button
-                onClick={() => setPage(p => p + 1)}
-                style={{
-                  width: '28px', height: '28px', borderRadius: '6px',
-                  border: '1px solid var(--border)', background: 'var(--bg-elevated)',
-                  color: 'var(--text-secondary)', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}
-              >
-                <ChevronRight size={14} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: SELECTED INVESTIGATION Drawer */}
-        {selectedItem && (
-          <div style={{
-            background: 'var(--bg-glass-card)',
-            border: '1px solid var(--border)',
-            borderRadius: '16px',
-            padding: '24px 26px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '22px',
-            height: 'fit-content',
-            position: 'sticky',
-            top: '80px'
-          }}>
-            <div>
-              <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-tertiary)' }}>
-                SELECTED INVESTIGATION
-              </div>
-              <div style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '14.5px',
-                fontWeight: '700',
-                color: 'var(--text-primary)',
-                marginTop: '6px',
-                wordBreak: 'break-all'
-              }}>
-                {selectedItem.indicator}
-              </div>
-            </div>
-
-            {/* Huge Score Banner */}
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
-              <span style={{ fontSize: '48px', fontWeight: '900', color: getScoreColor(selectedItem.score), lineHeight: 1 }}>
-                {selectedItem.score}
-              </span>
-              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                {selectedItem.severity} · {selectedItem.type}
-              </span>
-            </div>
-
-            {/* Timeline Steps */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderTop: '1px solid var(--border)', paddingTop: '18px' }}>
-              {selectedItem.timeline.map((step, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                  <span style={{
-                    width: '8px', height: '8px', borderRadius: '50%',
-                    background: step.color, boxShadow: `0 0 8px ${step.color}`,
-                    marginTop: '5px', flexShrink: 0
-                  }} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
-                      {step.title}
-                    </span>
-                    <span style={{ fontSize: '11.5px', color: 'var(--text-tertiary)' }}>
-                      {step.time}
-                    </span>
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                      {item.classification}
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
 
-            {/* Big Reopen Analysis Button */}
-            <button
-              onClick={() => onNavigateTab('analyzer', { indicator: selectedItem.indicator, type: selectedItem.type })}
-              style={{
-                background: 'linear-gradient(135deg, #0284c7 0%, #06b6d4 100%)',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '10px',
-                padding: '12px',
-                fontSize: '13.5px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                boxShadow: '0 0 20px rgba(6, 182, 212, 0.35)',
-                transition: 'all 0.15s ease',
-                marginTop: '6px'
-              }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-            >
-              <span>Reopen analysis</span>
-              <ArrowRight size={16} />
-            </button>
+                {/* Score and Timestamp */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{
+                      padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '800',
+                      background: badge.bg, color: badge.text, border: `1px solid ${badge.border}`
+                    }}>
+                      Score {item.risk_score || item.score}/100
+                    </span>
+                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                      {item.created_at ? item.created_at.split('T')[0] : item.analyzed || 'Today'}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRecord(item)}
+                    style={{
+                      background: 'var(--bg-overlay)', border: '1px solid var(--border)',
+                      borderRadius: '8px', padding: '8px 14px', color: 'var(--text-primary)',
+                      fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: '6px'
+                    }}
+                  >
+                    <span>View Dossier</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div style={{
+            background: 'var(--bg-glass-card)', border: '1px solid var(--border)',
+            borderRadius: '12px', padding: '40px', textAlign: 'center', color: 'var(--text-tertiary)'
+          }}>
+            No investigations matching current filter.
           </div>
         )}
       </div>
+
+      {/* Modal */}
+      {selectedRecord && (
+        <ScanDetailsModal
+          investigation={selectedRecord}
+          onClose={() => setSelectedRecord(null)}
+        />
+      )}
     </div>
   );
 }

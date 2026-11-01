@@ -8,289 +8,126 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
-  Loader
+  Radio,
+  AlertTriangle,
+  Server,
+  Shield,
+  Layers,
+  ArrowRight
 } from 'lucide-react';
+import KnowledgeGraph from '../components/KnowledgeGraph';
 
-// Comprehensive Intelligence Knowledge Base for instant, high-fidelity responses
-const KNOWN_INTEL = {
-  '192.0.2.88': {
-    indicator: '192.0.2.88',
-    type: 'IP address',
-    riskScore: 52,
-    severity: 'Medium severity',
-    confidence: 88,
-    classification: 'Brute force',
-    detectionSources: '2 of 4 flagged',
-    summaryText: 'The IP address was detected conducting automated brute-force authentication sprays against perimeter gateways.',
-    evidence: [
-      'High volume of failed authentication attempts observed across SSH and RDP services.',
-      'Originates from unallocated or non-routable documentation prefix with repeated probe bursts.',
-      'Observed attempting default credential combinations on web administration interfaces.',
-      'Correlated with perimeter firewall connection drop alerts.'
-    ],
-    recommendedActions: [
-      'Block IP 192.0.2.88 at the edge perimeter firewall.',
-      'Review authentication logs for any successful sessions from this IP.',
-      'Enforce rate limiting and MFA across all external access portals.'
-    ],
-    relatedIndicators: [
-      { type: 'IP', val: '198.51.100.17' },
-      { type: 'Domain', val: 'example-verify.com' },
-      { type: 'IP', val: '203.0.113.42' }
-    ]
-  },
-  '203.0.113.42': {
-    indicator: '203.0.113.42',
-    type: 'IP address',
-    riskScore: 88,
-    severity: 'Critical severity',
-    confidence: 95,
-    classification: 'Command and control',
-    detectionSources: '4 of 4 flagged',
-    summaryText: 'Active command-and-control listener receiving encrypted beacon traffic from compromised enterprise endpoints.',
-    evidence: [
-      'Direct correlation with CISA AA23-158A ransomware campaign IOCs.',
-      'Unusual high-frequency heartbeats observed over non-standard TLS ports.',
-      'Associated with unauthorized Azure SQL database credential exfiltration.',
-      'Reverse DNS records resolve to known bulletproof hosting network.'
-    ],
-    recommendedActions: [
-      'Sever all active network sockets communicating with 203.0.113.42.',
-      'Isolate affected internal host and capture volatile memory dump.',
-      'Rotate all administrative and database service account credentials immediately.'
-    ],
-    relatedIndicators: [
-      { type: 'URL', val: 'hxxp://secure-login.example-verify.com' },
-      { type: 'Domain', val: 'files-share.example.co' },
-      { type: 'IP', val: '198.51.100.17' }
-    ]
-  },
-  'files-share.example.co': {
-    indicator: 'files-share.example.co',
-    type: 'Domain',
-    riskScore: 81,
-    severity: 'High severity',
-    confidence: 90,
-    classification: 'Malware distribution',
-    detectionSources: '3 of 4 flagged',
-    summaryText: 'Domain identified hosting multi-stage payload droppers and obfuscated secondary executables.',
-    evidence: [
-      'Hosting IP shares infrastructure with previously flagged ransomware indicators.',
-      'Domain registered recently with privacy-protected WHOIS registrant.',
-      'Delivers disguised archive payloads masquerading as legitimate PDF invoices.',
-      'Flagged by 3 commercial passive DNS security feeds.'
-    ],
-    recommendedActions: [
-      'Sinkhole DNS queries for files-share.example.co across internal resolvers.',
-      'Inspect endpoint downloads matching this domain over the last 30 days.',
-      'Submit payload samples to automated sandbox for dynamic detonation.'
-    ],
-    relatedIndicators: [
-      { type: 'IP', val: '203.0.113.42' },
-      { type: 'URL', val: 'hxxps://files-share.example.co/invoice.zip' }
-    ]
-  },
-  'login-update.example.net': {
-    indicator: 'login-update.example.net',
-    type: 'Domain',
-    riskScore: 76,
-    severity: 'High severity',
-    confidence: 89,
-    classification: 'Credential harvesting',
-    detectionSources: '3 of 4 flagged',
-    summaryText: 'Impersonation domain hosting clone of enterprise single sign-on (SSO) login portal.',
-    evidence: [
-      'Domain imitates corporate login portal and uses lookalike keyword in hostname.',
-      'Form submission posts authentication tokens to unmonitored external endpoint.',
-      'SSL certificate issued recently via automated free certificate authority.',
-      'Observed in inbound phishing telemetry targeting employees.'
-    ],
-    recommendedActions: [
-      'Block domain at mail gateway and web proxy filters.',
-      'Force password reset for any user who accessed the portal.',
-      'Revoke active session tokens for accounts that submitted credentials.'
-    ],
-    relatedIndicators: [
-      { type: 'URL', val: 'hxxp://secure-login.example-verify.com' },
-      { type: 'IP', val: '198.51.100.17' }
-    ]
-  },
-  '198.51.100.17': {
-    indicator: '198.51.100.17',
-    type: 'IP address',
-    riskScore: 58,
-    severity: 'Medium severity',
-    confidence: 85,
-    classification: 'Port scanning',
-    detectionSources: '2 of 4 flagged',
-    summaryText: 'Repetitive reconnaissance sweeps probing perimeter ports 22, 80, 443, and 3389.',
-    evidence: [
-      'Sequential TCP SYN packets received without completing 3-way handshake.',
-      'Flagged across public abuse databases for mass scanning activities.',
-      'No successful ingress compromise detected to date.',
-      'Perimeter firewall rate-limiting triggered.'
-    ],
-    recommendedActions: [
-      'Add 198.51.100.17 to temporary perimeter drop list.',
-      'Ensure non-essential external service ports remain closed.',
-      'Verify IDS/IPS signatures are up to date for reconnaissance patterns.'
-    ],
-    relatedIndicators: [
-      { type: 'IP', val: '192.0.2.88' },
-      { type: 'IP', val: '203.0.113.42' }
-    ]
-  },
-  'cdn.example.org': {
-    indicator: 'cdn.example.org',
-    type: 'Domain',
-    riskScore: 6,
-    severity: 'Safe',
-    confidence: 98,
-    classification: 'No threat found',
-    detectionSources: '0 of 4 flagged',
-    summaryText: 'Legitimate content delivery network infrastructure with high reputation and zero malicious hits.',
-    evidence: [
-      'Verified corporate CDN edge node with long established WHOIS history.',
-      'Clean telemetry across all VirusTotal and threat intelligence vendors.',
-      'Valid Extended Validation SSL certificate from trusted root CA.',
-      'Regular benign traffic pattern observed across legitimate web assets.'
-    ],
-    recommendedActions: [
-      'No containment required. Maintain standard perimeter observation.',
-      'Whitelisted in automated SOC containment playbooks.'
-    ],
-    relatedIndicators: [
-      { type: 'Domain', val: 'example.org' }
-    ]
-  },
-  'hxxp://secure-login.example-verify.com': {
-    indicator: 'hxxp://secure-login.example-verify.com',
-    type: 'URL',
-    riskScore: 87,
-    severity: 'Critical severity',
-    confidence: 92,
-    classification: 'Phishing',
-    detectionSources: '3 of 4 flagged',
-    summaryText: 'The URL shows several traits common to credential-harvesting pages. Review the evidence below before taking action.',
-    evidence: [
-      'Domain imitates a login portal and uses a lookalike keyword in the hostname.',
-      'Page requests credentials over a form that posts to a different host.',
-      'Domain registered recently with privacy-protected WHOIS.',
-      'Hosting IP shares infrastructure with previously flagged indicators.'
-    ],
-    recommendedActions: [
-      'Block the URL and its hostname at the proxy and DNS filter.',
-      'Search mail and web logs for users who visited it.',
-      'Reset credentials for any account that submitted the form.'
-    ],
-    relatedIndicators: [
-      { type: 'IP', val: '203.0.113.42' },
-      { type: 'Domain', val: 'example-verify.com' },
-      { type: 'IP', val: '198.51.100.17' },
-      { type: 'URL', val: 'hxxp://login-update.example.net' }
-    ]
-  }
-};
+const API_BASE = 'http://localhost:8000';
 
-export default function ThreatAnalyzerView({ initialIndicator }) {
+export default function ThreatAnalyzerView({ onSelectIndicator, initialIndicator }) {
   const [activeTypeTab, setActiveTypeTab] = useState('URL');
-  const [inputValue, setInputValue] = useState(
-    initialIndicator?.indicator || 'https://suspicious-link.example.com/login'
-  );
+  const [inputValue, setInputValue] = useState('https://github.com');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isTechDetailsOpen, setIsTechDetailsOpen] = useState(false);
   const [hasCopiedSummary, setHasCopiedSummary] = useState(false);
   const [hasCopiedJson, setHasCopiedJson] = useState(false);
-  const [isJsonOpen, setIsJsonOpen] = useState(true);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [scanError, setScanError] = useState(null);
 
-  // Analysis result state
-  const [result, setResult] = useState(KNOWN_INTEL['hxxp://secure-login.example-verify.com']);
+  const [result, setResult] = useState({
+    indicator: 'https://github.com',
+    type: 'URL',
+    riskScore: 0,
+    severity: 'Safe',
+    confidence: 95,
+    classification: 'Clean / Legitimate',
+    detectionSources: '0 of 4 flagged',
+    summaryText: 'Official developer platform and repository host. Domain exhibits established history and trusted SSL certificate.',
+    evidence: [
+      'Target hostname resolves to valid public Microsoft / GitHub infrastructure.',
+      'SSL certificate verified and issued by Digicert.',
+      'No redirect manipulation or credential harvesting keywords identified.'
+    ],
+    recommendedActions: [
+      'No perimeter containment required.',
+      'Standard corporate proxy access approved.'
+    ],
+    relatedIndicators: [
+      { type: 'Domain', val: 'github.com' },
+      { type: 'IP', val: '20.207.73.82' }
+    ],
+    graph: null,
+    technical: {}
+  });
 
-  // Helper to detect type from indicator string
-  const detectType = (val) => {
-    const clean = (val || '').trim();
-    const isIp = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(clean);
-    if (isIp) return 'IP address';
-    if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('hxxp') || clean.includes('/')) {
+  const detectIndicatorType = (str) => {
+    const s = str.trim().toLowerCase();
+    if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('hxxp') || s.includes('/')) {
       return 'URL';
     }
+    const isIp = /^(\d{1,3}\.){3}\d{1,3}$/.test(s) || s.includes(':');
+    if (isIp) return 'IP address';
     return 'Domain';
   };
 
-  const runAnalysis = (inputVal) => {
-    const raw = (inputVal || inputValue).trim();
+  const runAnalysis = async (customVal) => {
+    const raw = (customVal !== undefined ? customVal : inputValue).trim();
     if (!raw) return;
 
     setIsAnalyzing(true);
+    setScanError(null);
 
-    const detected = detectType(raw);
-    setActiveTypeTab(detected);
+    const detectedType = activeTypeTab || detectIndicatorType(raw);
+    let endpoint = `${API_BASE}/api/scan/url`;
+    let body = { url: raw };
 
-    // Normalize check
-    const normalizedKey = raw.replace(/https?:\/\//i, '').replace(/hxxps?:\/\//i, '').replace(/\/$/, '');
-    const directMatch = KNOWN_INTEL[raw] || KNOWN_INTEL[normalizedKey] || Object.values(KNOWN_INTEL).find(
-      k => k.indicator.includes(normalizedKey) || normalizedKey.includes(k.indicator)
-    );
+    if (detectedType === 'IP address' || detectedType === 'IP') {
+      endpoint = `${API_BASE}/api/scan/ip`;
+      body = { ip: raw };
+    } else if (detectedType === 'Domain') {
+      endpoint = `${API_BASE}/api/scan/domain`;
+      body = { domain: raw };
+    }
 
-    setTimeout(() => {
-      if (directMatch) {
-        setResult(directMatch);
-      } else {
-        // Dynamic Heuristic & Telemetry Evaluation for ANY Custom Indicator
-        const isIp = detected === 'IP address';
-
-        let score = 78;
-        let classification = 'Suspicious Activity';
-        let severity = 'High severity';
-
-        if (raw.toLowerCase().includes('phish') || raw.toLowerCase().includes('login') || raw.toLowerCase().includes('verify')) {
-          score = 89;
-          classification = 'Phishing';
-          severity = 'Critical severity';
-        } else if (raw.toLowerCase().includes('cdn') || raw.toLowerCase().includes('safe') || raw.toLowerCase().includes('google')) {
-          score = 12;
-          classification = 'No threat found';
-          severity = 'Safe';
-        } else if (isIp) {
-          score = 68;
-          classification = 'Suspicious Infrastructure';
-          severity = 'Medium severity';
-        }
-
-        const defanged = raw
-          .replace(/http:\/\//gi, 'hxxp://')
-          .replace(/https:\/\//gi, 'hxxps://');
-
-        setResult({
-          indicator: defanged,
-          type: detected,
-          riskScore: score,
-          severity,
-          confidence: 88,
-          classification,
-          detectionSources: score > 70 ? '3 of 4 flagged' : score > 40 ? '2 of 4 flagged' : '0 of 4 flagged',
-          summaryText: `Investigation telemetry for ${defanged}. Evaluated against active perimeter rules and threat intelligence feeds.`,
-          evidence: [
-            `Indicator classified under active threat category: ${classification}.`,
-            `Analyzed via heuristic pattern matching and SOC reputation telemetry.`,
-            isIp ? 'Observed repeated connection attempts to edge gateways.' : 'Domain/URL structure exhibits automated obfuscation signatures.',
-            'Telemetry correlated with recent threat feeds and firewall drop logs.'
-          ],
-          recommendedActions: [
-            score > 70 ? `Block ${defanged} across edge firewalls and DNS resolvers.` : `Monitor telemetry for ${defanged}.`,
-            'Correlate SIEM access logs for internal hosts communicating with this indicator.',
-            'Update automated containment playbooks with observed IOC signatures.'
-          ],
-          relatedIndicators: [
-            { type: 'IP', val: '203.0.113.42' },
-            { type: 'Domain', val: 'example-verify.com' }
-          ]
-        });
+    try {
+      const resp = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        throw new Error(data.detail || 'Analysis failed');
       }
+
+      const score = data.risk_score !== undefined ? data.risk_score : data.abuse_score || 0;
+      const related = [];
+      if (data.resolved_ips) {
+        data.resolved_ips.forEach(ip => related.push({ type: 'IP', val: ip }));
+      }
+      if (data.reverse_dns && data.reverse_dns !== 'No PTR record found') {
+        related.push({ type: 'Domain', val: data.reverse_dns });
+      }
+      if (data.hostname && data.hostname !== raw) {
+        related.push({ type: 'Domain', val: data.hostname });
+      }
+
+      setResult({
+        indicator: data.indicator || raw,
+        type: detectedType,
+        riskScore: score,
+        severity: data.severity || (score >= 70 ? 'Critical severity' : score >= 40 ? 'Medium severity' : 'Safe'),
+        confidence: data.confidence || 90,
+        classification: data.classification || data.risk_classification || 'Investigated',
+        detectionSources: score > 70 ? '3 of 4 flagged' : score > 40 ? '2 of 4 flagged' : '0 of 4 flagged',
+        summaryText: data.summary || `Intelligence telemetry for ${data.indicator || raw}.`,
+        evidence: data.evidence || [],
+        recommendedActions: data.recommended_actions || ['Maintain routine threat monitoring.'],
+        relatedIndicators: related.slice(0, 4),
+        graph: data.graph || null,
+        technical: data
+      });
+    } catch (err) {
+      setScanError(err.message);
+    } finally {
       setIsAnalyzing(false);
-    }, 450);
+    }
   };
 
-  // Sync with initialIndicator when passed from Dashboard or History
   useEffect(() => {
     if (initialIndicator?.indicator) {
       const val = initialIndicator.indicator.trim();
@@ -299,25 +136,6 @@ export default function ThreatAnalyzerView({ initialIndicator }) {
     }
   }, [initialIndicator]);
 
-  const handleInputChange = (e) => {
-    const val = e.target.value;
-    setInputValue(val);
-    const detected = detectType(val);
-    if (detected !== activeTypeTab && val.trim().length > 3) {
-      setActiveTypeTab(detected);
-    }
-  };
-
-  const handleClear = () => {
-    setInputValue('');
-  };
-
-  const handleExampleClick = (ex, type) => {
-    setActiveTypeTab(type);
-    setInputValue(ex);
-    runAnalysis(ex);
-  };
-
   const copySummary = () => {
     const text = `ThreatLens Analysis for ${result.indicator}\nScore: ${result.riskScore}/100 (${result.severity})\nClassification: ${result.classification}\nEvidence:\n${result.evidence.map(e => `• ${e}`).join('\n')}\nRecommended Actions:\n${result.recommendedActions.map((a, i) => `${i + 1}. ${a}`).join('\n')}`;
     navigator.clipboard.writeText(text);
@@ -325,68 +143,57 @@ export default function ThreatAnalyzerView({ initialIndicator }) {
     setTimeout(() => setHasCopiedSummary(false), 2000);
   };
 
+  const copyJson = () => {
+    navigator.clipboard.writeText(JSON.stringify(result.technical, null, 2));
+    setHasCopiedJson(true);
+    setTimeout(() => setHasCopiedJson(false), 2000);
+  };
+
   const getGaugeColors = (score) => {
-    if (score >= 85) return { color1: '#f97316', color2: '#f43f5e', glow: 'rgba(244, 63, 94, 0.45)', pillBg: 'rgba(244, 63, 94, 0.1)', pillBorder: 'rgba(244, 63, 94, 0.25)', pillText: '#f43f5e' };
-    if (score >= 70) return { color1: '#f59e0b', color2: '#f97316', glow: 'rgba(249, 115, 22, 0.45)', pillBg: 'rgba(249, 115, 22, 0.1)', pillBorder: 'rgba(249, 115, 22, 0.25)', pillText: '#f97316' };
-    if (score >= 40) return { color1: '#eab308', color2: '#f59e0b', glow: 'rgba(234, 179, 8, 0.45)', pillBg: 'rgba(234, 179, 8, 0.1)', pillBorder: 'rgba(234, 179, 8, 0.25)', pillText: '#eab308' };
+    if (score >= 80) return { color1: '#f97316', color2: '#f43f5e', glow: 'rgba(244, 63, 94, 0.45)', pillBg: 'rgba(244, 63, 94, 0.1)', pillBorder: 'rgba(244, 63, 94, 0.25)', pillText: '#f43f5e' };
+    if (score >= 50) return { color1: '#f59e0b', color2: '#f97316', glow: 'rgba(249, 115, 22, 0.45)', pillBg: 'rgba(249, 115, 22, 0.1)', pillBorder: 'rgba(249, 115, 22, 0.25)', pillText: '#f97316' };
+    if (score >= 25) return { color1: '#eab308', color2: '#f59e0b', glow: 'rgba(234, 179, 8, 0.45)', pillBg: 'rgba(234, 179, 8, 0.1)', pillBorder: 'rgba(234, 179, 8, 0.25)', pillText: '#eab308' };
     return { color1: '#10b981', color2: '#00ff9d', glow: 'rgba(16, 185, 129, 0.45)', pillBg: 'rgba(16, 185, 129, 0.1)', pillBorder: 'rgba(16, 185, 129, 0.25)', pillText: '#10b981' };
   };
 
   const gaugeTheme = getGaugeColors(result.riskScore);
 
-  const technicalJson = {
-    indicator: result.indicator,
-    type: result.type.toLowerCase(),
-    risk_score: result.riskScore,
-    classification: result.classification.toLowerCase(),
-    confidence: result.confidence / 100,
-    sources: ['telemetry', 'model', 'whois', 'passive_dns']
-  };
-
-  const copyJson = () => {
-    navigator.clipboard.writeText(JSON.stringify(technicalJson, null, 2));
-    setHasCopiedJson(true);
-    setTimeout(() => setHasCopiedJson(false), 2000);
-  };
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
-      {/* ─── Top Header ─── */}
+      {/* Header */}
       <div>
         <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
           Threat Intelligence Analyzer
         </h1>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
-          Analyze suspicious indicators and understand potential cyber threats.
+          Automated multi-engine indicator scoring powered by IntelOwl Observable Analyzers and MITRE ATT&CK mapping.
         </p>
       </div>
 
-      {/* ─── Top Input Container Card ─── */}
+      {/* Input Card */}
       <div style={{
-        background: 'var(--bg-glass-card)',
-        border: '1px solid var(--border)',
-        borderRadius: '16px',
-        padding: '22px 26px',
-        display: 'flex', flexDirection: 'column', gap: '16px'
+        background: 'var(--bg-glass-card)', border: '1px solid var(--border)',
+        borderRadius: '16px', padding: '22px 26px', display: 'flex', flexDirection: 'column', gap: '16px'
       }}>
-        {/* Indicator Type Tabs */}
+        {/* Type Tabs */}
         <div style={{ display: 'flex', gap: '8px' }}>
           {['URL', 'IP address', 'Domain'].map(t => {
             const active = activeTypeTab === t;
             return (
               <button
                 key={t}
-                onClick={() => setActiveTypeTab(t)}
+                onClick={() => {
+                  setActiveTypeTab(t);
+                  if (t === 'URL') setInputValue('https://github.com');
+                  if (t === 'IP address') setInputValue('8.8.8.8');
+                  if (t === 'Domain') setInputValue('google.com');
+                }}
                 style={{
-                  padding: '7px 16px',
-                  borderRadius: '8px',
-                  fontSize: '12.5px',
-                  fontWeight: '600',
+                  padding: '7px 16px', borderRadius: '8px', fontSize: '12.5px', fontWeight: '600',
                   cursor: 'pointer',
                   border: active ? '1px solid var(--border-accent)' : '1px solid var(--border)',
                   background: active ? 'var(--accent-dim)' : 'var(--bg-overlay)',
-                  color: active ? 'var(--accent)' : 'var(--text-secondary)',
-                  transition: 'all 0.12s ease'
+                  color: active ? 'var(--accent)' : 'var(--text-secondary)'
                 }}
               >
                 {t}
@@ -395,223 +202,84 @@ export default function ThreatAnalyzerView({ initialIndicator }) {
           })}
         </div>
 
-        {/* Input & Action Buttons */}
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+        {/* Input Form */}
+        <form onSubmit={(e) => { e.preventDefault(); runAnalysis(); }} style={{ display: 'flex', gap: '12px' }}>
           <div style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            background: 'var(--bg-input)', border: '1px solid var(--border)',
-            borderRadius: '10px', padding: '11px 16px', flex: 1, minWidth: '300px'
+            flex: 1, display: 'flex', alignItems: 'center', gap: '12px',
+            background: 'var(--bg-base)', border: '1px solid var(--border)',
+            borderRadius: '10px', padding: '12px 18px'
           }}>
-            {activeTypeTab === 'URL' && <Link2 size={16} color="var(--accent)" />}
-            {activeTypeTab === 'IP address' && <Terminal size={16} color="var(--accent)" />}
-            {activeTypeTab === 'Domain' && <Globe size={16} color="var(--accent)" />}
+            <Link2 size={18} color="var(--text-tertiary)" />
             <input
               type="text"
               value={inputValue}
-              onChange={handleInputChange}
-              placeholder={
-                activeTypeTab === 'URL'
-                  ? 'https://suspicious-link.example.com/login'
-                  : activeTypeTab === 'IP address'
-                  ? '192.0.2.88'
-                  : 'files-share.example.co'
-              }
-              onKeyDown={e => { if (e.key === 'Enter') runAnalysis(); }}
+              onChange={e => setInputValue(e.target.value)}
+              placeholder="Paste URL, IP address, or domain to scan..."
               style={{
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
-                color: 'var(--text-primary)',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '13px',
-                width: '100%'
+                flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                color: 'var(--text-primary)', fontSize: '14px', fontFamily: 'monospace'
               }}
             />
           </div>
 
           <button
-            onClick={() => runAnalysis()}
-            disabled={isAnalyzing}
+            type="submit"
+            disabled={isAnalyzing || !inputValue.trim()}
             style={{
+              padding: '0 24px', borderRadius: '10px', border: 'none',
               background: 'linear-gradient(135deg, #0284c7 0%, var(--accent) 100%)',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '10px',
-              padding: '11px 24px',
-              fontSize: '13px',
-              fontWeight: '700',
-              cursor: isAnalyzing ? 'not-allowed' : 'pointer',
-              display: 'flex', alignItems: 'center', gap: '8px',
-              boxShadow: '0 0 20px var(--accent-glow)',
-              transition: 'all 0.15s ease'
+              color: '#06090f', fontWeight: '700', fontSize: '13.5px', cursor: isAnalyzing ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 0 20px var(--accent-glow)'
             }}
           >
-            {isAnalyzing ? <Loader size={16} className="spin" /> : <Sparkles size={16} />}
-            <span>{isAnalyzing ? 'Analyzing indicator...' : 'Analyze indicator'}</span>
+            {isAnalyzing ? <Radio size={16} className="animate-spin" /> : <Sparkles size={16} />}
+            <span>{isAnalyzing ? 'Scanning...' : 'Analyze indicator'}</span>
           </button>
-
-          <button
-            onClick={handleClear}
-            style={{
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-secondary)',
-              borderRadius: '10px',
-              padding: '11px 20px',
-              fontSize: '13px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.12s ease'
-            }}
-            onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
-            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
-          >
-            Clear
-          </button>
-        </div>
-
-        {/* Try an Example Chips */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '12px' }}>
-          <span style={{ color: 'var(--text-tertiary)' }}>Try an example:</span>
-          <button
-            onClick={() => handleExampleClick('192.0.2.88', 'IP address')}
-            style={{
-              background: 'var(--bg-overlay)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-secondary)',
-              padding: '4px 10px',
-              borderRadius: '6px',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-accent)'; e.currentTarget.style.color = 'var(--accent)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-          >
-            192.0.2.88
-          </button>
-
-          <button
-            onClick={() => handleExampleClick('http://login-check.example.net', 'URL')}
-            style={{
-              background: 'var(--bg-overlay)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-secondary)',
-              padding: '4px 10px',
-              borderRadius: '6px',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-accent)'; e.currentTarget.style.color = 'var(--accent)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-          >
-            http://login-check.example.net
-          </button>
-
-          <button
-            onClick={() => handleExampleClick('https://files.example.org/invoice', 'URL')}
-            style={{
-              background: 'var(--bg-overlay)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-secondary)',
-              padding: '4px 10px',
-              borderRadius: '6px',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-accent)'; e.currentTarget.style.color = 'var(--accent)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-          >
-            https://files.example.org/invoice
-          </button>
-        </div>
+        </form>
       </div>
 
-      {/* ─── Preview Notice Banner ─── */}
-      <div style={{
-        background: 'rgba(129, 140, 248, 0.08)',
-        border: '1px solid rgba(129, 140, 248, 0.22)',
-        borderRadius: '10px',
-        padding: '10px 16px',
-        display: 'flex', alignItems: 'center', gap: '10px'
-      }}>
-        <span style={{
-          background: 'rgba(129, 140, 248, 0.2)',
-          color: 'var(--purple)',
-          fontSize: '10.5px',
-          fontWeight: '700',
-          padding: '2px 8px',
-          borderRadius: '4px',
-          textTransform: 'uppercase',
-          letterSpacing: '0.04em'
-        }}>
-          Live telemetry
-        </span>
-        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-          Active analysis for <strong style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{result.indicator}</strong> ({result.classification}).
-        </span>
-      </div>
-
-      {/* ─── Two-Column Analysis Results Grid ─── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 2fr)',
-        gap: '20px',
-        alignItems: 'start'
-      }}>
-        {/* Left Column: Radial Score Gauge & Summary Card (Pinned to Top) */}
+      {/* Error Message */}
+      {scanError && (
         <div style={{
-          background: 'var(--bg-glass-card)',
-          border: '1px solid var(--border)',
-          borderRadius: '16px',
-          padding: '28px 24px',
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          justifyContent: 'flex-start', gap: '20px', textAlign: 'center',
-          height: 'fit-content',
-          position: 'sticky',
-          top: '80px'
+          background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.3)',
+          borderRadius: '12px', padding: '14px 18px', color: '#f43f5e',
+          display: 'flex', alignItems: 'center', gap: '12px'
         }}>
-          {/* Circular SVG Gauge */}
+          <AlertTriangle size={20} />
+          <span style={{ fontSize: '13px', fontWeight: '600' }}>{scanError}</span>
+        </div>
+      )}
+
+      {/* Main Results Layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 380px) 1fr', gap: '22px' }}>
+        {/* Left Column: Gauge & Confidence */}
+        <div style={{
+          background: 'var(--bg-glass-card)', border: '1px solid var(--border)',
+          borderRadius: '16px', padding: '26px 22px', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', gap: '20px'
+        }}>
+          {/* Radial Ring Gauge */}
           <div style={{ position: 'relative', width: '180px', height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg viewBox="0 0 160 160" width="180" height="180">
+            <svg width="180" height="180" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
               <defs>
-                <linearGradient id="scoreGaugeGradDynamic" x1="0" y1="0" x2="1" y2="1">
+                <linearGradient id="scoreGaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor={gaugeTheme.color1} />
                   <stop offset="100%" stopColor={gaugeTheme.color2} />
                 </linearGradient>
               </defs>
-              {/* Background track */}
+              <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255, 255, 255, 0.06)" strokeWidth="9" />
               <circle
-                cx="80" cy="80" r="64"
-                fill="none"
-                stroke="rgba(255, 255, 255, 0.05)"
-                strokeWidth="14"
-              />
-              {/* Glowing active arc */}
-              <circle
-                cx="80" cy="80" r="64"
-                fill="none"
-                stroke="url(#scoreGaugeGradDynamic)"
-                strokeWidth="14"
-                strokeDasharray="402"
-                strokeDashoffset={402 - (402 * result.riskScore) / 100}
-                strokeLinecap="round"
-                transform="rotate(-90 80 80)"
-                style={{ filter: `drop-shadow(0 0 12px ${gaugeTheme.glow})` }}
+                cx="50" cy="50" r="42" fill="none" stroke="url(#scoreGaugeGrad)" strokeWidth="9"
+                strokeDasharray={`${2 * Math.PI * 42}`}
+                strokeDashoffset={`${2 * Math.PI * 42 * (1 - result.riskScore / 100)}`}
+                strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s ease' }}
               />
             </svg>
-
-            {/* Score in Center */}
-            <div style={{
-              position: 'absolute',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-            }}>
-              <span style={{ fontSize: '42px', fontWeight: '900', color: 'var(--text-primary)', lineHeight: 1 }}>
+            <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <span style={{ fontSize: '48px', fontWeight: '900', color: 'var(--text-primary)', lineHeight: 1 }}>
                 {result.riskScore}
               </span>
-              <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: '600', marginTop: '2px' }}>
                 of 100
               </span>
             </div>
@@ -619,249 +287,188 @@ export default function ThreatAnalyzerView({ initialIndicator }) {
 
           {/* Severity Pill */}
           <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: '6px',
-            background: gaugeTheme.pillBg,
-            border: `1px solid ${gaugeTheme.pillBorder}`,
-            color: gaugeTheme.pillText,
-            padding: '5px 14px',
-            borderRadius: '20px',
-            fontSize: '12px',
-            fontWeight: '700'
+            display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 16px', borderRadius: '20px',
+            background: gaugeTheme.pillBg, border: `1px solid ${gaugeTheme.pillBorder}`, color: gaugeTheme.pillText,
+            fontSize: '12px', fontWeight: '700'
           }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: gaugeTheme.pillText }} />
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: gaugeTheme.pillText }} />
             <span>{result.severity}</span>
           </div>
 
-          {/* Indicator text */}
-          <div style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '12.5px',
-            color: 'var(--text-secondary)',
-            wordBreak: 'break-all',
-            background: 'var(--bg-overlay)',
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: '1px solid var(--border)',
-            width: '100%',
-            maxWidth: '280px'
-          }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'monospace', textAlign: 'center', wordBreak: 'break-all' }}>
             {result.indicator}
           </div>
 
-          {/* Model Confidence Progress Bar */}
-          <div style={{ width: '100%', maxWidth: '280px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Model confidence</span>
-              <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontWeight: '700' }}>{result.confidence}%</span>
+          {/* Model Confidence Bar */}
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+              <span>Confidence</span>
+              <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{result.confidence}%</span>
             </div>
-            <div style={{ width: '100%', height: '6px', borderRadius: '3px', background: 'rgba(255, 255, 255, 0.08)', overflow: 'hidden' }}>
+            <div style={{ width: '100%', height: '6px', background: 'var(--bg-overlay)', borderRadius: '3px', overflow: 'hidden' }}>
               <div style={{
-                width: `${result.confidence}%`,
-                height: '100%',
-                borderRadius: '3px',
-                background: 'linear-gradient(90deg, #00e5ff 0%, #818cf8 100%)'
+                width: `${result.confidence}%`, height: '100%',
+                background: 'linear-gradient(90deg, #0284c7 0%, var(--accent) 100%)',
+                borderRadius: '3px'
               }} />
             </div>
           </div>
 
-          {/* Copy Result Summary Button */}
           <button
+            type="button"
             onClick={copySummary}
             style={{
-              width: '100%', maxWidth: '280px',
-              padding: '10px 16px',
-              borderRadius: '8px',
-              border: '1px solid var(--border)',
-              background: 'var(--bg-elevated)',
-              color: 'var(--text-primary)',
-              fontSize: '12px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              transition: 'all 0.12s ease'
+              width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)',
+              background: 'var(--bg-overlay)', color: 'var(--text-primary)', fontSize: '12.5px', fontWeight: '600',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
             }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-accent)'}
-            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
           >
             {hasCopiedSummary ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
-            <span>{hasCopiedSummary ? 'Copied to clipboard' : 'Copy result summary'}</span>
+            <span>{hasCopiedSummary ? 'Copied' : 'Copy result summary'}</span>
           </button>
         </div>
 
-        {/* Right Column: Stacked Analysis Detail Cards */}
+        {/* Right Column: Summary, Evidence, Actions, Related */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Card A: Summary */}
+          {/* Summary Card */}
           <div style={{
-            background: 'var(--bg-glass-card)',
-            border: '1px solid var(--border)',
-            borderRadius: '14px',
-            padding: '20px 24px',
-            display: 'flex', flexDirection: 'column', gap: '14px'
+            background: 'var(--bg-glass-card)', border: '1px solid var(--border)',
+            borderRadius: '16px', padding: '22px'
           }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Summary</div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
-              <div style={{ background: 'var(--bg-overlay)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)' }}>Classification</div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>{result.classification}</div>
+            <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 14px' }}>
+              Summary
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '14px' }}>
+              <div style={{ background: 'var(--bg-overlay)', padding: '10px 14px', borderRadius: '8px' }}>
+                <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Classification</div>
+                <div style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>{result.classification}</div>
               </div>
-              <div style={{ background: 'var(--bg-overlay)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)' }}>Detection sources</div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>{result.detectionSources}</div>
+              <div style={{ background: 'var(--bg-overlay)', padding: '10px 14px', borderRadius: '8px' }}>
+                <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Detections</div>
+                <div style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>{result.detectionSources}</div>
               </div>
-              <div style={{ background: 'var(--bg-overlay)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)' }}>Indicator type</div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>{result.type}</div>
+              <div style={{ background: 'var(--bg-overlay)', padding: '10px 14px', borderRadius: '8px' }}>
+                <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Type</div>
+                <div style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>{result.type}</div>
               </div>
             </div>
-
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.6' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: 0 }}>
               {result.summaryText}
             </p>
           </div>
 
-          {/* Card B: Evidence */}
+          {/* Evidence */}
           <div style={{
-            background: 'var(--bg-glass-card)',
-            border: '1px solid var(--border)',
-            borderRadius: '14px',
-            padding: '20px 24px',
-            display: 'flex', flexDirection: 'column', gap: '12px'
+            background: 'var(--bg-glass-card)', border: '1px solid var(--border)',
+            borderRadius: '16px', padding: '22px'
           }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Evidence</div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 14px' }}>
+              Evidence
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {result.evidence.map((ev, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                  <span style={{
-                    width: '6px', height: '6px', borderRadius: '50%',
-                    background: gaugeTheme.color2, boxShadow: `0 0 6px ${gaugeTheme.color2}`,
-                    marginTop: '6px', flexShrink: 0
-                  }} />
-                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                    {ev}
-                  </span>
+                <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f43f5e', marginTop: '6px', flexShrink: 0 }} />
+                  <span>{ev}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Card C: Recommended actions */}
+          {/* Actions */}
           <div style={{
-            background: 'var(--bg-glass-card)',
-            border: '1px solid var(--border)',
-            borderRadius: '14px',
-            padding: '20px 24px',
-            display: 'flex', flexDirection: 'column', gap: '12px'
+            background: 'var(--bg-glass-card)', border: '1px solid var(--border)',
+            borderRadius: '16px', padding: '22px'
           }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Recommended actions</div>
-
+            <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 14px' }}>
+              Recommended actions
+            </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {result.recommendedActions.map((act, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                  <div style={{
-                    width: '20px', height: '20px', borderRadius: '6px',
-                    background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.3)',
-                    color: 'var(--accent)', fontSize: '11px', fontWeight: '800',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    marginTop: '1px'
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{
+                    width: '20px', height: '20px', borderRadius: '4px', background: 'var(--accent-dim)',
+                    color: 'var(--accent)', fontWeight: '800', fontSize: '11px', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', flexShrink: 0
                   }}>
                     {i + 1}
-                  </div>
-                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                    {act}
                   </span>
+                  <span style={{ fontSize: '12.5px', color: 'var(--text-primary)' }}>{act}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Card D: Related indicators */}
-          <div style={{
-            background: 'var(--bg-glass-card)',
-            border: '1px solid var(--border)',
-            borderRadius: '14px',
-            padding: '20px 24px',
-            display: 'flex', flexDirection: 'column', gap: '12px'
-          }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Related indicators</div>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {result.relatedIndicators.map((rel, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setInputValue(rel.val);
-                    runAnalysis(rel.val);
-                  }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '6px',
-                    background: 'var(--bg-overlay)', border: '1px solid var(--border)',
-                    padding: '5px 12px', borderRadius: '6px', fontSize: '11.5px',
-                    fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-accent)'; e.currentTarget.style.color = 'var(--accent)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                >
-                  <span style={{ color: 'var(--accent)', fontWeight: '700' }}>{rel.type}</span>
-                  <span>{rel.val}</span>
-                </button>
-              ))}
+          {/* Related Indicators */}
+          {result.relatedIndicators?.length > 0 && (
+            <div style={{
+              background: 'var(--bg-glass-card)', border: '1px solid var(--border)',
+              borderRadius: '16px', padding: '20px 22px'
+            }}>
+              <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 12px' }}>
+                Related infrastructure
+              </h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {result.relatedIndicators.map((rel, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setInputValue(rel.val);
+                      setActiveTypeTab(rel.type === 'IP' ? 'IP address' : rel.type);
+                      runAnalysis(rel.val);
+                    }}
+                    style={{
+                      background: 'var(--bg-overlay)', border: '1px solid var(--border)',
+                      borderRadius: '6px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '8px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <span style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{rel.type}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-primary)', fontFamily: 'monospace' }}>{rel.val}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Card E: Technical details Accordion */}
+          {/* Collapsible Technical Details */}
           <div style={{
-            background: 'var(--bg-glass-card)',
-            border: '1px solid var(--border)',
-            borderRadius: '14px',
-            padding: '16px 24px',
-            display: 'flex', flexDirection: 'column', gap: '10px'
+            background: 'var(--bg-glass-card)', border: '1px solid var(--border)',
+            borderRadius: '16px', overflow: 'hidden'
           }}>
-            <div
-              onClick={() => setIsJsonOpen(p => !p)}
+            <button
+              onClick={() => setIsTechDetailsOpen(p => !p)}
               style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                cursor: 'pointer', userSelect: 'none'
+                width: '100%', padding: '16px 22px', background: 'transparent', border: 'none',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer',
+                color: 'var(--text-primary)', fontSize: '13.5px', fontWeight: '700'
               }}
             >
-              <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Technical details</span>
-              {isJsonOpen ? <ChevronUp size={16} color="var(--text-tertiary)" /> : <ChevronDown size={16} color="var(--text-tertiary)" />}
-            </div>
-
-            {isJsonOpen && (
-              <div style={{ position: 'relative', marginTop: '6px' }}>
+              <span>Technical details</span>
+              {isTechDetailsOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+            {isTechDetailsOpen && (
+              <div style={{ padding: '0 22px 20px', borderTop: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '10px 0 6px' }}>
+                  <button
+                    onClick={copyJson}
+                    style={{
+                      background: 'var(--bg-overlay)', border: '1px solid var(--border)',
+                      borderRadius: '6px', padding: '4px 10px', color: 'var(--text-secondary)',
+                      fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
+                    }}
+                  >
+                    {hasCopiedJson ? <Check size={12} color="#10b981" /> : <Copy size={12} />}
+                    <span>{hasCopiedJson ? 'Copied' : 'Copy JSON'}</span>
+                  </button>
+                </div>
                 <pre style={{
-                  background: '#04070d',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '8px',
-                  padding: '14px 16px',
-                  margin: 0,
-                  fontSize: '12px',
-                  fontFamily: 'var(--font-mono)',
-                  color: 'var(--accent)',
-                  overflowX: 'auto',
-                  lineHeight: '1.6'
+                  background: '#040711', padding: '14px', borderRadius: '8px',
+                  color: 'var(--accent)', fontSize: '12px', fontFamily: 'monospace',
+                  overflowX: 'auto', maxHeight: '300px', margin: 0
                 }}>
-                  {JSON.stringify(technicalJson, null, 2)}
+                  {JSON.stringify(result.technical, null, 2)}
                 </pre>
-
-                <button
-                  onClick={copyJson}
-                  style={{
-                    position: 'absolute', top: '10px', right: '10px',
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    color: 'var(--text-secondary)',
-                    padding: '4px 8px', borderRadius: '4px',
-                    cursor: 'pointer', fontSize: '11px',
-                    display: 'flex', alignItems: 'center', gap: '4px'
-                  }}
-                >
-                  {hasCopiedJson ? <Check size={12} color="#10b981" /> : <Copy size={12} />}
-                  <span>{hasCopiedJson ? 'Copied' : 'Copy JSON'}</span>
-                </button>
               </div>
             )}
           </div>

@@ -9,6 +9,13 @@ import ReportsView from './views/ReportsView';
 import SettingsView from './views/SettingsView';
 import LoginView from './views/LoginView';
 
+// Dedicated IntelOwl & TTPMapper Modules
+import IpIntelligenceView from './views/IpIntelligenceView';
+import DomainIntelligenceView from './views/DomainIntelligenceView';
+import UrlAnalysisView from './views/UrlAnalysisView';
+import PdfResearchView from './views/PdfResearchView';
+import ThreatGraphView from './views/ThreatGraphView';
+
 import DefenseCenter from './components/DefenseCenter';
 import ThreatCopilot from './components/ThreatCopilot';
 import IngestModal from './components/IngestModal';
@@ -27,7 +34,11 @@ import {
   Sliders,
   MessageSquare,
   ShieldCheck,
-  Loader
+  Loader,
+  Activity,
+  Link2,
+  FileSearch,
+  Share2
 } from 'lucide-react';
 
 export default function App() {
@@ -263,19 +274,15 @@ export default function App() {
           </div>
 
           {/* WORKSPACE Menu Section */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <div className="section-label" style={{ marginBottom: '6px', fontSize: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <div className="section-label" style={{ marginBottom: '4px', fontSize: '10px' }}>
               WORKSPACE
             </div>
 
             {[
               { id: 'dashboard',      label: 'Dashboard',             icon: LayoutDashboard },
-              { id: 'analyzer',       label: 'Threat Analyzer',       icon: Search },
-              { id: 'intelligence',   label: 'Threat Intelligence',   icon: Globe },
-              { id: 'attack-mapping', label: 'Attack Mapping',        icon: Crosshair },
+              { id: 'analyzer',       label: 'Unified Analyzer',       icon: Search },
               { id: 'history',        label: 'Investigation History', icon: Clock },
-              { id: 'reports',        label: 'Reports',               icon: FileText },
-              { id: 'settings',       label: 'Settings',              icon: Sliders },
             ].map(item => {
               const Icon = item.icon;
               const active = activeTab === item.id;
@@ -315,7 +322,142 @@ export default function App() {
                     }
                   }}
                 >
-                  {/* Left Cyan/Accent Vertical Bar (Matches Mockup) */}
+                  {active && (
+                    <span style={{
+                      position: 'absolute',
+                      left: '-14px',
+                      width: '3.5px',
+                      height: '24px',
+                      borderRadius: '0 4px 4px 0',
+                      background: 'var(--accent)',
+                      boxShadow: '0 0 10px var(--accent)'
+                    }} />
+                  )}
+                  <Icon size={16} style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* INTELOWL & TTPMAPPER MODULES */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+            <div className="section-label" style={{ marginBottom: '4px', fontSize: '10px' }}>
+              INTELLIGENCE SCANNERS
+            </div>
+
+            {[
+              { id: 'ip-scanner',     label: 'IP Intelligence',     icon: Activity },
+              { id: 'domain-scanner', label: 'Domain Intelligence', icon: Globe },
+              { id: 'url-scanner',    label: 'URL Threat Analysis', icon: Link2 },
+              { id: 'pdf-research',   label: 'PDF Threat Research', icon: FileSearch },
+              { id: 'threat-graph',   label: 'Threat Graph',        icon: Share2 },
+            ].map(item => {
+              const Icon = item.icon;
+              const active = activeTab === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavigateTab(item.id)}
+                  style={{
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: active ? 'var(--accent-dim)' : 'transparent',
+                    color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                    fontWeight: active ? '600' : '500',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    outline: active ? '1px solid var(--border-accent)' : 'none',
+                    transition: 'all 0.12s ease',
+                    textAlign: 'left'
+                  }}
+                  onMouseEnter={e => {
+                    if (!active) {
+                      e.currentTarget.style.background = 'var(--bg-hover)';
+                      e.currentTarget.style.color = 'var(--text-primary)';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!active) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = 'var(--text-secondary)';
+                    }
+                  }}
+                >
+                  {active && (
+                    <span style={{
+                      position: 'absolute',
+                      left: '-14px',
+                      width: '3.5px',
+                      height: '24px',
+                      borderRadius: '0 4px 4px 0',
+                      background: 'var(--accent)',
+                      boxShadow: '0 0 10px var(--accent)'
+                    }} />
+                  )}
+                  <Icon size={16} style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ADVANCED ATT&CK & THREAT INTEL */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+            <div className="section-label" style={{ marginBottom: '4px', fontSize: '10px' }}>
+              ADVANCED RESEARCH
+            </div>
+
+            {[
+              { id: 'intelligence',   label: 'Threat Intelligence',   icon: Globe },
+              { id: 'attack-mapping', label: 'ATT&CK Matrix',         icon: Crosshair },
+              { id: 'reports',        label: 'Reports & Export',      icon: FileText },
+            ].map(item => {
+              const Icon = item.icon;
+              const active = activeTab === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavigateTab(item.id)}
+                  style={{
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: active ? 'var(--accent-dim)' : 'transparent',
+                    color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                    fontWeight: active ? '600' : '500',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    outline: active ? '1px solid var(--border-accent)' : 'none',
+                    transition: 'all 0.12s ease',
+                    textAlign: 'left'
+                  }}
+                  onMouseEnter={e => {
+                    if (!active) {
+                      e.currentTarget.style.background = 'var(--bg-hover)';
+                      e.currentTarget.style.color = 'var(--text-primary)';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!active) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = 'var(--text-secondary)';
+                    }
+                  }}
+                >
                   {active && (
                     <span style={{
                       position: 'absolute',
@@ -499,6 +641,41 @@ export default function App() {
                   initialIndicator={selectedIndicator}
                   onAnalyzeReport={analyzeThreatReport}
                   isAnalyzingBackend={isAnalyzing}
+                />
+              )}
+
+              {/* Module 1: IP Intelligence Scanner */}
+              {activeTab === 'ip-scanner' && (
+                <IpIntelligenceView
+                  onNavigateTab={handleNavigateTab}
+                />
+              )}
+
+              {/* Module 2: Domain Intelligence Scanner */}
+              {activeTab === 'domain-scanner' && (
+                <DomainIntelligenceView
+                  onNavigateTab={handleNavigateTab}
+                />
+              )}
+
+              {/* Module 3: URL Threat Analysis */}
+              {activeTab === 'url-scanner' && (
+                <UrlAnalysisView
+                  onNavigateTab={handleNavigateTab}
+                />
+              )}
+
+              {/* Module 4: PDF Threat Intelligence Research */}
+              {activeTab === 'pdf-research' && (
+                <PdfResearchView
+                  onNavigateTab={handleNavigateTab}
+                />
+              )}
+
+              {/* Module 5: Threat Intelligence Graph */}
+              {activeTab === 'threat-graph' && (
+                <ThreatGraphView
+                  onNavigateTab={handleNavigateTab}
                 />
               )}
 
