@@ -135,3 +135,10 @@ def delete_investigation(inv_id: str) -> bool:
         return True
     return False
 
+def clear_all_investigations() -> int:
+    """Removes all investigation records from the persistent store."""
+    items = _load_investigations()
+    count = len(items)
+    _save_investigations([])
+    return count
+

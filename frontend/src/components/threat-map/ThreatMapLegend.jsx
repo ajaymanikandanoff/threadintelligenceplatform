@@ -105,3 +105,4 @@ export default function ThreatMapLegend({ activeSeverity, onSelectSeverity }) {
     </div>
   );
 }
+

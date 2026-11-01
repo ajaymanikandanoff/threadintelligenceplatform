@@ -573,3 +573,4 @@ export const SEVERITY_COLORS = {
   low: '#00e5ff',
   info: '#3b82f6'
 };
+

@@ -10,7 +10,8 @@ import {
   Shield,
   Layers,
   Radio,
-  Clock
+  Clock,
+  Trash2
 } from 'lucide-react';
 import ScanDetailsModal from '../components/ScanDetailsModal';
 
@@ -90,6 +91,40 @@ export default function InvestigationHistoryView({ onOpenInvestigation }) {
     fetchInvestigations();
   }, []);
 
+  const handleDeleteSingle = async (e, id) => {
+    e.stopPropagation();
+    if (!window.confirm('Are you sure you want to delete this investigation record permanently?')) {
+      return;
+    }
+    try {
+      const resp = await fetch(`${API_BASE}/api/investigations/${id}`, { method: 'DELETE' });
+      if (resp.ok) {
+        setInvestigations(prev => prev.filter(item => item.id !== id));
+      } else {
+        alert('Could not delete record from server.');
+      }
+    } catch (err) {
+      // In case of local fallback
+      setInvestigations(prev => prev.filter(item => item.id !== id));
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!window.confirm('Are you sure you want to permanently delete ALL past investigation history? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      const resp = await fetch(`${API_BASE}/api/investigations`, { method: 'DELETE' });
+      if (resp.ok) {
+        setInvestigations([]);
+      } else {
+        alert('Could not purge all records from server.');
+      }
+    } catch (err) {
+      setInvestigations([]);
+    }
+  };
+
   const filtered = investigations.filter(item => {
     const q = searchQuery.toLowerCase().trim();
     const ind = (item.indicator || '').toLowerCase();
@@ -123,20 +158,40 @@ export default function InvestigationHistoryView({ onOpenInvestigation }) {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={fetchInvestigations}
-          disabled={isLoading}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            background: 'var(--bg-glass-card)', border: '1px solid var(--border)',
-            borderRadius: '8px', padding: '8px 14px', color: 'var(--text-primary)',
-            fontSize: '12.5px', fontWeight: '600', cursor: 'pointer'
-          }}
-        >
-          <RotateCcw size={14} className={isLoading ? 'animate-spin' : ''} />
-          <span>Refresh Store</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            type="button"
+            onClick={fetchInvestigations}
+            disabled={isLoading}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              background: 'var(--bg-glass-card)', border: '1px solid var(--border)',
+              borderRadius: '8px', padding: '8px 14px', color: 'var(--text-primary)',
+              fontSize: '12.5px', fontWeight: '600', cursor: 'pointer'
+            }}
+          >
+            <RotateCcw size={14} className={isLoading ? 'animate-spin' : ''} />
+            <span>Refresh</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleClearAll}
+            disabled={isLoading || investigations.length === 0}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.3)',
+              borderRadius: '8px', padding: '8px 14px', color: '#f43f5e',
+              fontSize: '12.5px', fontWeight: '700',
+              cursor: (isLoading || investigations.length === 0) ? 'not-allowed' : 'pointer',
+              opacity: (isLoading || investigations.length === 0) ? 0.5 : 1
+            }}
+            title="Permanently clear all investigations"
+          >
+            <Trash2 size={14} />
+            <span>Clear All History</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
@@ -267,19 +322,39 @@ export default function InvestigationHistoryView({ onOpenInvestigation }) {
                   </div>
 
                   {/* Actions */}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedRecord(item)}
-                    style={{
-                      background: 'var(--bg-overlay)', border: '1px solid var(--border)',
-                      borderRadius: '8px', padding: '8px 14px', color: 'var(--text-primary)',
-                      fontSize: '12px', fontWeight: '600', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: '6px'
-                    }}
-                  >
-                    <span>View Dossier</span>
-                    <ArrowRight size={14} />
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedRecord(item)}
+                      style={{
+                        background: 'var(--bg-overlay)', border: '1px solid var(--border)',
+                        borderRadius: '8px', padding: '8px 14px', color: 'var(--text-primary)',
+                        fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '6px'
+                      }}
+                    >
+                      <span>View Dossier</span>
+                      <ArrowRight size={14} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteSingle(e, item.id)}
+                      style={{
+                        background: 'rgba(244, 63, 94, 0.08)', border: '1px solid rgba(244, 63, 94, 0.25)',
+                        borderRadius: '8px', padding: '8px 12px', color: '#f43f5e',
+                        fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '6px',
+                        transition: 'all 0.15s ease'
+                      }}
+                      title="Permanently delete this investigation record"
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(244, 63, 94, 0.2)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(244, 63, 94, 0.08)'}
+                    >
+                      <Trash2 size={14} />
+                      <span>Delete</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );

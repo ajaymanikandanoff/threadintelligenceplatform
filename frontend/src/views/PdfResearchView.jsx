@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   FileText,
   Upload,
@@ -17,7 +17,10 @@ import {
   FileCode,
   Printer,
   FileDown,
-  RotateCcw
+  RotateCcw,
+  FolderOpen,
+  Trash2,
+  Clock
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
@@ -30,11 +33,117 @@ export default function PdfResearchView({ onSelectIndicator }) {
   const [errorMsg, setErrorMsg] = useState(null);
   const [activeIocTab, setActiveIocTab] = useState('ipv4');
   const [hasCopied, setHasCopied] = useState(false);
+  const [savedPdfReports, setSavedPdfReports] = useState([]);
+  const fileInputRef = useRef(null);
 
   const sampleReports = [
     { name: 'Volt_Typhoon_Advisory_Critical_Infra.pdf', path: 'Volt Typhoon Cyber Espionage (CISA Advisory)' },
     { name: 'CISA_AA23-158A_CL0P_MOVEit.pdf', path: 'CL0P Ransomware MOVEit Exploit (CISA AA23-158A)' }
   ];
+
+  // Load saved PDF reports from localStorage and backend on mount
+  useEffect(() => {
+    loadSavedReports();
+  }, []);
+
+  const loadSavedReports = async () => {
+    // 1. Read from localStorage
+    let localList = [];
+    try {
+      localList = JSON.parse(localStorage.getItem('THREATLENS_SAVED_PDF_REPORTS') || '[]');
+    } catch {}
+
+    // 2. Fetch from backend investigations
+    try {
+      const resp = await fetch(`${API_BASE}/api/investigations?type=PDF&limit=20`);
+      if (resp.ok) {
+        const data = await resp.json();
+        const serverPdfs = (data.investigations || []).map(inv => ({
+          id: inv.id,
+          filename: inv.details?.filename || inv.indicator || 'Threat_Report.pdf',
+          risk_score: inv.risk_score,
+          severity: inv.severity,
+          executive_summary: inv.details?.executive_summary || inv.classification,
+          total_pages: inv.details?.total_pages || 1,
+          ioc_count: Object.values(inv.details?.ioc_summary_count || {}).reduce((a, b) => a + b, 0),
+          mitre_count: (inv.details?.mitre_mappings || []).length,
+          savedAt: inv.created_at,
+          fullResult: inv.details || inv
+        }));
+
+        // Merge and deduplicate by filename
+        const mergedMap = new Map();
+        localList.forEach(item => mergedMap.set(item.filename, item));
+        serverPdfs.forEach(item => mergedMap.set(item.filename, item));
+        const merged = Array.from(mergedMap.values());
+        setSavedPdfReports(merged);
+        localStorage.setItem('THREATLENS_SAVED_PDF_REPORTS', JSON.stringify(merged));
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend PDF fetch fallback:', err);
+    }
+    setSavedPdfReports(localList);
+  };
+
+  const saveReportToHistory = (result) => {
+    try {
+      const existing = JSON.parse(localStorage.getItem('THREATLENS_SAVED_PDF_REPORTS') || '[]');
+      const newEntry = {
+        id: result.investigation_id || `pdf-${Date.now()}`,
+        filename: result.filename,
+        risk_score: result.risk_score,
+        severity: result.severity,
+        executive_summary: result.executive_summary,
+        total_pages: result.total_pages,
+        total_characters: result.total_characters,
+        ioc_count: Object.values(result.ioc_summary_count || {}).reduce((a, b) => a + b, 0),
+        mitre_count: (result.mitre_mappings || []).length,
+        savedAt: new Date().toISOString(),
+        fullResult: result
+      };
+      const filtered = existing.filter(item => item.filename !== result.filename);
+      const updated = [newEntry, ...filtered].slice(0, 20);
+      localStorage.setItem('THREATLENS_SAVED_PDF_REPORTS', JSON.stringify(updated));
+      setSavedPdfReports(updated);
+    } catch (err) {
+      console.warn('Could not save PDF report to localStorage:', err);
+    }
+  };
+
+  const handleDeleteSavedPdf = async (e, reportId, filename) => {
+    e.stopPropagation();
+    if (!window.confirm(`Permanently remove "${filename}" from saved reports history?`)) return;
+
+    // 1. Remove from localStorage
+    const existing = JSON.parse(localStorage.getItem('THREATLENS_SAVED_PDF_REPORTS') || '[]');
+    const updated = existing.filter(r => r.id !== reportId && r.filename !== filename);
+    localStorage.setItem('THREATLENS_SAVED_PDF_REPORTS', JSON.stringify(updated));
+    setSavedPdfReports(updated);
+
+    // 2. Remove from backend database
+    if (reportId && !reportId.startsWith('pdf-')) {
+      try {
+        await fetch(`${API_BASE}/api/investigations/${reportId}`, { method: 'DELETE' });
+      } catch (err) {
+        console.warn('Backend delete error:', err);
+      }
+    }
+
+    // 3. Clear current view if it was showing this file
+    if (researchResult && researchResult.filename === filename) {
+      setResearchResult(null);
+      setSelectedFile(null);
+    }
+  };
+
+  const handleLoadSavedPdf = (report) => {
+    if (report.fullResult) {
+      setResearchResult(report.fullResult);
+      setSelectedFile({ name: report.filename });
+      setErrorMsg(null);
+    }
+  };
 
   const handleFileUpload = async (file) => {
     if (!file) return;
@@ -56,6 +165,7 @@ export default function PdfResearchView({ onSelectIndicator }) {
         throw new Error(data.detail || 'PDF processing failed');
       }
       setResearchResult(data);
+      saveReportToHistory(data);
     } catch (err) {
       setErrorMsg(err.message);
     } finally {
@@ -321,6 +431,7 @@ export default function PdfResearchView({ onSelectIndicator }) {
         </div>
 
         <input
+          ref={fileInputRef}
           type="file"
           id="pdf-upload-input"
           accept=".pdf"
@@ -363,6 +474,125 @@ export default function PdfResearchView({ onSelectIndicator }) {
           ))}
         </div>
       </div>
+
+      {/* Saved PDF Threat Reports History (Database & Local Storage) */}
+      {!researchResult && savedPdfReports.length > 0 && (
+        <div style={{
+          background: 'var(--bg-glass-card)',
+          border: '1px solid var(--border)',
+          borderRadius: '16px',
+          padding: '22px 24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                width: '32px', height: '32px', borderRadius: '8px',
+                background: 'rgba(56, 189, 248, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                <Clock size={16} color="var(--accent)" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
+                  Saved PDF Reports History
+                </h3>
+                <span style={{ fontSize: '11.5px', color: 'var(--text-tertiary)' }}>
+                  Stored in database and local storage. Click any report to reload, or delete to purge.
+                </span>
+              </div>
+            </div>
+
+            <span style={{
+              fontSize: '11px', fontWeight: '700', color: 'var(--accent)',
+              background: 'var(--accent-dim)', padding: '3px 9px', borderRadius: '4px'
+            }}>
+              {savedPdfReports.length} Reports Archived
+            </span>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            gap: '12px'
+          }}>
+            {savedPdfReports.map((report) => (
+              <div
+                key={report.filename}
+                onClick={() => handleLoadSavedPdf(report)}
+                style={{
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '12px',
+                  padding: '14px 16px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-accent)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                    <FileText size={16} color="var(--accent)" style={{ flexShrink: 0 }} />
+                    <span style={{
+                      fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                    }}>
+                      {report.filename}
+                    </span>
+                  </div>
+
+                  <span style={{
+                    padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '800',
+                    background: report.risk_score >= 80 ? 'rgba(244, 63, 94, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                    color: report.risk_score >= 80 ? '#f43f5e' : '#f59e0b',
+                    flexShrink: 0
+                  }}>
+                    {report.risk_score}/100
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                  <span>{report.mitre_count || 0} MITRE • {report.ioc_count || 0} IoCs</span>
+                  <span>{report.savedAt ? report.savedAt.split('T')[0] : 'Saved'}</span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '4px', borderTop: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--accent)', fontWeight: '600' }}>
+                    Click to Open Dossier →
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeleteSavedPdf(e, report.id, report.filename)}
+                    style={{
+                      background: 'rgba(244, 63, 94, 0.1)',
+                      border: '1px solid rgba(244, 63, 94, 0.25)',
+                      borderRadius: '6px',
+                      padding: '4px 8px',
+                      color: '#f43f5e',
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                    title="Delete this PDF report from history"
+                  >
+                    <Trash2 size={12} />
+                    <span>Delete</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Error Message */}
       {errorMsg && (
@@ -492,6 +722,21 @@ export default function PdfResearchView({ onSelectIndicator }) {
               >
                 <FileCode size={14} />
                 <span>Technical JSON</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)',
+                  color: 'var(--accent)', borderRadius: '8px', padding: '8px 14px',
+                  fontSize: '12px', fontWeight: '700', cursor: 'pointer'
+                }}
+                title="Select and analyze another PDF report from your computer"
+              >
+                <FolderOpen size={14} />
+                <span>Change / Select PDF</span>
               </button>
 
               <button

@@ -491,6 +491,11 @@ def delete_investigation_endpoint(inv_id: str):
         raise HTTPException(status_code=404, detail="Investigation record not found.")
     return {"success": True, "message": "Investigation record removed."}
 
+@app.delete("/api/investigations")
+def clear_all_investigations_endpoint():
+    count = threat_correlation_service.clear_all_investigations()
+    return {"success": True, "message": f"Successfully purged {count} investigation records."}
+
 @app.get("/api/graph/investigation/{inv_id}")
 def get_investigation_graph_endpoint(inv_id: str):
     item = threat_correlation_service.get_investigation_by_id(inv_id)
