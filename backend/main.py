@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 from sample_data import SAMPLE_REPORTS, MITRE_ENTERPRISE_TACTICS
 from gemini_service import analyze_threat_text, chat_with_copilot, call_gemini_api
+import auth_service
 
 load_dotenv()
 
@@ -53,6 +54,43 @@ class CustomDefenseRequest(BaseModel):
     technique: str
     rule_type: str # 'sigma' or 'yara' or 'snort'
     api_key: Optional[str] = None
+
+# --- AUTH REQUEST MODELS ---
+class RegisterPayload(BaseModel):
+    fullName: Optional[str] = None
+    name: Optional[str] = None
+    email: str
+    password: str
+
+class LoginPayload(BaseModel):
+    email: str
+    password: str
+
+class GoogleAuthPayload(BaseModel):
+    email: str
+    name: Optional[str] = None
+    picture: Optional[str] = None
+
+class ProfileUpdatePayload(BaseModel):
+    email: str
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    occupation: Optional[str] = None
+    picture_url: Optional[str] = None
+
+class ForgotOtpPayload(BaseModel):
+    email: str
+
+class ResetOtpPayload(BaseModel):
+    email: str
+    otp: str
+    newPassword: Optional[str] = None
+    new_password: Optional[str] = None
+
+class ChangePasswordPayload(BaseModel):
+    email: str
+    currentPassword: str
+    newPassword: str
 
 @app.get("/api/health")
 def health_check():
@@ -150,6 +188,78 @@ async def test_key(payload: KeyTestRequest):
         return {"success": True, "message": "Gemini API Key verified successfully!", "raw": resp}
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+# ==========================================
+# AUTHENTICATION ENDPOINTS (matching AI FactChecker)
+# ==========================================
+
+@app.post("/api/auth/register")
+def register(payload: RegisterPayload):
+    display_name = payload.fullName or payload.name or ""
+    res = auth_service.register_user(name=display_name, email=payload.email, password=payload.password)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Registration failed"))
+    return res
+
+@app.post("/api/auth/login")
+def login(payload: LoginPayload):
+    res = auth_service.login_user(email=payload.email, password=payload.password)
+    if not res.get("success"):
+        raise HTTPException(status_code=401, detail=res.get("error", "Authentication failed"))
+    return res
+
+@app.post("/api/auth/google")
+def google_auth(payload: GoogleAuthPayload):
+    res = auth_service.google_login(email=payload.email, name=payload.name, picture=payload.picture)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Google auth failed"))
+    return res
+
+@app.get("/api/auth/profile")
+def get_user_profile(email: str):
+    res = auth_service.get_profile(email=email)
+    if not res.get("success"):
+        raise HTTPException(status_code=404, detail=res.get("error", "User not found"))
+    return res
+
+@app.post("/api/auth/profile")
+def update_user_profile(payload: ProfileUpdatePayload):
+    res = auth_service.update_profile(
+        email=payload.email,
+        name=payload.name,
+        phone=payload.phone,
+        occupation=payload.occupation,
+        picture_url=payload.picture_url
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Profile update failed"))
+    return res
+
+@app.post("/api/auth/forgot-password-otp")
+def forgot_password_otp(payload: ForgotOtpPayload):
+    res = auth_service.request_password_otp(email=payload.email)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Failed to generate OTP"))
+    return res
+
+@app.post("/api/auth/reset-password-otp")
+def reset_password_otp(payload: ResetOtpPayload):
+    pw = payload.newPassword or payload.new_password or ""
+    res = auth_service.reset_password_with_otp(email=payload.email, otp=payload.otp, new_password=pw)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Failed to reset password"))
+    return res
+
+@app.post("/api/auth/change-password")
+def change_password(payload: ChangePasswordPayload):
+    res = auth_service.change_password(
+        email=payload.email,
+        old_password=payload.currentPassword,
+        new_password=payload.newPassword
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Failed to change password"))
+    return res
 
 if __name__ == "__main__":
     import uvicorn

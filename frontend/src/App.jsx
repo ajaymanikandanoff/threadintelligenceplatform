@@ -44,10 +44,19 @@ export default function App() {
   const [isReportOpen, setIsReportOpen]       = useState(false);
   const [isGlossaryOpen, setIsGlossaryOpen]   = useState(false);
   const [isAuthOpen, setIsAuthOpen]           = useState(false);
-  const [currentUser, setCurrentUser]         = useState({
-    name: 'Ajay M.',
-    email: 'analyst@example.com',
-    role: 'Security analyst'
+  const [currentUser, setCurrentUser]         = useState(() => {
+    try {
+      const stored = localStorage.getItem('user_session') || sessionStorage.getItem('user_session');
+      if (stored) {
+        const u = JSON.parse(stored);
+        if (u && u.name) return u;
+      }
+    } catch {}
+    return {
+      name: 'Ajay M.',
+      email: 'analyst@example.com',
+      role: 'Security analyst'
+    };
   });
 
   // Themes & Cybersecurity Colors
@@ -174,6 +183,12 @@ export default function App() {
     setActiveTab(tabId);
   };
 
+  const handleSignOut = () => {
+    localStorage.removeItem('user_session');
+    sessionStorage.removeItem('user_session');
+    setIsAuthOpen(true);
+  };
+
   // If Auth screen is active, show the Login View (matching Mockup)
   if (isAuthOpen) {
     return (
@@ -203,10 +218,12 @@ export default function App() {
       {/* ─── Top Header Bar ─── */}
       <Header
         activeTab={activeTab}
+        currentUser={currentUser}
         theme={theme}
         onToggleTheme={() => setTheme(p => p === 'dark' ? 'light' : 'dark')}
         onSearchGlobal={handleGlobalSearch}
         onOpenAuth={() => setIsAuthOpen(true)}
+        onSignOut={handleSignOut}
       />
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -517,7 +534,7 @@ export default function App() {
                 <SettingsView
                   currentUser={currentUser}
                   onUpdateUser={setCurrentUser}
-                  onSignOut={() => setIsAuthOpen(true)}
+                  onSignOut={handleSignOut}
                   cyberAccent={cyberAccent}
                   onChangeCyberAccent={setCyberAccent}
                 />

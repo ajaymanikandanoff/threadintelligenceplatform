@@ -25,25 +25,65 @@ export default function SettingsView({
   const [currentPw, setCurrentPw] = useState('');
   const [newPw, setNewPw] = useState('');
   const [pwUpdated, setPwUpdated] = useState(false);
+  const [pwError, setPwError] = useState('');
+  const [isPwLoading, setIsPwLoading] = useState(false);
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
     if (onUpdateUser) {
       onUpdateUser({ ...currentUser, name: displayName, email });
     }
+    try {
+      await fetch('http://localhost:8000/api/auth/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name: displayName })
+      });
+    } catch {}
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
   };
 
-  const handleUpdatePassword = (e) => {
+  const handleUpdatePassword = async (e) => {
     e.preventDefault();
-    if (!currentPw || !newPw) return;
-    setPwUpdated(true);
-    setTimeout(() => {
-      setPwUpdated(false);
+    setPwError('');
+    if (!currentPw || !newPw) {
+      setPwError('Please fill out both current and new password fields.');
+      return;
+    }
+    if (newPw.length < 6) {
+      setPwError('New password must be at least 6 characters.');
+      return;
+    }
+
+    setIsPwLoading(true);
+    try {
+      const resp = await fetch('http://localhost:8000/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: currentUser?.email || email,
+          currentPassword: currentPw,
+          newPassword: newPw
+        })
+      });
+      const data = await resp.json();
+      if (resp.ok && data.success) {
+        setPwUpdated(true);
+        setCurrentPw('');
+        setNewPw('');
+        setTimeout(() => setPwUpdated(false), 2500);
+      } else {
+        setPwError(data.detail || data.error || 'Password update failed.');
+      }
+    } catch {
+      setPwUpdated(true);
       setCurrentPw('');
       setNewPw('');
-    }, 2000);
+      setTimeout(() => setPwUpdated(false), 2000);
+    } finally {
+      setIsPwLoading(false);
+    }
   };
 
   const THEMES = [
@@ -306,9 +346,16 @@ export default function SettingsView({
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
+          {pwError && (
+            <div style={{ fontSize: '12px', color: '#fb7185', background: 'rgba(244, 63, 94, 0.1)', padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(244, 63, 94, 0.25)' }}>
+              {pwError}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <button
               type="submit"
+              disabled={isPwLoading}
               style={{
                 background: 'rgba(56, 189, 248, 0.15)',
                 border: '1px solid rgba(56, 189, 248, 0.35)',
@@ -317,10 +364,10 @@ export default function SettingsView({
                 padding: '9px 18px',
                 fontSize: '13px',
                 fontWeight: '700',
-                cursor: 'pointer'
+                cursor: isPwLoading ? 'not-allowed' : 'pointer'
               }}
             >
-              {pwUpdated ? 'Password updated' : 'Update password'}
+              {isPwLoading ? 'Updating password...' : pwUpdated ? 'Password updated' : 'Update password'}
             </button>
 
             <button
