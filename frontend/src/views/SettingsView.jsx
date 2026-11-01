@@ -101,7 +101,7 @@ export default function SettingsView({
           Settings
         </h1>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
-          Manage your profile, security and how ThreatLens behaves.
+          Manage your profile, security and how AI ThreatLens behaves.
         </p>
       </div>
 

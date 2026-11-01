@@ -439,23 +439,19 @@ export default function LoginView({ onSignIn, onCancel }) {
     }}>
       {/* Top Left Brand */}
       <div style={{ padding: '32px 48px', display: 'flex', alignItems: 'center', gap: '14px', zIndex: 10 }}>
-        <div style={{
-          width: '42px', height: '42px', borderRadius: '12px',
-          background: 'rgba(0, 229, 255, 0.08)',
-          border: '1px solid rgba(0, 229, 255, 0.35)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 24px rgba(0, 229, 255, 0.4)',
-          overflow: 'hidden',
-          padding: '2px'
-        }}>
-          <img
-            src="/logo.png"
-            alt="ThreatLens Cyber Shield"
-            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-          />
-        </div>
+        <img
+          src="/logo.png"
+          alt="AI ThreatLens Cyber Shield"
+          style={{
+            height: '42px',
+            width: 'auto',
+            objectFit: 'contain',
+            flexShrink: 0,
+            filter: 'drop-shadow(0 0 16px rgba(0, 229, 255, 0.5))'
+          }}
+        />
         <span style={{ fontSize: '20px', fontWeight: '800', color: '#f8fafc', letterSpacing: '-0.02em' }}>
-          ThreatLens
+          AI ThreatLens
         </span>
       </div>
 

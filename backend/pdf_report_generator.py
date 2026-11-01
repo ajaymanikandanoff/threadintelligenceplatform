@@ -58,7 +58,7 @@ class NumberedCanvas(canvas.Canvas):
         # Top running header
         self.setFont('Helvetica-Bold', 7)
         self.setFillColor(CLR_CYAN)
-        self.drawString(36, 762, 'THREATLENS CYBER THREAT INTELLIGENCE PLATFORM')
+        self.drawString(36, 762, 'AI THREATLENS CYBER THREAT INTELLIGENCE PLATFORM')
         self.setFont('Helvetica', 7)
         self.setFillColor(CLR_MUTED)
         self.drawRightString(576, 762, 'TLP:AMBER // RESTRICTED DISTRIBUTION')
@@ -72,7 +72,7 @@ class NumberedCanvas(canvas.Canvas):
         self.line(36, 32, 576, 32)
         self.setFont('Helvetica', 7.5)
         self.setFillColor(CLR_MUTED)
-        self.drawString(36, 22, 'CONFIDENTIAL // PRODUCED BY THREATLENS CTI & TTPMAPPER ENGINE')
+        self.drawString(36, 22, 'CONFIDENTIAL // PRODUCED BY AI THREATLENS CTI & TTPMAPPER ENGINE')
         self.drawRightString(576, 22, f'Page {self._pageNumber} of {page_count}')
         self.restoreState()
 

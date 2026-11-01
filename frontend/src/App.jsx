@@ -82,7 +82,7 @@ export default function App() {
   const [externalCopilotQuery, setExternalCopilotQuery] = useState('');
   const [copilotMessages, setCopilotMessages] = useState([{
     role: 'assistant',
-    content: '👋 Hello Ajay! I\'m your ThreatLens AI Copilot. I analyze suspicious indicators, correlate MITRE ATT&CK techniques, provide step-by-step containment instructions, and generate defensive firewall rules.\n\nHow can I help your investigation today?'
+    content: '👋 Hello Ajay! I\'m your AI ThreatLens Copilot. I analyze suspicious indicators, correlate MITRE ATT&CK techniques, provide step-by-step containment instructions, and generate defensive firewall rules.\n\nHow can I help your investigation today?'
   }]);
 
   useEffect(() => {

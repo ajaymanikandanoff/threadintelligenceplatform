@@ -233,7 +233,7 @@ def process_pdf_threat_report(pdf_bytes: bytes, filename: str = "threat_report.p
     primary_malware = malware_families[0]["name"] if malware_families else "Unspecified Tooling"
     
     executive_summary = (
-        f"ThreatLens analyzed '{filename}' ({total_pages} page(s), {total_chars:,} characters). "
+        f"AI ThreatLens analyzed '{filename}' ({total_pages} page(s), {total_chars:,} characters). "
         f"Attributed to {primary_actor} utilizing {primary_malware}. "
         f"Extracted {ioc_count} indicators of compromise ({len(all_iocs['ipv4'])} IPs, "
         f"{len(all_iocs['domains'])} domains, {len(all_iocs['urls'])} URLs, {len(all_iocs['cves'])} CVEs) "

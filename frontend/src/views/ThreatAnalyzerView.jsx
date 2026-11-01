@@ -138,7 +138,7 @@ export default function ThreatAnalyzerView({ onSelectIndicator, initialIndicator
   }, [initialIndicator]);
 
   const copySummary = () => {
-    const text = `ThreatLens Analysis for ${result.indicator}\nScore: ${result.riskScore}/100 (${result.severity})\nClassification: ${result.classification}\nEvidence:\n${result.evidence.map(e => `• ${e}`).join('\n')}\nRecommended Actions:\n${result.recommendedActions.map((a, i) => `${i + 1}. ${a}`).join('\n')}`;
+    const text = `AI ThreatLens Analysis for ${result.indicator}\nScore: ${result.riskScore}/100 (${result.severity})\nClassification: ${result.classification}\nEvidence:\n${result.evidence.map(e => `• ${e}`).join('\n')}\nRecommended Actions:\n${result.recommendedActions.map((a, i) => `${i + 1}. ${a}`).join('\n')}`;
     navigator.clipboard.writeText(text);
     setHasCopiedSummary(true);
     setTimeout(() => setHasCopiedSummary(false), 2000);
