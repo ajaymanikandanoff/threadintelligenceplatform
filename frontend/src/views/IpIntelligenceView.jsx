@@ -13,7 +13,8 @@ import {
   ExternalLink,
   MapPin,
   Clock,
-  Radio
+  Radio,
+  RotateCcw
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
@@ -64,6 +65,12 @@ export default function IpIntelligenceView({ onSelectIndicator }) {
     navigator.clipboard.writeText(JSON.stringify(scanResult, null, 2));
     setHasCopied(true);
     setTimeout(() => setHasCopied(false), 2000);
+  };
+
+  const handleClearIp = () => {
+    setScanResult(null);
+    setScanError(null);
+    setIpInput('');
   };
 
   return (
@@ -136,6 +143,28 @@ export default function IpIntelligenceView({ onSelectIndicator }) {
             {isLoading ? <Radio size={16} className="animate-spin" /> : <Shield size={16} />}
             <span>{isLoading ? 'Scanning IP...' : 'Scan IP'}</span>
           </button>
+
+          {(scanResult || ipInput) && (
+            <button
+              type="button"
+              onClick={handleClearIp}
+              style={{
+                padding: '0 16px',
+                borderRadius: '10px',
+                border: '1px solid var(--border)',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: 'var(--text-secondary)',
+                fontWeight: '600',
+                fontSize: '12.5px',
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: '6px'
+              }}
+              title="Deselect / Clear IP input and result"
+            >
+              <RotateCcw size={14} />
+              <span>Clear</span>
+            </button>
+          )}
         </form>
 
         {/* Quick Sample Chips */}

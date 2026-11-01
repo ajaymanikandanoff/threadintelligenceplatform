@@ -13,7 +13,8 @@ import {
   Server,
   Shield,
   Layers,
-  ArrowRight
+  ArrowRight,
+  RotateCcw
 } from 'lucide-react';
 import KnowledgeGraph from '../components/KnowledgeGraph';
 
@@ -235,6 +236,23 @@ export default function ThreatAnalyzerView({ onSelectIndicator, initialIndicator
             {isAnalyzing ? <Radio size={16} className="animate-spin" /> : <Sparkles size={16} />}
             <span>{isAnalyzing ? 'Scanning...' : 'Analyze indicator'}</span>
           </button>
+
+          {inputValue && (
+            <button
+              type="button"
+              onClick={() => { setInputValue(''); setScanError(null); }}
+              style={{
+                padding: '0 16px', borderRadius: '10px',
+                border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)',
+                color: 'var(--text-secondary)', fontWeight: '600', fontSize: '13px',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+              }}
+              title="Clear input indicator"
+            >
+              <RotateCcw size={14} />
+              <span>Clear</span>
+            </button>
+          )}
         </form>
       </div>
 

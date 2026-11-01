@@ -12,7 +12,8 @@ import {
   ExternalLink,
   ShieldAlert,
   Radio,
-  Server
+  Server,
+  RotateCcw
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
@@ -63,6 +64,12 @@ export default function UrlAnalysisView({ onSelectIndicator }) {
     navigator.clipboard.writeText(JSON.stringify(scanResult, null, 2));
     setHasCopied(true);
     setTimeout(() => setHasCopied(false), 2000);
+  };
+
+  const handleClearUrl = () => {
+    setScanResult(null);
+    setScanError(null);
+    setUrlInput('');
   };
 
   return (
@@ -135,6 +142,28 @@ export default function UrlAnalysisView({ onSelectIndicator }) {
             {isLoading ? <Radio size={16} className="animate-spin" /> : <Shield size={16} />}
             <span>{isLoading ? 'Crawling URL...' : 'Analyze URL'}</span>
           </button>
+
+          {(scanResult || urlInput) && (
+            <button
+              type="button"
+              onClick={handleClearUrl}
+              style={{
+                padding: '0 16px',
+                borderRadius: '10px',
+                border: '1px solid var(--border)',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: 'var(--text-secondary)',
+                fontWeight: '600',
+                fontSize: '12.5px',
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: '6px'
+              }}
+              title="Deselect / Clear URL input and result"
+            >
+              <RotateCcw size={14} />
+              <span>Clear</span>
+            </button>
+          )}
         </form>
 
         {/* Quick Samples */}

@@ -16,7 +16,8 @@ import {
   Radio,
   FileCode,
   Printer,
-  FileDown
+  FileDown,
+  RotateCcw
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
@@ -262,6 +263,13 @@ export default function PdfResearchView({ onSelectIndicator }) {
     window.print();
   };
 
+  // 6. Deselect / Clear loaded report
+  const handleDeselectReport = () => {
+    setResearchResult(null);
+    setSelectedFile(null);
+    setErrorMsg(null);
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
       {/* Header */}
@@ -484,6 +492,21 @@ export default function PdfResearchView({ onSelectIndicator }) {
               >
                 <FileCode size={14} />
                 <span>Technical JSON</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDeselectReport}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.3)',
+                  color: '#f43f5e', borderRadius: '8px', padding: '8px 14px',
+                  fontSize: '12px', fontWeight: '700', cursor: 'pointer'
+                }}
+                title="Deselect current report and return to upload view"
+              >
+                <RotateCcw size={14} />
+                <span>Deselect Report</span>
               </button>
             </div>
           </div>

@@ -12,7 +12,8 @@ import {
   Radio,
   FileCode,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  RotateCcw
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
@@ -64,6 +65,12 @@ export default function DomainIntelligenceView({ onSelectIndicator }) {
     navigator.clipboard.writeText(JSON.stringify(scanResult, null, 2));
     setHasCopied(true);
     setTimeout(() => setHasCopied(false), 2000);
+  };
+
+  const handleClearDomain = () => {
+    setScanResult(null);
+    setScanError(null);
+    setDomainInput('');
   };
 
   return (
@@ -136,6 +143,28 @@ export default function DomainIntelligenceView({ onSelectIndicator }) {
             {isLoading ? <Radio size={16} className="animate-spin" /> : <Shield size={16} />}
             <span>{isLoading ? 'Scanning Domain...' : 'Scan Domain'}</span>
           </button>
+
+          {(scanResult || domainInput) && (
+            <button
+              type="button"
+              onClick={handleClearDomain}
+              style={{
+                padding: '0 16px',
+                borderRadius: '10px',
+                border: '1px solid var(--border)',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: 'var(--text-secondary)',
+                fontWeight: '600',
+                fontSize: '12.5px',
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: '6px'
+              }}
+              title="Deselect / Clear domain input and result"
+            >
+              <RotateCcw size={14} />
+              <span>Clear</span>
+            </button>
+          )}
         </form>
 
         {/* Quick Samples */}
