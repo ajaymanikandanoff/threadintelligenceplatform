@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ShieldAlert, UserX, Bug, ShieldCheck, ArrowRight,
-  Volume2, VolumeX, Languages, AlertTriangle, Clock,
-  Zap, TrendingUp, Activity, Eye, Lock, Users,
+  ShieldAlert, Bug, ShieldCheck,
+  Volume2, VolumeX,
+  Zap, TrendingUp, Activity, Eye, Lock,
   ChevronRight, ExternalLink
 } from 'lucide-react';
 import ThreatRadarGauge from './ThreatRadarGauge';
@@ -44,15 +44,6 @@ function KPICard({ label, value, sub, color = 'var(--accent)', icon: Icon }) {
   );
 }
 
-function SectionTitle({ children, action }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-      <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>{children}</h3>
-      {action}
-    </div>
-  );
-}
-
 function ChecklistItem({ step, idx, checked, onToggle }) {
   return (
     <div
@@ -84,7 +75,7 @@ function ChecklistItem({ step, idx, checked, onToggle }) {
   );
 }
 
-function PlainEnglishCard({ summary, actor, sectors }) {
+function ThreatDossierCard({ summary, actor, sectors }) {
   const safeSectors = Array.isArray(sectors) ? sectors : [];
   return (
     <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
@@ -92,17 +83,17 @@ function PlainEnglishCard({ summary, actor, sectors }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Eye size={14} color="var(--accent)" />
           <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
-            Plain-English Executive Briefing
+            Threat Incident Dossier
           </span>
           <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '3px', background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px solid rgba(56,189,248,0.2)', fontWeight: '700' }}>
-            MANAGEMENT BRIEF
+            OPERATIONAL BRIEF
           </span>
         </div>
       </div>
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <div style={{ padding: '12px', background: 'var(--bg-overlay)', borderRadius: '8px', border: '1px solid var(--border)' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)', marginBottom: '6px' }}>
-            📋 What Happened
+            🚨 Incident Overview & Attack Vector
           </div>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.65', margin: 0 }}>
             {summary || 'No threat summary available.'}
@@ -130,7 +121,7 @@ function PlainEnglishCard({ summary, actor, sectors }) {
 }
 
 /* ─── Main Component ─── */
-export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
+export default function OverviewTab({ threatData, onSwitchTab, _onOpenIngest }) {
   const [checkedSteps, setCheckedSteps]     = useState({});
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [activeSection, setActiveSection]   = useState('briefing');
@@ -178,8 +169,8 @@ export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
   };
 
   const SECTION_TABS = [
-    { id: 'briefing',  label: 'AI Briefing' },
-    { id: 'killchain', label: 'Attack Chain' },
+    { id: 'briefing',  label: 'Threat Dossier' },
+    { id: 'killchain', label: 'Attack Lifecycle' },
     { id: 'checklist', label: 'Response Checklist' },
     { id: 'graph',     label: 'Knowledge Graph' },
   ];
@@ -233,7 +224,7 @@ export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
           <ThreatRadarGauge score={riskScore} cveCount={cves.length} iocCount={iocs.length} tacticCount={mitre_techniques.length} />
         </div>
 
-        <PlainEnglishCard
+        <ThreatDossierCard
           summary={executive_summary}
           actor={threat_actor}
           sectors={target_sectors}
@@ -286,10 +277,10 @@ export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
                       </span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '12px', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {cve.description || cve.software || 'Vulnerability details'}
+                          {cve.description || cve.affected_product || cve.software || 'Vulnerability details'}
                         </div>
                         <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '1px' }}>
-                          CVSS: {cve.cvss_score || '—'} · {cve.software || ''}
+                          CVSS: {cve.cvss ?? cve.cvss_score ?? '—'} · {cve.affected_product || cve.software || 'Target System'}
                         </div>
                       </div>
                       <a href={`https://nvd.nist.gov/vuln/detail/${cve.id}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ flexShrink: 0 }}>
@@ -373,10 +364,10 @@ export default function OverviewTab({ threatData, onSwitchTab, onOpenIngest }) {
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {(blue_team_actions.length ? blue_team_actions : attack_flow_steps).map((step, i) => (
+              {(safeActions.length ? safeActions : safeFlow).map((step, i) => (
                 <ChecklistItem key={i} step={step} idx={i} checked={!!checkedSteps[i]} onToggle={toggleCheck} />
               ))}
-              {!blue_team_actions.length && !attack_flow_steps.length && (
+              {!safeActions.length && !safeFlow.length && (
                 <div style={{ textAlign: 'center', padding: '40px', fontSize: '13px', color: 'var(--text-tertiary)', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '12px' }}>
                   No response actions extracted from this report.
                 </div>

@@ -1,9 +1,11 @@
-import React from 'react';
-import { X, Printer, Download, Shield, FileText, CheckCircle2, AlertTriangle, Building2, Terminal, Copy, Check } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { X, Printer, Download, FileText, Copy, Check } from 'lucide-react';
 import { downloadStixBundle } from '../utils/stixExport';
 
 export default function ExecutiveReportModal({ isOpen, onClose, threatData }) {
   const [copied, setCopied] = React.useState(false);
+
+  const reportDate = useMemo(() => new Date().toLocaleDateString(), []);
 
   if (!isOpen || !threatData) return null;
 
@@ -13,10 +15,10 @@ export default function ExecutiveReportModal({ isOpen, onClose, threatData }) {
     cves = [],
     mitre_techniques = [],
     iocs = [],
-    target_sectors = [],
-    summary = '',
-    defense_artifacts = {}
+    target_sectors = []
   } = threatData;
+
+  const executiveSummary = threatData.executive_summary || threatData.summary || '';
 
   const handlePrint = () => {
     window.print();
@@ -25,8 +27,8 @@ export default function ExecutiveReportModal({ isOpen, onClose, threatData }) {
   const getMarkdownContent = () => {
     let md = `# EXECUTIVE THREAT INTELLIGENCE BRIEFING\n`;
     md += `**Advisory:** ${title}\n`;
-    md += `**Date:** ${new Date().toLocaleDateString()} | **TLP:** AMBER | **Classification:** RESTRICTED\n\n`;
-    md += `## 1. Executive Summary\n${summary || 'Adversary activity detected targeting enterprise environments.'}\n\n`;
+    md += `**Date:** ${reportDate} | **TLP:** AMBER | **Classification:** RESTRICTED\n\n`;
+    md += `## 1. Executive Summary\n${executiveSummary || 'Adversary activity detected targeting enterprise environments.'}\n\n`;
     md += `## 2. Threat Actor Attribution\n`;
     md += `- **Name:** ${threat_actor.name || 'Unknown'}\n`;
     md += `- **Aliases:** ${(threat_actor.aliases || []).join(', ') || 'N/A'}\n`;
@@ -151,7 +153,7 @@ export default function ExecutiveReportModal({ isOpen, onClose, threatData }) {
                 {title}
               </h1>
               <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
-                Published: {new Date().toLocaleDateString()} | Author: SOC Threat Intelligence Unit | AI Engine: Gemini
+                Published: {reportDate} | Author: SOC Threat Intelligence Unit | AI Engine: Gemini
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -203,7 +205,7 @@ export default function ExecutiveReportModal({ isOpen, onClose, threatData }) {
               borderRadius: '8px', padding: '16px 18px', fontSize: '13px',
               color: 'var(--text-secondary)', lineHeight: '1.7'
             }}>
-              {summary || 'Security intelligence operations have detected active exploitation activity. Organizations operating within affected verticals should immediately cross-reference telemetry against the provided Indicators of Compromise (IoCs) and implement mitigation patches.'}
+              {executiveSummary || 'Security intelligence operations have detected active exploitation activity. Organizations operating within affected verticals should immediately cross-reference telemetry against the provided Indicators of Compromise (IoCs) and implement mitigation patches.'}
             </div>
           </div>
 

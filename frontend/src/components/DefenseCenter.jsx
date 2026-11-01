@@ -66,8 +66,18 @@ export default function DefenseCenter({ defenseArtifacts, threatData }) {
   const { sigma_rule = '', yara_rule = '', stix_bundle = {} } = defenseArtifacts || {};
   const stixStr = JSON.stringify(stix_bundle, null, 2);
 
-  const rawIps     = (threatData?.iocs || []).filter(i => i.type?.toLowerCase().includes('ip')).map(i => i.value?.replace(/\[\.\]/g, '.') || '');
-  const rawDomains = (threatData?.iocs || []).filter(i => i.type?.toLowerCase().includes('domain')).map(i => i.value?.replace(/\[\.\]/g, '.') || '');
+  const IP_REGEX = /^([0-9]{1,3}\.){3}[0-9]{1,3}(\/[0-9]{1,2})?$/;
+  const DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,}$/;
+
+  const rawIps = (threatData?.iocs || [])
+    .filter(i => i.type?.toLowerCase().includes('ip'))
+    .map(i => i.value?.replace(/\[\.\]/g, '.').trim() || '')
+    .filter(ip => IP_REGEX.test(ip));
+
+  const rawDomains = (threatData?.iocs || [])
+    .filter(i => i.type?.toLowerCase().includes('domain'))
+    .map(i => i.value?.replace(/\[\.\]/g, '.').trim() || '')
+    .filter(d => DOMAIN_REGEX.test(d));
 
   const buildFirewall = () => {
     if (!rawIps.length && !rawDomains.length) return '# No malicious IPs or domains extracted for this campaign.';
@@ -97,7 +107,7 @@ export default function DefenseCenter({ defenseArtifacts, threatData }) {
 ! CyberIntel.AI — Cisco ASA/IOS ACL Block Rules
 ! Paste into privileged EXEC mode
 ! ═══════════════════════════════════════════════\n\n` +
-      rawIps.map((ip, i) => `access-list CYBERINTEL_BLOCK deny ip host ${ip} any log`).join('\n');
+      rawIps.map(ip => `access-list CYBERINTEL_BLOCK deny ip host ${ip} any log`).join('\n');
     }
     if (fwFormat === 'hosts') {
       return `# ═══════════════════════════════════════════════

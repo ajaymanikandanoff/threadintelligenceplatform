@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Target, Terminal, Bug, Radio, AlertOctagon, ShieldCheck, ChevronRight, CheckCircle2, Lock, Eye, Zap, Layers } from 'lucide-react';
+import { Target, Terminal, Bug, Radio, AlertOctagon, ShieldCheck, Eye, Zap } from 'lucide-react';
 
 const DEFAULT_STAGES = [
   {
     id: 'recon',
     name: 'Initial Access & Infiltration',
     phaseRole: 'Perimeter Breach',
-    simpleExplain: 'Attackers find an unlocked digital door—like an unpatched software bug or phishing email—to break in.',
+    attackActivity: 'Adversary probes public perimeter assets, exploits unpatched remote code execution vulnerabilities, or uses spear-phishing to establish initial corporate network access.',
     analystForensics: 'Exploitation of public edge gateway, CVE remote code execution, or credential theft.',
     defenseControl: 'Patch perimeter CVEs immediately, enforce MFA, and restrict edge management ports.',
     icon: Target,
@@ -17,7 +17,7 @@ const DEFAULT_STAGES = [
     id: 'execution',
     name: 'Execution & Defense Evasion',
     phaseRole: 'Malware Execution',
-    simpleExplain: 'The hacker runs hidden commands, turns off antivirus alerts, and slips past security sensors.',
+    attackActivity: 'Adversary executes unauthorized payloads, utilizes Living-off-the-Land binaries (LOLBins), and disables endpoint telemetry to evade security detection.',
     analystForensics: 'Living-off-the-land binaries (LOLBins), PowerShell obfuscation, security log clearing (T1070).',
     defenseControl: 'Enable PowerShell Script Block Logging, block unauthorized script executions via AppLocker/WDAC.',
     icon: Terminal,
@@ -28,7 +28,7 @@ const DEFAULT_STAGES = [
     id: 'persistence',
     name: 'Persistence & Privilege Escalation',
     phaseRole: 'Backdoor Implant',
-    simpleExplain: 'They install a secret trapdoor so even if the system restarts, they stay inside your network.',
+    attackActivity: 'Adversary deploys web shells, creates scheduled tasks, or modifies registry keys to retain network access across system restarts.',
     analystForensics: 'Webshell placement, scheduled tasks creation, admin account hijacking, registry run keys.',
     defenseControl: 'Audit autorun registry keys, monitor server directories for newly spawned .aspx/.php files.',
     icon: Bug,
@@ -39,7 +39,7 @@ const DEFAULT_STAGES = [
     id: 'c2',
     name: 'Command & Control (C2)',
     phaseRole: 'C2 Beaconing',
-    simpleExplain: 'The infected computer dials out secretly to the hackers server waiting for instructions.',
+    attackActivity: 'Compromised systems establish encrypted outbound communication with attacker infrastructure to receive commands and stage payloads.',
     analystForensics: 'Encrypted HTTPS/DNS beaconing, dynamic domain generation algorithms (DGA), proxy routing.',
     defenseControl: 'Block outbound traffic to newly registered domains & known malicious C2 IP blocks in firewall.',
     icon: Radio,
@@ -50,7 +50,7 @@ const DEFAULT_STAGES = [
     id: 'impact',
     name: 'Exfiltration & Extortion',
     phaseRole: 'Data Theft & Ransom',
-    simpleExplain: 'The grand prize for hackers: stealing confidential company files and demanding millions in ransom.',
+    attackActivity: 'Adversary aggregates confidential enterprise data, compresses archives, transfers them to external staging servers, or encrypts production assets.',
     analystForensics: 'Data staging in hidden archives, megaupload exfiltration, VSS shadow copy deletion, ransomware deployment.',
     defenseControl: 'Isolate affected subnet, revoke API tokens, take offline immutable backups, report to CERT/CISA.',
     icon: AlertOctagon,
@@ -59,7 +59,7 @@ const DEFAULT_STAGES = [
   }
 ];
 
-export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps = [], threatData }) {
+export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps = [] }) {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [viewMode, setViewMode] = useState('dual'); // 'dual' | 'simple' | 'technical'
 
@@ -68,10 +68,20 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
   const stages = DEFAULT_STAGES.map((def, idx) => {
     if (rawSteps[idx]) {
       const real = rawSteps[idx];
+      if (typeof real === 'string') {
+        const clean = real.replace(/^\d+[.)]\s*/, '').trim();
+        return {
+          ...def,
+          attackActivity: clean,
+          analystForensics: clean,
+          tacticMapped: def.id.toUpperCase()
+        };
+      }
       return {
         ...def,
         name: real.title || real.tactic || def.name,
-        analystForensics: real.description || real.evidence || def.analystForensics,
+        attackActivity: real.description || def.attackActivity,
+        analystForensics: real.evidence || real.details || real.description || def.analystForensics,
         tacticMapped: real.tactic || real.technique || null
       };
     }
@@ -114,9 +124,9 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
           border: '1px solid var(--border)'
         }}>
           {[
-            { id: 'dual', label: 'Balanced View' },
-            { id: 'simple', label: 'Plain English' },
-            { id: 'technical', label: 'SOC Analyst' }
+            { id: 'dual', label: 'Full Breakdown' },
+            { id: 'simple', label: 'Adversary Objective' },
+            { id: 'technical', label: 'Forensic Telemetry' }
           ].map(m => (
             <button
               key={m.id}
@@ -285,7 +295,7 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'dual' ? '1fr 1fr' : '1fr', gap: '16px' }}>
-            {/* Plain English Box */}
+            {/* Attack Activity & Objective */}
             {(viewMode === 'dual' || viewMode === 'simple') && (
               <div style={{
                 background: 'var(--bg-elevated)',
@@ -295,14 +305,14 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
               }}>
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
-                  fontSize: '12px', fontWeight: '700', color: 'var(--green)',
+                  fontSize: '12px', fontWeight: '700', color: 'var(--accent)',
                   marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em'
                 }}>
                   <Eye size={14} />
-                  <span>Plain-English Briefing (Non-Technical Explanation)</span>
+                  <span>Adversary Phase & Attack Objective</span>
                 </div>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
-                  {activeStage.simpleExplain}
+                  {activeStage.attackActivity}
                 </p>
               </div>
             )}
@@ -321,7 +331,7 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
                   marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em'
                 }}>
                   <Zap size={14} />
-                  <span>Technical Telemetry & Evidence (SOC Forensics)</span>
+                  <span>Forensic Telemetry & Extracted Evidence</span>
                 </div>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0, fontFamily: 'var(--font-mono)' }}>
                   {activeStage.analystForensics}

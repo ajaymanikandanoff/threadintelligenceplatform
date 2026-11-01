@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Target, GitCommit, BarChart3, HelpCircle, Layers } from 'lucide-react';
+import { Target, GitCommit, BarChart3, Layers } from 'lucide-react';
 import MitreMatrix from './MitreMatrix';
 import KnowledgeGraph from './KnowledgeGraph';
 import AnalyticsDashboard from './AnalyticsDashboard';

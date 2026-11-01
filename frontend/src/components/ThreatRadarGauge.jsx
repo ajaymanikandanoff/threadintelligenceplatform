@@ -5,8 +5,10 @@ export default function ThreatRadarGauge({ score = 0, cveCount = 0, iocCount = 0
   const angle = -135 + (s / 100) * 270;
   const isCritical = s >= 75;
   const isHigh     = s >= 50 && s < 75;
-  const color      = isCritical ? '#f87171' : isHigh ? '#fbbf24' : '#34d399';
+  const color      = isCritical ? 'var(--red)' : isHigh ? 'var(--amber)' : 'var(--green)';
   const label      = isCritical ? 'CRITICAL' : isHigh ? 'HIGH' : 'MODERATE';
+  const badgeBg    = isCritical ? 'var(--red-dim)' : isHigh ? 'var(--amber-dim)' : 'var(--green-dim)';
+  const badgeBorder= isCritical ? 'rgba(248,113,113,0.35)' : isHigh ? 'rgba(251,191,36,0.35)' : 'rgba(52,211,153,0.35)';
 
   // Build arc path for the filled portion
   const toRad = (deg) => (deg * Math.PI) / 180;
@@ -41,7 +43,7 @@ export default function ThreatRadarGauge({ score = 0, cveCount = 0, iocCount = 0
         {/* Track arc (background) */}
         <path
           d={`M ${cx + r * Math.cos(toRad(startAngle))} ${cy + r * Math.sin(toRad(startAngle))} A ${r} ${r} 0 1 1 ${cx + r * Math.cos(toRad(startAngle + 270))} ${cy + r * Math.sin(toRad(startAngle + 270))}`}
-          fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="14" strokeLinecap="round"
+          fill="none" stroke="var(--bg-overlay)" strokeWidth="14" strokeLinecap="round"
         />
 
         {/* Filled arc */}
@@ -61,13 +63,13 @@ export default function ThreatRadarGauge({ score = 0, cveCount = 0, iocCount = 0
               key={v}
               x1={cx + r1 * Math.cos(a)} y1={cy + r1 * Math.sin(a)}
               x2={cx + r2 * Math.cos(a)} y2={cy + r2 * Math.sin(a)}
-              stroke="rgba(255,255,255,0.15)" strokeWidth="2"
+              stroke="var(--border-strong)" strokeWidth="2"
             />
           );
         })}
 
         {/* Center */}
-        <circle cx={cx} cy={cy} r="7" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+        <circle cx={cx} cy={cy} r="7" fill="var(--bg-overlay)" stroke="var(--border-strong)" strokeWidth="1.5" />
 
         {/* Needle */}
         <line
@@ -78,19 +80,19 @@ export default function ThreatRadarGauge({ score = 0, cveCount = 0, iocCount = 0
         />
 
         {/* Score text */}
-        <text x={cx} y={cy + 24} textAnchor="middle" fill={color} fontSize="26" fontWeight="800" fontFamily="Inter, sans-serif">{s}</text>
-        <text x={cx} y={cy + 38} textAnchor="middle" fill="rgba(148,163,184,0.8)" fontSize="9" fontFamily="Inter, sans-serif" letterSpacing="1">RISK SCORE</text>
+        <text x={cx} y={cy + 24} textAnchor="middle" fill={color} fontSize="26" fontWeight="800" fontFamily="var(--font-sans)">{s}</text>
+        <text x={cx} y={cy + 38} textAnchor="middle" fill="var(--text-tertiary)" fontSize="9" fontFamily="var(--font-sans)" letterSpacing="1">RISK SCORE</text>
 
         {/* Labels */}
-        <text x={cx - 68} y={cy + 22} fill="rgba(52,211,153,0.7)" fontSize="9" fontFamily="Inter">LOW</text>
-        <text x={cx + 52} y={cy + 22} fill="rgba(248,113,113,0.7)" fontSize="9" fontFamily="Inter">HIGH</text>
+        <text x={cx - 68} y={cy + 22} fill="var(--green)" fontSize="9" fontFamily="var(--font-sans)">LOW</text>
+        <text x={cx + 52} y={cy + 22} fill="var(--red)" fontSize="9" fontFamily="var(--font-sans)">HIGH</text>
       </svg>
 
       {/* Severity label */}
       <div style={{
         padding: '4px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: '800',
-        letterSpacing: '0.06em', fontFamily: 'Inter, sans-serif',
-        background: `${color}20`, color, border: `1px solid ${color}40`
+        letterSpacing: '0.06em', fontFamily: 'var(--font-sans)',
+        background: badgeBg, color, border: `1px solid ${badgeBorder}`
       }}>
         {label} THREAT
       </div>
@@ -98,13 +100,13 @@ export default function ThreatRadarGauge({ score = 0, cveCount = 0, iocCount = 0
       {/* Mini stats */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', width: '100%' }}>
         {[
-          { label: 'CVEs', value: cveCount, c: '#fbbf24' },
-          { label: 'IoCs', value: iocCount, c: '#f87171' },
-          { label: 'TTPs', value: tacticCount, c: '#a78bfa' },
+          { label: 'CVEs', value: cveCount, c: 'var(--amber)' },
+          { label: 'IoCs', value: iocCount, c: 'var(--red)' },
+          { label: 'TTPs', value: tacticCount, c: 'var(--purple)' },
         ].map(m => (
-          <div key={m.label} style={{ textAlign: 'center', padding: '7px 4px', background: 'rgba(255,255,255,0.03)', borderRadius: '7px', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize: '16px', fontWeight: '800', color: m.c, lineHeight: 1, fontFamily: 'Inter' }}>{m.value}</div>
-            <div style={{ fontSize: '9px', color: 'rgba(148,163,184,0.7)', marginTop: '2px', fontFamily: 'Inter', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{m.label}</div>
+          <div key={m.label} style={{ textAlign: 'center', padding: '7px 4px', background: 'var(--bg-overlay)', borderRadius: '7px', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: m.c, lineHeight: 1, fontFamily: 'var(--font-mono)' }}>{m.value}</div>
+            <div style={{ fontSize: '9px', color: 'var(--text-tertiary)', marginTop: '2px', fontFamily: 'var(--font-sans)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{m.label}</div>
           </div>
         ))}
       </div>

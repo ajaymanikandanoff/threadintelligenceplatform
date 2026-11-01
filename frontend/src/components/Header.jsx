@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, FileUp, Settings, FileText, BookOpen, Sun, Moon, Zap } from 'lucide-react';
+import { Shield, Settings, FileText, BookOpen, Sun, Moon, Zap } from 'lucide-react';
 
 export default function Header({ hasCustomKey, onOpenSettings, onOpenIngest, onOpenReport, onOpenGlossary, threatData, theme, onToggleTheme }) {
   return (
@@ -51,7 +51,7 @@ export default function Header({ hasCustomKey, onOpenSettings, onOpenIngest, onO
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
         <button className="btn-ghost" onClick={onOpenGlossary} style={{ fontSize: '12px', padding: '6px 10px' }}>
           <BookOpen size={13} />
-          <span>Dictionary</span>
+          <span>Feature Guide</span>
         </button>
 
         {threatData && (

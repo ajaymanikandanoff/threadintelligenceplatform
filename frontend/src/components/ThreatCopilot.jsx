@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Send, Bot, User, Sparkles, Loader, Zap } from 'lucide-react';
+import { Send, Bot, User, Loader } from 'lucide-react';
 
 const QUICK_PROMPTS = [
-  { icon: '🧠', text: 'Explain this attack in plain language.' },
+  { icon: '🛡️', text: 'Summarize attack vector and impacted assets.' },
   { icon: '⚡', text: 'What must our IT team do in the next 1 hour?' },
   { icon: '🚫', text: 'List all IPs to block on our firewall.' },
   { icon: '🩹', text: 'Which software needs emergency patching?' },
@@ -14,8 +14,11 @@ export default function ThreatCopilot({ messages, onSendMessage, isLoading, thre
 
   React.useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isLoading]);
   React.useEffect(() => {
-    if (externalQuery) { setInput(externalQuery); onClearExternalQuery?.(); }
-  }, [externalQuery]);
+    if (externalQuery) {
+      setInput(externalQuery);
+      onClearExternalQuery?.();
+    }
+  }, [externalQuery, onClearExternalQuery]);
 
   const submit = (e) => {
     e.preventDefault();

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AlertTriangle, Shield, TrendingUp, PieChart, Activity, Zap, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, Shield, TrendingUp, PieChart, Activity } from 'lucide-react';
 
 const PALETTE = ['#f87171', '#fbbf24', '#38bdf8', '#c084fc', '#34d399', '#f472b6'];
 
@@ -8,7 +8,15 @@ function DonutChart({ segments, size = 120 }) {
   const strokeWidth = 18;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  let accumulatedPercent = 0;
+
+  const computedSegments = segments.reduce((acc, seg) => {
+    const strokeDashoffset = circumference - (seg.value / total) * circumference;
+    const rotateAngle = acc.running * 360;
+    return {
+      running: acc.running + seg.value / total,
+      items: [...acc.items, { ...seg, strokeDashoffset, rotateAngle }]
+    };
+  }, { running: 0, items: [] }).items;
 
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
@@ -17,28 +25,22 @@ function DonutChart({ segments, size = 120 }) {
           cx={size / 2} cy={size / 2} r={radius}
           fill="none" stroke="var(--bg-overlay)" strokeWidth={strokeWidth}
         />
-        {segments.map((seg, i) => {
-          const strokeDashoffset = circumference - (seg.value / total) * circumference;
-          const rotateAngle = accumulatedPercent * 360;
-          accumulatedPercent += seg.value / total;
-
-          return (
-            <circle
-              key={i}
-              cx={size / 2} cy={size / 2} r={radius}
-              fill="none"
-              stroke={seg.color}
-              strokeWidth={strokeWidth}
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              style={{
-                transformOrigin: '50% 50%',
-                transform: `rotate(${rotateAngle}deg)`,
-                transition: 'all 0.6s ease'
-              }}
-            />
-          );
-        })}
+        {computedSegments.map((seg, i) => (
+          <circle
+            key={i}
+            cx={size / 2} cy={size / 2} r={radius}
+            fill="none"
+            stroke={seg.color}
+            strokeWidth={strokeWidth}
+            strokeDasharray={circumference}
+            strokeDashoffset={seg.strokeDashoffset}
+            style={{
+              transformOrigin: '50% 50%',
+              transform: `rotate(${seg.rotateAngle}deg)`,
+              transition: 'all 0.6s ease'
+            }}
+          />
+        ))}
       </svg>
       <div style={{
         position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',

@@ -22,11 +22,11 @@ import {
 } from 'lucide-react';
 
 const TABS = [
-  { id: 'overview',  label: 'Threat Overview',    icon: LayoutDashboard, sub: 'What happened & who attacked' },
-  { id: 'defense',   label: 'Defense Center',      icon: ShieldCheck,     sub: 'Firewall & containment rules' },
-  { id: 'iocs',      label: 'Threat Indicators',   icon: Search,          sub: 'IPs, hashes & domains to block' },
-  { id: 'copilot',   label: 'AI Copilot',          icon: MessageSquare,   sub: 'Ask questions in plain English' },
-  { id: 'technical', label: 'Technical Deep Dive', icon: Cpu,             sub: 'MITRE ATT&CK & attack graph' },
+  { id: 'overview',  label: 'Threat Overview',    icon: LayoutDashboard, sub: 'Incident summary & risk metrics' },
+  { id: 'defense',   label: 'Defense Center',      icon: ShieldCheck,     sub: 'Firewall rules & SIEM detections' },
+  { id: 'iocs',      label: 'Threat Indicators',   icon: Search,          sub: 'Malicious IPs, domains & hashes' },
+  { id: 'copilot',   label: 'AI Copilot',          icon: MessageSquare,   sub: 'Interactive SOC intelligence' },
+  { id: 'technical', label: 'Technical Deep Dive', icon: Cpu,             sub: 'MITRE matrix & knowledge graph' },
 ];
 
 function LoadingScreen() {
@@ -68,7 +68,7 @@ function LoadingScreen() {
   );
 }
 
-function EmptyState({ onOpenIngest }) {
+function EmptyState({ onOpenIngest, onSelectReport }) {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -88,26 +88,37 @@ function EmptyState({ onOpenIngest }) {
           No Threat Loaded
         </h2>
         <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.65', margin: 0 }}>
-          Load a government security advisory from the sidebar, or click <strong style={{ color: 'var(--accent)' }}>Analyze Threat</strong> to upload your own PDF / paste logs.
+          Load a government security advisory below, or click <strong style={{ color: 'var(--accent)' }}>Analyze Threat</strong> to upload your own PDF / paste logs.
         </p>
       </div>
 
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
         {[
-          { label: '🏛️ CISA Advisory', desc: 'CL0P Ransomware / MOVEit' },
-          { label: '🛡️ NSA Report', desc: 'Volt Typhoon China APT' },
-          { label: '🚨 FBI Alert', desc: 'ALPHV BlackCat Ransomware' },
+          { label: '🏛️ CISA Advisory', desc: 'CL0P Ransomware / MOVEit', id: 'cisa-aa23-158a' },
+          { label: '🛡️ NSA Report', desc: 'Volt Typhoon China APT', id: 'cisa-volt-typhoon' },
+          { label: '🚨 FBI Alert', desc: 'ALPHV BlackCat Ransomware', id: 'alphv-blackcat-healthcare' },
         ].map(f => (
-          <div key={f.label} style={{
-            padding: '12px 16px', borderRadius: '10px', background: 'var(--bg-elevated)',
-            border: '1px solid var(--border)', fontSize: '12px', color: 'var(--text-secondary)',
-            minWidth: '130px'
-          }}>
+          <button
+            key={f.label}
+            onClick={() => onSelectReport ? onSelectReport(f.id) : onOpenIngest?.()}
+            style={{
+              padding: '12px 16px', borderRadius: '10px', background: 'var(--bg-elevated)',
+              border: '1px solid var(--border)', fontSize: '12px', color: 'var(--text-secondary)',
+              minWidth: '140px', cursor: 'pointer', textAlign: 'left', fontFamily: 'var(--font-sans)',
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'var(--bg-hover)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-elevated)'; }}
+          >
             <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '13px', marginBottom: '2px' }}>{f.label}</div>
             <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{f.desc}</div>
-          </div>
+          </button>
         ))}
       </div>
+
+      <button className="btn-primary" onClick={onOpenIngest} style={{ padding: '8px 18px', fontSize: '13px' }}>
+        <ShieldCheck size={14} /> Ingest Advisory / Upload PDF
+      </button>
     </div>
   );
 }
@@ -130,7 +141,7 @@ export default function App() {
   const [externalCopilotQuery, setExternalCopilotQuery] = useState('');
   const [copilotMessages, setCopilotMessages] = useState([{
     role: 'assistant',
-    content: '👋 Hello! I\'m your AI Security Copilot. I can explain cyber attacks in plain language, give step-by-step containment instructions, or help write firewall rules.\n\nLoad a threat report on the left to get started, then ask me anything!'
+    content: '👋 Hello! I\'m your AI Security Copilot. I can analyze threat incident reports, correlate MITRE ATT&CK techniques, provide step-by-step containment instructions, and generate defensive firewall rules.\n\nSelect a threat report from the left sidebar to get started, then ask me anything!'
   }]);
 
   useEffect(() => {
@@ -339,7 +350,7 @@ export default function App() {
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
             >
               <BookOpen size={13} />
-              <span>Cyber Glossary</span>
+              <span>Feature Guide</span>
             </button>
           </div>
         </nav>
@@ -353,7 +364,15 @@ export default function App() {
         }}>
           {isAnalyzing ? <LoadingScreen /> : (
             <>
-              {!threatData && activeTab !== 'copilot' && <EmptyState onOpenIngest={() => setIsIngestOpen(true)} />}
+              {!threatData && activeTab !== 'copilot' && (
+                <EmptyState
+                  onOpenIngest={() => setIsIngestOpen(true)}
+                  onSelectReport={(repId) => {
+                    const rep = sampleReports.find(x => x.id === repId);
+                    if (rep) analyzeThreatReport(rep.content, rep.title, rep.id);
+                  }}
+                />
+              )}
               {(threatData || activeTab === 'copilot') && (
                 <>
                   {activeTab === 'overview'  && <OverviewTab threatData={threatData} onSwitchTab={setActiveTab} onOpenIngest={() => setIsIngestOpen(true)} />}

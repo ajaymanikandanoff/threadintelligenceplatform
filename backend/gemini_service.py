@@ -332,7 +332,7 @@ async def call_gemini_api(api_key: str, model_name: str, prompt: str, system_pro
     if not clean_model.startswith("models/"):
         clean_model = f"models/{clean_model}"
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/{clean_model}:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/{clean_model}:generateContent"
     
     payload = {
         "systemInstruction": {
@@ -349,8 +349,13 @@ async def call_gemini_api(api_key: str, model_name: str, prompt: str, system_pro
         }
     }
     
+    headers = {
+        "Content-Type": "application/json",
+        "x-goog-api-key": api_key.strip()
+    }
+    
     async with httpx.AsyncClient(timeout=45.0) as client:
-        response = await client.post(url, json=payload, headers={"Content-Type": "application/json"})
+        response = await client.post(url, json=payload, headers=headers)
         if response.status_code != 200:
             raise Exception(f"Gemini API returned status {response.status_code}: {response.text}")
         data = response.json()

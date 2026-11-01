@@ -16,10 +16,16 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Enable CORS for local Vite dev server
+# Enable CORS for local dev server
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -86,6 +92,10 @@ async def upload_pdf_report(
 ):
     try:
         content_bytes = await file.read()
+        # Max file size limit: 15MB
+        if len(content_bytes) > 15 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="File too large. Maximum supported upload size is 15MB.")
+
         extracted_text = ""
         filename = file.filename or "uploaded_report.pdf"
         
@@ -111,6 +121,8 @@ async def upload_pdf_report(
         result["filename"] = filename
         result["extracted_char_count"] = len(extracted_text)
         return result
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
 

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { X, ExternalLink, Search, Filter, ShieldAlert, Sparkles, MessageSquare, CheckCircle2, ChevronRight } from 'lucide-react';
+import { X, Search, Filter, ExternalLink, MessageSquare } from 'lucide-react';
 
 export default function MitreMatrix({ tactics = [], activeTechniques = [], onAskCopilot }) {
   const [selectedTech, setSelectedTech] = useState(null);

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { ZoomIn, ZoomOut, RotateCcw, X, Terminal, Maximize2, Minimize2, Search, Filter, MessageSquare, Copy, Check, ShieldAlert } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, X, Maximize2, Minimize2, Search, MessageSquare, Copy, Check } from 'lucide-react';
 
 const NODE_TYPES = {
   actor:     { label: 'Attacker',   color: '#f87171', bg: 'rgba(248,113,113,0.18)', ring: '#f87171' },
@@ -314,10 +314,10 @@ export default function KnowledgeGraph({ graphData, onAskCopilot }) {
                 <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Node ID</div>
                 <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>{selected.id}</div>
               </div>
-              {selected.description && (
+              {(selected.details || selected.description) && (
                 <div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Description</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{selected.description}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Details / Context</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{selected.details || selected.description}</div>
                 </div>
               )}
             </div>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Copy, Check, Download, Filter, ExternalLink, Shield, Globe, Hash, Link2 } from 'lucide-react';
+import { Search, Copy, Check, Download, ExternalLink, Shield, Globe, Hash, Link2 } from 'lucide-react';
 import { downloadStixBundle } from '../utils/stixExport';
 
 const IOC_META = {
