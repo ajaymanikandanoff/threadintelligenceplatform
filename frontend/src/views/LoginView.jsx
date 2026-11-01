@@ -12,8 +12,7 @@ import {
   AlertCircle,
   X,
   RefreshCw,
-  Sparkles,
-  Check
+  Sparkles
 } from 'lucide-react';
 import { auth, googleProvider, signInWithPopup } from '../utils/firebase';
 
@@ -115,11 +114,7 @@ export default function LoginView({ onSignIn, onCancel }) {
   const [googleCustomName, setGoogleCustomName] = useState('');
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  // GitHub OAuth Modal State
-  const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
-  const [githubCustomUser, setGithubCustomUser] = useState('ajay-sec');
-  const [githubCustomEmail, setGithubCustomEmail] = useState('ajay.security@github.com');
-  const [isGitHubLoading, setIsGitHubLoading] = useState(false);
+
 
   const showAlert = (message, type = 'error') => {
     setAlert({ message, type });
@@ -377,64 +372,7 @@ export default function LoginView({ onSignIn, onCancel }) {
     setTimeout(() => onSignIn(sessionUser), 400);
   };
 
-  /* ==============================================================
-     GITHUB OAUTH HANDLER (WITH AUTHORIZATION MODAL)
-     ============================================================== */
-  const executeGitHubLogin = async (username, email) => {
-    setIsGitHubLoading(true);
-    const uname = (username || 'ajay-sec').trim();
-    const uemail = (email || `${uname}@github.threatlens.io`).trim().toLowerCase();
-    const picture = `https://avatars.githubusercontent.com/u/9919?v=4`;
-    const name = uname === 'ajay-sec' ? 'Ajay M. (GitHub)' : uname.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
-    try {
-      const resp = await fetch(`${API_BASE}/api/auth/github`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: uemail,
-          name,
-          username: uname,
-          picture
-        })
-      });
-      const data = await resp.json();
-      if (resp.ok && data.success) {
-        const sessionUser = {
-          id: data.user.id,
-          name: data.user.name,
-          email: data.user.email,
-          role: data.user.role || 'SecOps Engineer',
-          picture: data.user.pictureUrl || picture,
-          authProvider: 'GITHUB',
-          loggedIn: true,
-          loginTime: new Date().toISOString()
-        };
-        saveSession(sessionUser, true);
-        setIsGitHubModalOpen(false);
-        showAlert(`Authenticated via GitHub! Welcome, ${sessionUser.name}.`, 'success');
-        setTimeout(() => onSignIn(sessionUser), 300);
-        return;
-      }
-    } catch {
-      // Offline fallback
-    } finally {
-      setIsGitHubLoading(false);
-    }
-
-    const sessionUser = {
-      name,
-      email: uemail,
-      role: 'SecOps Engineer',
-      authProvider: 'GITHUB',
-      loggedIn: true,
-      loginTime: new Date().toISOString()
-    };
-    saveSession(sessionUser, true);
-    setIsGitHubModalOpen(false);
-    showAlert(`Signed in via GitHub! Welcome, ${sessionUser.name}.`, 'success');
-    setTimeout(() => onSignIn(sessionUser), 300);
-  };
 
   const handleTriggerGoogleAuth = async () => {
     hideAlert();
@@ -456,10 +394,7 @@ export default function LoginView({ onSignIn, onCancel }) {
     }
   };
 
-  const handleTriggerGitHubAuth = () => {
-    hideAlert();
-    setIsGitHubModalOpen(true);
-  };
+
 
   /* ==============================================================
      OTP FORGOT PASSWORD FLOW
@@ -931,53 +866,31 @@ export default function LoginView({ onSignIn, onCancel }) {
                 <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.08)' }} />
               </div>
 
-              {/* Social Login Buttons Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <button
-                  type="button"
-                  onClick={handleTriggerGoogleAuth}
-                  disabled={isLoading}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                    background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '8px', padding: '10px 12px',
-                    color: '#f8fafc', fontSize: '12.5px', fontWeight: '600',
-                    cursor: 'pointer', transition: 'border-color 0.15s ease'
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.35)'}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
-                  title="Sign in with Google Account"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/>
-                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.25 21.35 7.31 24 12 24z"/>
-                    <path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.21 0 10.04 0 12s.46 3.79 1.26 5.41l4.02-3.09z"/>
-                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.65 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/>
-                  </svg>
-                  <span>Google</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleTriggerGitHubAuth}
-                  disabled={isLoading}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                    background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '8px', padding: '10px 12px',
-                    color: '#f8fafc', fontSize: '12.5px', fontWeight: '600',
-                    cursor: 'pointer', transition: 'border-color 0.15s ease'
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.35)'}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
-                  title="Sign in with GitHub"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#f8fafc">
-                    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-                  </svg>
-                  <span>GitHub</span>
-                </button>
-              </div>
+              {/* Google Sign-In */}
+              <button
+                type="button"
+                onClick={handleTriggerGoogleAuth}
+                disabled={isLoading}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                  background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: '9px', padding: '11px 14px',
+                  color: '#f8fafc', fontSize: '13px', fontWeight: '600',
+                  cursor: 'pointer', transition: 'border-color 0.15s ease',
+                  width: '100%'
+                }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.35)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
+                title="Sign in with Google Account"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.25 21.35 7.31 24 12 24z"/>
+                  <path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.21 0 10.04 0 12s.46 3.79 1.26 5.41l4.02-3.09z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.65 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/>
+                </svg>
+                <span>Continue with Google</span>
+              </button>
 
 
             </form>
@@ -1153,46 +1066,31 @@ export default function LoginView({ onSignIn, onCancel }) {
                 <div style={{ flex: 1, height: '1px', background: 'rgba(255, 255, 255, 0.08)' }} />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <button
-                  type="button"
-                  onClick={handleTriggerGoogleAuth}
-                  disabled={isLoading}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                    background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '8px', padding: '9px 12px',
-                    color: '#f8fafc', fontSize: '12.5px', fontWeight: '600',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/>
-                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.25 21.35 7.31 24 12 24z"/>
-                    <path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.21 0 10.04 0 12s.46 3.79 1.26 5.41l4.02-3.09z"/>
-                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.65 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/>
-                  </svg>
-                  <span>Google</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleTriggerGitHubAuth}
-                  disabled={isLoading}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                    background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '8px', padding: '9px 12px',
-                    color: '#f8fafc', fontSize: '12.5px', fontWeight: '600',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#f8fafc">
-                    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-                  </svg>
-                  <span>GitHub</span>
-                </button>
-              </div>
+              {/* Google Sign-Up */}
+              <button
+                type="button"
+                onClick={handleTriggerGoogleAuth}
+                disabled={isLoading}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                  background: '#070b14', border: '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: '9px', padding: '11px 14px',
+                  color: '#f8fafc', fontSize: '13px', fontWeight: '600',
+                  cursor: 'pointer', transition: 'border-color 0.15s ease',
+                  width: '100%'
+                }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.35)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
+                title="Sign up with Google Account"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.25 21.35 7.31 24 12 24z"/>
+                  <path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.21 0 10.04 0 12s.46 3.79 1.26 5.41l4.02-3.09z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.65 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/>
+                </svg>
+                <span>Continue with Google</span>
+              </button>
             </form>
           )}
 
@@ -1389,164 +1287,7 @@ export default function LoginView({ onSignIn, onCancel }) {
         </div>
       )}
 
-      {/* ==============================================================
-         GITHUB OAUTH AUTHORIZATION MODAL
-         ============================================================== */}
-      {isGitHubModalOpen && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.82)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-          padding: '20px'
-        }}>
-          <div style={{
-            background: '#0d1117',
-            color: '#c9d1d9',
-            border: '1px solid #30363d',
-            borderRadius: '16px',
-            maxWidth: '450px',
-            width: '100%',
-            boxShadow: '0 25px 70px rgba(0, 0, 0, 0.8)',
-            overflow: 'hidden',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
-          }}>
-            {/* Header */}
-            <div style={{ padding: '24px 24px 16px', textAlign: 'center', borderBottom: '1px solid #21262d' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginBottom: '14px' }}>
-                <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#21262d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="#f0f6fc">
-                    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-                  </svg>
-                </div>
-                <div style={{ color: '#8b949e', fontSize: '18px' }}>⇄</div>
-                <div style={{
-                  width: '44px', height: '44px', borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #0284c7 0%, #00e5ff 100%)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
-                  <Shield size={24} color="#06090f" />
-                </div>
-              </div>
 
-              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#f0f6fc', margin: '0 0 6px' }}>
-                Authorize ThreatLens Security
-              </h3>
-              <p style={{ fontSize: '12.5px', color: '#8b949e', margin: 0, lineHeight: '1.4' }}>
-                <strong>ThreatLens Platform</strong> wants to access your GitHub identity.
-              </p>
-            </div>
-
-            {/* GitHub Account Selector & Scopes */}
-            <div style={{ padding: '20px 24px' }}>
-              {/* Quick Account Cards */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '700', color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Select GitHub Account:
-                </div>
-
-                <div
-                  onClick={() => {
-                    setGithubCustomUser('ajay-sec');
-                    setGithubCustomEmail('ajay.security@github.com');
-                  }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '12px',
-                    padding: '10px 14px', borderRadius: '8px',
-                    background: githubCustomUser === 'ajay-sec' ? 'rgba(56, 189, 248, 0.12)' : '#161b22',
-                    border: `1px solid ${githubCustomUser === 'ajay-sec' ? 'rgba(56, 189, 248, 0.4)' : '#30363d'}`,
-                    cursor: 'pointer'
-                  }}
-                >
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#21262d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#f0f6fc">
-                      <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-                    </svg>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#f0f6fc' }}>Ajay M. (@ajay-sec)</div>
-                    <div style={{ fontSize: '11px', color: '#8b949e' }}>ajay.security@github.com</div>
-                  </div>
-                  {githubCustomUser === 'ajay-sec' && <Check size={16} color="#38bdf8" />}
-                </div>
-
-                <div
-                  onClick={() => {
-                    setGithubCustomUser('threat-intel');
-                    setGithubCustomEmail('threat-intel@github.com');
-                  }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '12px',
-                    padding: '10px 14px', borderRadius: '8px',
-                    background: githubCustomUser === 'threat-intel' ? 'rgba(56, 189, 248, 0.12)' : '#161b22',
-                    border: `1px solid ${githubCustomUser === 'threat-intel' ? 'rgba(56, 189, 248, 0.4)' : '#30363d'}`,
-                    cursor: 'pointer'
-                  }}
-                >
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#21262d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Shield size={16} color="#38bdf8" />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#f0f6fc' }}>ThreatOps Intel (@threat-intel)</div>
-                    <div style={{ fontSize: '11px', color: '#8b949e' }}>threat-intel@github.com</div>
-                  </div>
-                  {githubCustomUser === 'threat-intel' && <Check size={16} color="#38bdf8" />}
-                </div>
-              </div>
-
-              {/* Scopes list */}
-              <div style={{
-                background: '#161b22', border: '1px solid #30363d', borderRadius: '8px', padding: '12px 14px',
-                display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', color: '#8b949e'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#3fb950' }}>
-                  <Check size={14} />
-                  <span>Verify public GitHub identity ({githubCustomUser || 'ajay-sec'})</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#3fb950' }}>
-                  <Check size={14} />
-                  <span>Link SecOps threat investigation repository telemetry</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Buttons */}
-            <div style={{ padding: '0 24px 20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button
-                type="button"
-                disabled={isGitHubLoading || !githubCustomUser.trim()}
-                onClick={() => executeGitHubLogin(githubCustomUser.trim(), githubCustomEmail.trim())}
-                style={{
-                  background: '#238636', color: '#ffffff', border: '1px solid rgba(240, 246, 252, 0.1)',
-                  borderRadius: '8px', padding: '11px', fontSize: '13.5px', fontWeight: '700',
-                  cursor: isGitHubLoading ? 'not-allowed' : 'pointer', width: '100%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  boxShadow: '0 0 16px rgba(35, 134, 54, 0.4)'
-                }}
-              >
-                <span>{isGitHubLoading ? 'Authorizing GitHub session...' : `Authorize & Sign In (@${githubCustomUser || 'ajay-sec'})`}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsGitHubModalOpen(false)}
-                style={{
-                  background: '#21262d', color: '#c9d1d9', border: '1px solid #30363d',
-                  borderRadius: '8px', padding: '9px', fontSize: '12.5px', fontWeight: '600',
-                  cursor: 'pointer', width: '100%'
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ==============================================================
          FORGOT PASSWORD OTP MODAL (Matching aifactchecker #otp-modal)
