@@ -67,21 +67,17 @@ export default function ExecutiveReportModal({ isOpen, onClose, threatData }) {
   };
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 100,
-      background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(8px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px'
-    }} onClick={onClose}>
-      <div style={{
-        background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '14px',
-        width: '100%', maxWidth: '880px', maxHeight: '90vh', display: 'flex', flexDirection: 'column',
-        boxShadow: '0 24px 64px rgba(0,0,0,0.7)', overflow: 'hidden'
-      }} onClick={e => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className="modal-container"
+        style={{ maxWidth: '900px', display: 'flex', flexDirection: 'column' }}
+        onClick={e => e.stopPropagation()}
+      >
         {/* Header Bar */}
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           padding: '16px 24px', borderBottom: '1px solid var(--border)',
-          background: 'var(--bg-base)'
+          background: 'var(--bg-overlay)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
@@ -92,41 +88,38 @@ export default function ExecutiveReportModal({ isOpen, onClose, threatData }) {
               <FileText size={16} color="var(--accent)" />
             </div>
             <div>
-              <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
-                Executive CTI Briefing & PDF Report
+              <h3 style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
+                Executive CTI Briefing & PDF Dossier
               </h3>
               <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
-                Official Threat Assessment for CISO & Board
+                Official Threat Assessment for C-Suite & Security Leadership
               </div>
             </div>
             <span style={{
               marginLeft: '8px', padding: '2px 8px', borderRadius: '4px',
-              background: 'rgba(251,191,36,0.12)', color: 'var(--amber)',
-              border: '1px solid rgba(251,191,36,0.3)', fontSize: '11px',
-              fontWeight: '700', fontFamily: 'var(--font-mono)'
+              background: 'var(--amber-dim)', color: 'var(--amber)',
+              border: '1px solid rgba(245,158,11,0.3)', fontSize: '10.5px',
+              fontWeight: '800', fontFamily: 'var(--font-mono)'
             }}>
               TLP:AMBER
             </span>
           </div>
 
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <button className="btn-ghost" onClick={copyMarkdown} style={{ padding: '6px 12px', fontSize: '12px' }}>
+            <button className="btn-ghost" onClick={copyMarkdown} style={{ padding: '6px 12px', fontSize: '11.5px' }}>
               {copied ? <Check size={13} color="var(--green)" /> : <Copy size={13} />}
-              <span>{copied ? 'Copied' : 'Copy'}</span>
+              <span>{copied ? 'Copied' : 'Copy MD'}</span>
             </button>
-            <button className="btn-ghost" onClick={downloadMarkdown} style={{ padding: '6px 12px', fontSize: '12px' }}>
+            <button className="btn-ghost" onClick={downloadMarkdown} style={{ padding: '6px 12px', fontSize: '11.5px' }}>
               <Download size={13} /><span>Markdown</span>
             </button>
-            <button className="btn-ghost" onClick={() => downloadStixBundle(threatData)} style={{ padding: '6px 12px', fontSize: '12px' }}>
+            <button className="btn-ghost" onClick={() => downloadStixBundle(threatData)} style={{ padding: '6px 12px', fontSize: '11.5px' }}>
               <Download size={13} /><span>STIX 2.1</span>
             </button>
-            <button className="btn-primary" onClick={handlePrint} style={{ padding: '6px 14px', fontSize: '12px' }}>
+            <button className="btn-primary" onClick={handlePrint} style={{ padding: '6px 14px', fontSize: '11.5px' }}>
               <Printer size={13} /><span>Print / PDF</span>
             </button>
-            <button onClick={onClose} style={{
-              background: 'none', border: 'none', color: 'var(--text-tertiary)',
-              cursor: 'pointer', padding: '6px', marginLeft: '4px', display: 'flex'
-            }}>
+            <button onClick={onClose} className="btn-ghost" style={{ padding: '6px', border: 'none', background: 'transparent' }}>
               <X size={18} />
             </button>
           </div>
@@ -144,8 +137,9 @@ export default function ExecutiveReportModal({ isOpen, onClose, threatData }) {
           }}>
             <div>
               <div style={{
-                fontSize: '11px', fontWeight: '700', letterSpacing: '0.12em',
-                color: 'var(--accent)', textTransform: 'uppercase', marginBottom: '4px'
+                fontSize: '11px', fontWeight: '800', letterSpacing: '0.12em',
+                color: 'var(--accent)', textTransform: 'uppercase', marginBottom: '4px',
+                fontFamily: 'var(--font-mono)'
               }}>
                 CYBER THREAT INTELLIGENCE ADVISORY BRIEFING
               </div>
@@ -153,15 +147,15 @@ export default function ExecutiveReportModal({ isOpen, onClose, threatData }) {
                 {title}
               </h1>
               <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
-                Published: {reportDate} | Author: SOC Threat Intelligence Unit | AI Engine: Gemini
+                Published: {reportDate} | Author: SOC Threat Intelligence Unit | AI Engine: Gemini 2.5 Flash
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <span style={{
-                background: 'rgba(248,113,113,0.15)', color: 'var(--red)',
-                border: '1px solid rgba(248,113,113,0.35)', padding: '5px 12px',
-                borderRadius: '6px', fontSize: '12px', fontWeight: '800',
-                letterSpacing: '0.04em'
+                background: 'var(--red-dim)', color: 'var(--red)',
+                border: '1px solid rgba(244,63,94,0.35)', padding: '5px 12px',
+                borderRadius: '6px', fontSize: '11.5px', fontWeight: '800',
+                letterSpacing: '0.04em', fontFamily: 'var(--font-mono)'
               }}>
                 THREAT LEVEL: CRITICAL
               </span>
@@ -171,37 +165,46 @@ export default function ExecutiveReportModal({ isOpen, onClose, threatData }) {
           {/* Key Metrics Strip */}
           <div style={{
             display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px',
-            background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: '10px',
+            background: 'var(--bg-overlay)', border: '1px solid var(--border)', borderRadius: '10px',
             padding: '16px 20px', marginBottom: '28px'
           }}>
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '600' }}>Primary Adversary</div>
-              <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--red)', marginTop: '2px' }}>{threat_actor.name || 'Unattributed'}</div>
+              <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '700' }}>Primary Adversary</div>
+              <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--red)', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+                {threat_actor.name || 'Unattributed'}
+              </div>
             </div>
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '600' }}>CVEs Identified</div>
-              <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--amber)', marginTop: '2px' }}>{cves.length} Exploit(s)</div>
+              <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '700' }}>CVEs Identified</div>
+              <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--amber)', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+                {cves.length} Exploit(s)
+              </div>
             </div>
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '600' }}>MITRE ATT&CK</div>
-              <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--accent)', marginTop: '2px' }}>{mitre_techniques.length} Techniques</div>
+              <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '700' }}>MITRE ATT&CK</div>
+              <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--accent)', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+                {mitre_techniques.length} Techniques
+              </div>
             </div>
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '600' }}>Active IoCs</div>
-              <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--green)', marginTop: '2px' }}>{iocs.length} Indicators</div>
+              <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '700' }}>Active Indicators</div>
+              <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--green)', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+                {iocs.length} IoCs
+              </div>
             </div>
           </div>
 
           {/* Section 1: Executive Summary */}
           <div style={{ marginBottom: '28px' }}>
             <h4 style={{
-              fontSize: '13px', fontWeight: '800', color: 'var(--accent)',
-              textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px'
+              fontSize: '12px', fontWeight: '800', color: 'var(--accent)',
+              textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '10px',
+              fontFamily: 'var(--font-mono)'
             }}>
               1. Executive Summary & Impact Analysis
             </h4>
             <div style={{
-              background: 'var(--bg-base)', border: '1px solid var(--border)',
+              background: 'var(--bg-overlay)', border: '1px solid var(--border)',
               borderRadius: '8px', padding: '16px 18px', fontSize: '13px',
               color: 'var(--text-secondary)', lineHeight: '1.7'
             }}>
@@ -212,13 +215,14 @@ export default function ExecutiveReportModal({ isOpen, onClose, threatData }) {
           {/* Section 2: Targeted Sectors & Actor */}
           <div style={{ marginBottom: '28px' }}>
             <h4 style={{
-              fontSize: '13px', fontWeight: '800', color: 'var(--accent)',
-              textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px'
+              fontSize: '12px', fontWeight: '800', color: 'var(--accent)',
+              textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '10px',
+              fontFamily: 'var(--font-mono)'
             }}>
               2. Threat Actor Profile & Target Sectors
             </h4>
             <div style={{
-              background: 'var(--bg-base)', border: '1px solid var(--border)',
+              background: 'var(--bg-overlay)', border: '1px solid var(--border)',
               borderRadius: '8px', padding: '16px 18px', display: 'flex',
               flexDirection: 'column', gap: '10px'
             }}>
@@ -226,13 +230,15 @@ export default function ExecutiveReportModal({ isOpen, onClose, threatData }) {
                 <strong style={{ color: 'var(--text-primary)' }}>Known Aliases:</strong> {(threat_actor.aliases || []).join(', ') || 'None recorded'}
               </div>
               <div>
-                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginBottom: '6px', fontWeight: '600' }}>TARGETED VERTICALS:</div>
+                <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', marginBottom: '6px', fontWeight: '700', textTransform: 'uppercase' }}>
+                  Targeted Verticals:
+                </div>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {target_sectors.map((sec, i) => (
                     <span key={i} style={{
                       padding: '3px 9px', borderRadius: '4px', fontSize: '11px',
-                      background: 'rgba(251,191,36,0.12)', color: 'var(--amber)',
-                      border: '1px solid rgba(251,191,36,0.25)', fontWeight: '600'
+                      background: 'var(--amber-dim)', color: 'var(--amber)',
+                      border: '1px solid rgba(245,158,11,0.25)', fontWeight: '700'
                     }}>
                       {sec}
                     </span>
@@ -242,85 +248,82 @@ export default function ExecutiveReportModal({ isOpen, onClose, threatData }) {
             </div>
           </div>
 
-          {/* Section 3: Vulnerabilities */}
-          {cves.length > 0 && (
-            <div style={{ marginBottom: '28px' }}>
-              <h4 style={{
-                fontSize: '13px', fontWeight: '800', color: 'var(--accent)',
-                textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px'
-              }}>
-                3. Vulnerability Exploit Analysis
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {cves.map((c, i) => (
-                  <div key={i} style={{
-                    padding: '12px 16px', background: 'var(--bg-base)',
-                    borderRadius: '8px', border: '1px solid var(--border)'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: 'var(--red)', fontSize: '13px' }}>
-                        {c.id}
-                      </span>
-                      <span style={{
-                        padding: '2px 8px', borderRadius: '4px',
-                        background: 'rgba(248,113,113,0.15)', color: 'var(--red)',
-                        fontSize: '11px', fontWeight: '700'
-                      }}>
-                        CVSS {c.cvss || 'N/A'} - {c.severity || 'CRITICAL'}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px', lineHeight: '1.5' }}>
-                      {c.description || 'Targeted in initial compromise vector.'}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Section 4: MITRE ATT&CK */}
+          {/* Section 3: Exploited CVEs */}
           <div style={{ marginBottom: '28px' }}>
             <h4 style={{
-              fontSize: '13px', fontWeight: '800', color: 'var(--accent)',
-              textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px'
+              fontSize: '12px', fontWeight: '800', color: 'var(--accent)',
+              textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '10px',
+              fontFamily: 'var(--font-mono)'
             }}>
-              4. Observed MITRE ATT&CK TTPs
+              3. Exploited Vulnerabilities (CVE Flaws)
             </h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-              {mitre_techniques.slice(0, 8).map((t, i) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {cves.map((c, i) => (
                 <div key={i} style={{
-                  padding: '10px 14px', background: 'var(--bg-base)',
-                  borderRadius: '8px', border: '1px solid var(--border)', fontSize: '12px'
+                  padding: '12px 14px', background: 'var(--bg-overlay)',
+                  border: '1px solid var(--border)', borderRadius: '8px',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
-                  <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent)', fontWeight: '700' }}>
-                    {t.id}: {t.name}
+                  <div>
+                    <span style={{ fontSize: '12.5px', fontWeight: '800', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{c.id}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginLeft: '10px' }}>{c.description || c.affected_product || 'Vulnerability Flaw'}</span>
                   </div>
-                  <div style={{ color: 'var(--text-tertiary)', fontSize: '11px', marginTop: '2px' }}>
-                    Tactic: {t.tactic}
-                  </div>
+                  <span className="badge badge-amber">CVSS {c.cvss ?? c.cvss_score ?? '9.8'}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Section 5: Defense Recommendation */}
+          {/* Section 4: MITRE ATT&CK */}
+          <div style={{ marginBottom: '28px' }}>
+            <h4 style={{
+              fontSize: '12px', fontWeight: '800', color: 'var(--accent)',
+              textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '10px',
+              fontFamily: 'var(--font-mono)'
+            }}>
+              4. Extracted MITRE ATT&CK TTPs
+            </h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '8px' }}>
+              {mitre_techniques.map((t, i) => (
+                <div key={i} style={{
+                  padding: '10px 12px', background: 'var(--bg-overlay)',
+                  border: '1px solid var(--border)', borderRadius: '8px'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--purple)', fontFamily: 'var(--font-mono)' }}>{t.id}</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{t.tactic}</span>
+                  </div>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>{t.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Section 5: Indicators of Compromise */}
           <div>
             <h4 style={{
-              fontSize: '13px', fontWeight: '800', color: 'var(--accent)',
-              textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px'
+              fontSize: '12px', fontWeight: '800', color: 'var(--accent)',
+              textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '10px',
+              fontFamily: 'var(--font-mono)'
             }}>
-              5. Recommended Defensive Action Items
+              5. Priority Indicators of Compromise (IoCs)
             </h4>
-            <div style={{
-              background: 'rgba(56,189,248,0.06)', border: '1px solid rgba(56,189,248,0.2)',
-              borderRadius: '8px', padding: '16px 20px'
-            }}>
-              <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.8' }}>
-                <li>Enforce immediate perimeter firewall blocks for all identified C2 IPs and malicious domains.</li>
-                <li>Ingest generated Sigma detection rules into SIEM (Splunk, Elastic, Microsoft Sentinel).</li>
-                <li>Deploy YARA signatures across endpoint detection and response (EDR) sensors.</li>
-                <li>Patch affected software versions and verify Multi-Factor Authentication on all external access portals.</li>
-              </ul>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {iocs.slice(0, 15).map((ioc, i) => (
+                <div key={i} style={{
+                  padding: '8px 12px', background: 'var(--bg-overlay)',
+                  border: '1px solid var(--border)', borderRadius: '6px',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                }}>
+                  <code style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>{ioc.value}</code>
+                  <span className="badge badge-blue">{ioc.type}</span>
+                </div>
+              ))}
+              {iocs.length > 15 && (
+                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textAlign: 'center', marginTop: '4px' }}>
+                  +{iocs.length - 15} additional indicators cataloged in the full STIX 2.1 bundle.
+                </div>
+              )}
             </div>
           </div>
         </div>

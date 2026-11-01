@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import { AlertTriangle, Shield, TrendingUp, PieChart, Activity } from 'lucide-react';
 
-const PALETTE = ['#f87171', '#fbbf24', '#38bdf8', '#c084fc', '#34d399', '#f472b6'];
+const PALETTE = ['#f43f5e', '#f59e0b', '#38bdf8', '#818cf8', '#10b981', '#ec4899'];
 
-function DonutChart({ segments, size = 120 }) {
+function DonutChart({ segments, size = 130 }) {
   const total = segments.reduce((s, x) => s + x.value, 0) || 1;
   const strokeWidth = 18;
   const radius = (size - strokeWidth) / 2;
@@ -37,7 +37,7 @@ function DonutChart({ segments, size = 120 }) {
             style={{
               transformOrigin: '50% 50%',
               transform: `rotate(${seg.rotateAngle}deg)`,
-              transition: 'all 0.6s ease'
+              transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
           />
         ))}
@@ -46,11 +46,11 @@ function DonutChart({ segments, size = 120 }) {
         position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center'
       }}>
-        <span style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
+        <span style={{ fontSize: '20px', fontWeight: '900', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
           {total}
         </span>
-        <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
-          Total
+        <span style={{ fontSize: '9.5px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.06em' }}>
+          TOTAL IOCS
         </span>
       </div>
     </div>
@@ -62,7 +62,7 @@ function MetricProgressBar({ label, value, max, color }) {
   return (
     <div style={{ marginBottom: '12px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '5px' }}>
-        <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>{label}</span>
+        <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>{label}</span>
         <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontWeight: '700' }}>
           {value} <span style={{ color: 'var(--text-tertiary)', fontSize: '10px' }}>({pct}%)</span>
         </span>
@@ -84,7 +84,7 @@ function RiskMeter({ score }) {
   const isHigh = clamped >= 50 && clamped < 75;
   const isMedium = clamped >= 25 && clamped < 50;
   const color = isCritical ? 'var(--red)' : isHigh ? 'var(--amber)' : isMedium ? '#fbbf24' : 'var(--green)';
-  const label = isCritical ? 'CRITICAL RISK' : isHigh ? 'HIGH RISK' : isMedium ? 'MODERATE' : 'LOW RISK';
+  const label = isCritical ? 'CRITICAL RISK' : isHigh ? 'HIGH RISK' : isMedium ? 'MODERATE' : 'GUARDED';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
@@ -99,12 +99,12 @@ function RiskMeter({ score }) {
           strokeDasharray={`${(clamped / 100) * 267} 267`}
           style={{ transition: 'stroke-dasharray 0.8s ease' }}
         />
-        <circle cx="110" cy="115" r="7" fill="var(--text-primary)" />
+        <circle cx="110" cy="115" r="7" fill="var(--bg-elevated)" stroke={color} strokeWidth="2.5" />
         <line
           x1="110" y1="115"
           x2={110 + 60 * Math.cos((angle * Math.PI) / 180)}
           y2={115 + 60 * Math.sin((angle * Math.PI) / 180)}
-          stroke="var(--text-primary)" strokeWidth="3" strokeLinecap="round"
+          stroke={color} strokeWidth="2.5" strokeLinecap="round"
           style={{ transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}
         />
       </svg>
@@ -115,9 +115,9 @@ function RiskMeter({ score }) {
         {clamped}<span style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>/100</span>
       </div>
       <div style={{
-        fontSize: '11px', fontWeight: '800', color, letterSpacing: '0.08em',
+        fontSize: '10.5px', fontWeight: '800', color, letterSpacing: '0.08em',
         padding: '3px 10px', borderRadius: '4px', background: `${color}18`,
-        border: `1px solid ${color}33`, marginTop: '4px'
+        border: `1px solid ${color}33`, marginTop: '4px', fontFamily: 'var(--font-mono)'
       }}>
         {label}
       </div>
@@ -154,7 +154,7 @@ export default function AnalyticsDashboard({ threatData }) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-tertiary)' }}>
         <PieChart size={36} style={{ marginBottom: '12px', opacity: 0.4 }} />
-        <p>No active threat data to visualize. Ingest a report first.</p>
+        <p>No active threat telemetry to analyze. Ingest an advisory first.</p>
       </div>
     );
   }
@@ -174,28 +174,28 @@ export default function AnalyticsDashboard({ threatData }) {
       {/* Top Banner */}
       <div style={{
         background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-        borderRadius: '12px', padding: '20px 24px', display: 'flex',
+        borderRadius: '12px', padding: '18px 22px', display: 'flex',
         justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px'
       }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Activity size={18} color="var(--accent)" />
-            <h2 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
-              SOC Threat Metrics & Threat Radar
+            <h2 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.01em' }}>
+              SOC Threat Metrics & Behavioral Analytics
             </h2>
           </div>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
-            Multi-dimensional risk analysis computed from CVSS vulnerability scores, MITRE ATT&CK coverage, and active indicators.
+          <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+            Multi-dimensional risk analysis computed from CVSS vulnerability scores, MITRE ATT&CK coverage, and extracted network telemetry.
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '8px' }}>
           <span style={{
-            padding: '4px 10px', borderRadius: '6px', fontSize: '11px',
+            padding: '5px 12px', borderRadius: '6px', fontSize: '11px',
             background: 'var(--bg-base)', border: '1px solid var(--border)',
             color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)'
           }}>
-            Adversary: <strong style={{ color: 'var(--text-primary)' }}>{stats.threat_actor?.name || 'Unknown'}</strong>
+            Adversary Attribution: <strong style={{ color: 'var(--text-primary)' }}>{stats.threat_actor?.name || 'Unknown'}</strong>
           </span>
         </div>
       </div>
@@ -208,7 +208,7 @@ export default function AnalyticsDashboard({ threatData }) {
           borderRadius: '12px', padding: '24px 20px', display: 'flex',
           flexDirection: 'column', alignItems: 'center', gap: '10px'
         }}>
-          <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-tertiary)', fontWeight: '700' }}>
+          <div style={{ fontSize: '10.5px', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-tertiary)', fontWeight: '700' }}>
             Aggregate Risk Index
           </div>
           <RiskMeter score={stats.riskScore} />
@@ -218,7 +218,7 @@ export default function AnalyticsDashboard({ threatData }) {
             padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border)'
           }}>
             {stats.riskScore >= 75
-              ? '🚨 High severity campaign active. Immediate perimeter firewall blocks & emergency patching required.'
+              ? '🚨 Critical risk advisory active. Enforce emergency perimeter blocks and patch public gateways.'
               : '⚠️ Targeted activity detected. Review network telemetry and enforce detection rules.'}
           </div>
         </div>
@@ -243,8 +243,8 @@ export default function AnalyticsDashboard({ threatData }) {
             {
               label: 'Target Sectors',
               value: stats.target_sectors.length,
-              sub: stats.target_sectors.slice(0, 2).join(', ') || 'Global Enterprises',
-              color: '#c084fc',
+              sub: stats.target_sectors.slice(0, 2).join(', ') || 'Global Infrastructure',
+              color: '#818cf8',
               icon: Shield
             },
             {
@@ -259,24 +259,21 @@ export default function AnalyticsDashboard({ threatData }) {
             return (
               <div
                 key={i}
-                style={{
-                  background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-                  borderRadius: '12px', padding: '18px 20px', display: 'flex',
-                  flexDirection: 'column', justifyContent: 'space-between'
-                }}
+                className="stat-card"
+                style={{ padding: '18px 20px', justifyContent: 'space-between' }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', fontWeight: '700' }}>
+                  <span style={{ fontSize: '10.5px', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-tertiary)', fontWeight: '700' }}>
                     {s.label}
                   </span>
                   <div style={{
-                    width: '28px', height: '28px', borderRadius: '6px',
+                    width: '30px', height: '30px', borderRadius: '7px',
                     background: `${s.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center'
                   }}>
                     <Icon size={15} color={s.color} />
                   </div>
                 </div>
-                <div style={{ fontSize: '24px', fontWeight: '800', color: s.color, fontFamily: 'var(--font-mono)', margin: '8px 0 2px' }}>
+                <div style={{ fontSize: '26px', fontWeight: '900', color: s.color, fontFamily: 'var(--font-mono)', margin: '8px 0 2px' }}>
                   {s.value}
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -299,13 +296,13 @@ export default function AnalyticsDashboard({ threatData }) {
             IoC Indicator Breakdown
           </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
-            <DonutChart segments={iocSegments} size={120} />
+            <DonutChart segments={iocSegments} size={130} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
               {iocSegments.map((d, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
                   <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: d.color, flexShrink: 0 }} />
                   <span style={{ color: 'var(--text-secondary)' }}>{d.label}</span>
-                  <span style={{ color: 'var(--text-primary)', fontWeight: '700', fontFamily: 'var(--font-mono)', marginLeft: 'auto' }}>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: '800', fontFamily: 'var(--font-mono)', marginLeft: 'auto' }}>
                     {d.value}
                   </span>
                 </div>

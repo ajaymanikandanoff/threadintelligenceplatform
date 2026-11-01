@@ -11,7 +11,7 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, sele
 
   const test = async () => {
     if (!tempKey.trim()) {
-      setTestResult({ ok: false, msg: 'Enter an API key first.' });
+      setTestResult({ ok: false, msg: 'Enter an API key first to validate.' });
       return;
     }
     setTesting(true);
@@ -41,90 +41,88 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, sele
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0,
-        background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: 100, padding: '20px'
-      }}
-      onClick={onClose}
-    >
+    <div className="modal-overlay" onClick={onClose}>
       <div
-        style={{
-          maxWidth: '480px', width: '100%',
-          background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-          borderRadius: '14px', padding: '28px', boxShadow: '0 24px 64px rgba(0,0,0,0.7)'
-        }}
+        className="modal-container"
+        style={{ maxWidth: '500px', padding: '28px' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Cpu size={18} color="var(--accent)" />
-              <h2 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
-                AI Engine & Model Settings
+              <div style={{
+                width: '32px', height: '32px', borderRadius: '8px',
+                background: 'rgba(56,189,248,0.12)', border: '1px solid var(--border-accent)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                <Cpu size={16} color="var(--accent)" />
+              </div>
+              <h2 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.01em' }}>
+                AI Engine & Key Settings
               </h2>
             </div>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
-              Configure your Google Gemini API key and active intelligence model.
+            <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+              Configure your Google Gemini API credentials and active LLM reasoning model.
             </p>
           </div>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: '4px' }}
+            className="btn-ghost"
+            style={{ padding: '6px', border: 'none', background: 'transparent' }}
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Inputs */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '22px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '24px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>
-              Gemini API Key
+              Google Gemini API Key
             </label>
             <input
               type="password"
               value={tempKey}
               onChange={e => setTempKey(e.target.value)}
               placeholder="AIzaSy…"
+              className="input"
               style={{
-                width: '100%', background: 'var(--bg-base)', border: '1px solid var(--border)',
-                borderRadius: '8px', padding: '10px 14px', color: 'var(--text-primary)',
-                fontSize: '13px', fontFamily: 'var(--font-mono)', outline: 'none'
+                fontFamily: 'var(--font-mono)',
+                fontSize: '12.5px',
+                padding: '10px 14px'
               }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '11px' }}>
-              <span style={{ color: 'var(--text-tertiary)' }}>Leave blank to use built-in heuristic engine.</span>
+              <span style={{ color: 'var(--text-tertiary)' }}>Leave blank to use server environment key or heuristic fallback.</span>
               <a
                 href="https://aistudio.google.com/app/apikey"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: '3px', fontWeight: '600' }}
+                style={{ color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: '3px', fontWeight: '700' }}
               >
-                Get API key <ExternalLink size={10} />
+                Get Key <ExternalLink size={10} />
               </a>
             </div>
           </div>
 
           <div>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>
-              Gemini Model Selection
+              Active Intelligence Model
             </label>
             <select
               value={tempModel}
               onChange={e => setTempModel(e.target.value)}
+              className="input"
               style={{
-                width: '100%', background: 'var(--bg-base)', border: '1px solid var(--border)',
-                borderRadius: '8px', padding: '10px 14px', color: 'var(--text-primary)',
-                fontSize: '13px', outline: 'none'
+                fontSize: '12.5px',
+                padding: '10px 14px',
+                cursor: 'pointer'
               }}
             >
-              <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended - Fastest & High Precision)</option>
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended — Fastest & High Precision)</option>
               <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Multimodal Reasoning)</option>
-              <option value="gemini-1.5-flash">Gemini 1.5 Flash (Lightweight & High Throughput)</option>
+              <option value="gemini-1.5-flash">Gemini 1.5 Flash (High Throughput & Low Latency)</option>
             </select>
           </div>
 
@@ -132,20 +130,20 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, sele
             className="btn-ghost"
             onClick={test}
             disabled={testing}
-            style={{ width: '100%', justifyContent: 'center', padding: '9px', fontSize: '12px' }}
+            style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: '12.5px' }}
           >
-            <ShieldCheck size={14} color="var(--accent)" />
-            <span>{testing ? 'Validating Key…' : 'Validate API Key'}</span>
+            <ShieldCheck size={15} color="var(--accent)" />
+            <span>{testing ? 'Testing Key Connectivity…' : 'Validate Gemini API Key'}</span>
           </button>
 
           {testResult && (
             <div style={{
-              background: testResult.ok ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)',
-              border: `1px solid ${testResult.ok ? 'rgba(52,211,153,0.3)' : 'rgba(248,113,113,0.3)'}`,
+              background: testResult.ok ? 'var(--green-dim)' : 'var(--red-dim)',
+              border: `1px solid ${testResult.ok ? 'rgba(16,185,129,0.35)' : 'rgba(244,63,94,0.35)'}`,
               borderRadius: '8px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px',
               fontSize: '12px', color: testResult.ok ? 'var(--green)' : 'var(--red)'
             }}>
-              {testResult.ok ? <Check size={15} /> : <AlertCircle size={15} />}
+              {testResult.ok ? <Check size={16} /> : <AlertCircle size={16} />}
               <span>{testResult.msg}</span>
             </div>
           )}
@@ -153,11 +151,11 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, sele
 
         {/* Buttons */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-          <button className="btn-ghost" onClick={onClose} style={{ padding: '8px 16px', fontSize: '12px' }}>
+          <button className="btn-ghost" onClick={onClose} style={{ padding: '8px 16px', fontSize: '12.5px' }}>
             Cancel
           </button>
-          <button className="btn-primary" onClick={save} style={{ padding: '8px 20px', fontSize: '12px' }}>
-            Save Settings
+          <button className="btn-primary" onClick={save} style={{ padding: '8px 20px', fontSize: '12.5px' }}>
+            Save Configuration
           </button>
         </div>
       </div>

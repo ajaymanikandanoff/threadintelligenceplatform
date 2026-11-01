@@ -18,47 +18,76 @@ import {
   Loader,
   Radio,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  FileUp
 } from 'lucide-react';
 
-const TABS = [
-  { id: 'overview',  label: 'Threat Overview',    icon: LayoutDashboard, sub: 'Incident summary & risk metrics' },
-  { id: 'defense',   label: 'Defense Center',      icon: ShieldCheck,     sub: 'Firewall rules & SIEM detections' },
-  { id: 'iocs',      label: 'Threat Indicators',   icon: Search,          sub: 'Malicious IPs, domains & hashes' },
-  { id: 'copilot',   label: 'AI Copilot',          icon: MessageSquare,   sub: 'Interactive SOC intelligence' },
-  { id: 'technical', label: 'Technical Deep Dive', icon: Cpu,             sub: 'MITRE matrix & knowledge graph' },
+const NAV_SECTIONS = [
+  {
+    heading: 'OPERATIONS',
+    items: [
+      { id: 'overview',  label: 'Threat Overview',    icon: LayoutDashboard, sub: 'Incident dossier & metrics' },
+      { id: 'defense',   label: 'Defense Center',      icon: ShieldCheck,     sub: 'Firewall rules & SIEM detections' },
+    ]
+  },
+  {
+    heading: 'INTELLIGENCE',
+    items: [
+      { id: 'iocs',      label: 'Threat Indicators',   icon: Search,          sub: 'Malicious IPs, domains & hashes' },
+      { id: 'technical', label: 'Technical Deep Dive', icon: Cpu,             sub: 'MITRE matrix & knowledge graph' },
+    ]
+  },
+  {
+    heading: 'AI ASSISTANT',
+    items: [
+      { id: 'copilot',   label: 'AI Security Copilot', icon: MessageSquare,   sub: 'Interactive SOC intelligence' },
+    ]
+  }
 ];
 
 function LoadingScreen() {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      height: '100%', gap: '20px', padding: '60px 20px'
+      height: '100%', minHeight: '60vh', gap: '24px', padding: '60px 20px'
     }}>
       <div style={{
-        width: '52px', height: '52px', borderRadius: '14px',
-        background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: '0 0 30px rgba(14,165,233,0.4)',
-        animation: 'pulse-dot 1.5s ease-in-out infinite'
+        position: 'relative',
+        width: '64px', height: '64px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center'
       }}>
-        <Loader size={24} color="#fff" className="spin" />
+        <div style={{
+          position: 'absolute', inset: 0,
+          borderRadius: '50%',
+          border: '2px solid rgba(56, 189, 248, 0.2)',
+          borderTopColor: 'var(--accent)',
+          animation: 'spin 1s linear infinite'
+        }} />
+        <div style={{
+          position: 'absolute', inset: '8px',
+          borderRadius: '50%',
+          border: '2px dashed rgba(129, 140, 248, 0.3)',
+          borderBottomColor: 'var(--purple)',
+          animation: 'spin 2s linear infinite reverse'
+        }} />
+        <Loader size={20} color="var(--accent)" />
       </div>
-      <div style={{ textAlign: 'center', maxWidth: '400px' }}>
-        <div style={{ fontSize: '17px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
-          Analyzing Threat Report
+
+      <div style={{ textAlign: 'center', maxWidth: '440px' }}>
+        <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>
+          Extracting Threat Intelligence
         </div>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.65' }}>
-          Gemini AI is extracting threat actors, mapping vulnerabilities to MITRE ATT&CK, and generating firewall defense rules in real-time.
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
+          Google Gemini AI is synthesizing adversary attribution, mapping enterprise MITRE ATT&CK vectors, and formulating defensive perimeter scripts.
         </p>
       </div>
-      <div style={{ display: 'flex', gap: '8px' }}>
-        {['Extracting IoCs', 'Mapping MITRE', 'Generating Rules'].map((s, i) => (
+
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+        {['Attribution & CVEs', 'MITRE Heatmap Matrix', 'Perimeter Containment Rules'].map((s, i) => (
           <div key={i} style={{
             padding: '5px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: '600',
             background: 'var(--bg-overlay)', border: '1px solid var(--border)',
-            color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)',
-            animation: `pulse-dot 1.2s ease-in-out ${i * 0.4}s infinite`
+            color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)'
           }}>
             {s}
           </div>
@@ -72,52 +101,66 @@ function EmptyState({ onOpenIngest, onSelectReport }) {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      height: '100%', gap: '24px', padding: '60px 20px', textAlign: 'center'
+      minHeight: '70vh', gap: '28px', padding: '60px 20px', textAlign: 'center'
     }}>
       <div style={{
-        width: '64px', height: '64px', borderRadius: '18px',
-        background: 'linear-gradient(135deg, rgba(14,165,233,0.2), rgba(99,102,241,0.2))',
-        border: '1px solid rgba(14,165,233,0.25)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center'
+        width: '72px', height: '72px', borderRadius: '20px',
+        background: 'linear-gradient(135deg, rgba(56,189,248,0.15), rgba(129,140,248,0.15))',
+        border: '1px solid rgba(56,189,248,0.3)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 0 32px rgba(56,189,248,0.12)'
       }}>
-        <ShieldCheck size={28} color="var(--accent)" />
+        <ShieldCheck size={32} color="var(--accent)" strokeWidth={2.2} />
       </div>
 
-      <div style={{ maxWidth: '420px' }}>
-        <h2 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 10px', letterSpacing: '-0.02em' }}>
-          No Threat Loaded
+      <div style={{ maxWidth: '480px' }}>
+        <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 10px', letterSpacing: '-0.02em' }}>
+          No Threat Campaign Active
         </h2>
-        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.65', margin: 0 }}>
-          Load a government security advisory below, or click <strong style={{ color: 'var(--accent)' }}>Analyze Threat</strong> to upload your own PDF / paste logs.
+        <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', lineHeight: '1.65', margin: 0 }}>
+          Select a verified government cyber advisory below to inspect adversary techniques, or click <strong style={{ color: 'var(--accent)' }}>Analyze Advisory</strong> to upload an incident PDF or paste raw telemetry.
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', maxWidth: '680px', width: '100%' }}>
         {[
-          { label: '🏛️ CISA Advisory', desc: 'CL0P Ransomware / MOVEit', id: 'cisa-aa23-158a' },
-          { label: '🛡️ NSA Report', desc: 'Volt Typhoon China APT', id: 'cisa-volt-typhoon' },
-          { label: '🚨 FBI Alert', desc: 'ALPHV BlackCat Ransomware', id: 'alphv-blackcat-healthcare' },
+          { label: '🏛️ CISA Advisory AA23-158A', desc: 'CL0P Ransomware / MOVEit Transfer', id: 'cisa-aa23-158a', badge: 'CRITICAL' },
+          { label: '🛡️ NSA / CISA Alert', desc: 'Volt Typhoon Living-off-the-Land APT', id: 'cisa-volt-typhoon', badge: 'NATION-STATE' },
+          { label: '🚨 FBI Cyber Alert', desc: 'ALPHV BlackCat Healthcare Extortion', id: 'alphv-blackcat-healthcare', badge: 'HIGH SEV' },
         ].map(f => (
           <button
-            key={f.label}
+            key={f.id}
             onClick={() => onSelectReport ? onSelectReport(f.id) : onOpenIngest?.()}
             style={{
-              padding: '12px 16px', borderRadius: '10px', background: 'var(--bg-elevated)',
-              border: '1px solid var(--border)', fontSize: '12px', color: 'var(--text-secondary)',
-              minWidth: '140px', cursor: 'pointer', textAlign: 'left', fontFamily: 'var(--font-sans)',
-              transition: 'all 0.15s ease'
+              padding: '16px 18px', borderRadius: '12px', background: 'var(--bg-elevated)',
+              border: '1px solid var(--border)', textAlign: 'left', cursor: 'pointer',
+              transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+              display: 'flex', flexDirection: 'column', gap: '6px'
             }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'var(--bg-hover)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-elevated)'; }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = 'var(--accent)';
+              e.currentTarget.style.background = 'var(--bg-hover)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = 'var(--border)';
+              e.currentTarget.style.background = 'var(--bg-elevated)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
           >
-            <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '13px', marginBottom: '2px' }}>{f.label}</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{f.desc}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: '700', padding: '2px 6px', borderRadius: '4px', background: 'rgba(56,189,248,0.1)', color: 'var(--accent)' }}>
+                {f.badge}
+              </span>
+            </div>
+            <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '13px', marginTop: '2px' }}>{f.label}</div>
+            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{f.desc}</div>
           </button>
         ))}
       </div>
 
-      <button className="btn-primary" onClick={onOpenIngest} style={{ padding: '8px 18px', fontSize: '13px' }}>
-        <ShieldCheck size={14} /> Ingest Advisory / Upload PDF
+      <button className="btn-primary" onClick={onOpenIngest} style={{ padding: '9px 20px', fontSize: '13px' }}>
+        <FileUp size={15} /> Ingest Custom Advisory / PDF
       </button>
     </div>
   );
@@ -261,48 +304,64 @@ export default function App() {
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
-        {/* ─── Sidebar ─── */}
+        {/* ─── Categorized Enterprise Sidebar ─── */}
         <nav style={{
-          width: '220px',
+          width: '240px',
           flexShrink: 0,
           borderRight: '1px solid var(--border)',
-          background: 'var(--bg-elevated)',
-          padding: '14px 10px',
+          background: 'var(--bg-glass)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          padding: '16px 12px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '2px',
+          gap: '16px',
           overflowY: 'auto',
         }}>
-          {/* Nav Tabs */}
-          <div className="section-label" style={{ marginBottom: '6px' }}>Navigation</div>
-          {TABS.map(tab => {
-            const Icon = tab.icon;
-            const active = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                className={`nav-item ${active ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                <Icon size={15} style={{ flexShrink: 0 }} />
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: '13px', fontWeight: active ? '600' : '500', lineHeight: '1.2' }}>
-                    {tab.label}
-                  </div>
-                  <div style={{ fontSize: '11px', color: active ? 'rgba(56,189,248,0.7)' : 'var(--text-tertiary)', marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {tab.sub}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+          {NAV_SECTIONS.map((section, idx) => (
+            <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              <div className="section-label" style={{ marginBottom: '4px' }}>
+                {section.heading}
+              </div>
+              {section.items.map(tab => {
+                const Icon = tab.icon;
+                const active = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    className={`nav-item ${active ? 'active' : ''}`}
+                    onClick={() => setActiveTab(tab.id)}
+                  >
+                    <Icon size={16} className="nav-icon" style={{ flexShrink: 0 }} />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: '13px', lineHeight: '1.2' }}>
+                        {tab.label}
+                      </div>
+                      <div style={{
+                        fontSize: '10.5px',
+                        color: active ? 'rgba(56,189,248,0.75)' : 'var(--text-tertiary)',
+                        marginTop: '1px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {tab.sub}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
 
-          {/* Government Feeds */}
-          <div style={{ marginTop: '20px', paddingTop: '14px', borderTop: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px' }}>
-              <Radio size={10} color="var(--red)" />
-              <span className="section-label">Live Feeds</span>
-              <span className="status-dot" style={{ background: 'var(--red)', marginLeft: '2px' }}></span>
+          {/* Government Live Threat Feeds */}
+          <div style={{ marginTop: 'auto', paddingTop: '14px', borderTop: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', padding: '0 4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Radio size={11} color="var(--red)" />
+                <span className="section-label">Live Advisory Feeds</span>
+              </div>
+              <span className="status-dot" style={{ background: 'var(--red)', width: '6px', height: '6px' }} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
               {sampleReports.map(rep => {
@@ -313,9 +372,9 @@ export default function App() {
                     onClick={() => analyzeThreatReport(rep.content, rep.title, rep.id)}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '7px 9px', borderRadius: '6px', textAlign: 'left', width: '100%',
-                      background: sel ? 'rgba(248,113,113,0.08)' : 'transparent',
-                      border: `1px solid ${sel ? 'rgba(248,113,113,0.25)' : 'transparent'}`,
+                      padding: '8px 10px', borderRadius: '6px', textAlign: 'left', width: '100%',
+                      background: sel ? 'rgba(244,63,94,0.08)' : 'transparent',
+                      border: `1px solid ${sel ? 'rgba(244,63,94,0.25)' : 'transparent'}`,
                       color: sel ? 'var(--red)' : 'var(--text-secondary)',
                       fontSize: '11px', fontFamily: 'var(--font-mono)',
                       cursor: 'pointer', transition: 'all 0.12s ease',
@@ -327,20 +386,20 @@ export default function App() {
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                       {getFeedLabel(rep)}
                     </span>
-                    <ChevronRight size={10} style={{ flexShrink: 0, marginLeft: '4px', opacity: sel ? 1 : 0.4 }} />
+                    <ChevronRight size={11} style={{ flexShrink: 0, marginLeft: '4px', opacity: sel ? 1 : 0.4 }} />
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Glossary button at bottom */}
-          <div style={{ marginTop: 'auto', paddingTop: '14px' }}>
+          {/* Feature Guide Shortcut */}
+          <div style={{ paddingTop: '8px' }}>
             <button
               onClick={() => setIsGlossaryOpen(true)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '8px',
-                width: '100%', padding: '10px 12px', borderRadius: '8px',
+                width: '100%', padding: '9px 12px', borderRadius: '8px',
                 background: 'var(--bg-overlay)', border: '1px solid var(--border)',
                 color: 'var(--text-secondary)', cursor: 'pointer',
                 fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: '500',
@@ -349,18 +408,18 @@ export default function App() {
               onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-accent)'; e.currentTarget.style.color = 'var(--accent)'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
             >
-              <BookOpen size={13} />
-              <span>Feature Guide</span>
+              <BookOpen size={13} color="var(--accent)" />
+              <span>Platform Feature Guide</span>
             </button>
           </div>
         </nav>
 
-        {/* ─── Main Content ─── */}
+        {/* ─── Main Content Canvas ─── */}
         <main style={{
           flex: 1,
-          padding: '24px 28px',
+          padding: '24px 32px',
           overflowY: 'auto',
-          maxHeight: 'calc(100vh - 52px)',
+          maxHeight: 'calc(100vh - 56px)',
         }}>
           {isAnalyzing ? <LoadingScreen /> : (
             <>
@@ -375,7 +434,7 @@ export default function App() {
               )}
               {(threatData || activeTab === 'copilot') && (
                 <>
-                  {activeTab === 'overview'  && <OverviewTab threatData={threatData} onSwitchTab={setActiveTab} onOpenIngest={() => setIsIngestOpen(true)} />}
+                  {activeTab === 'overview'  && <OverviewTab threatData={threatData} onSwitchTab={setActiveTab} _onOpenIngest={() => setIsIngestOpen(true)} />}
                   {activeTab === 'defense'   && <DefenseCenter defenseArtifacts={threatData?.defense_artifacts} threatData={threatData} />}
                   {activeTab === 'iocs'      && <IocExplorer iocs={threatData?.iocs || []} threatData={threatData} />}
                   {activeTab === 'technical' && <TechnicalDeepDive tactics={tactics} threatData={threatData} onAskCopilot={askCopilot} />}

@@ -93,10 +93,6 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
 
   return (
     <div style={{
-      background: 'var(--bg-elevated)',
-      border: '1px solid var(--border)',
-      borderRadius: '12px',
-      padding: '24px',
       display: 'flex',
       flexDirection: 'column',
       gap: '20px'
@@ -106,36 +102,37 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{
-              width: '10px', height: '10px', borderRadius: '50%',
+              width: '8px', height: '8px', borderRadius: '50%',
               background: 'var(--red)', boxShadow: '0 0 10px var(--red)'
             }} />
-            <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.01em' }}>
-              Cyber Kill Chain — Adversary Attack Lifecycle
+            <h3 style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.01em' }}>
+              Adversary Cyber Kill Chain & Intrusion Lifecycle
             </h3>
           </div>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
-            Visual step-by-step adversary lifecycle. Click any phase below to examine attacker techniques and defense containment.
+          <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', margin: '3px 0 0' }}>
+            Step-by-step adversary execution timeline. Click any phase to inspect attacker techniques and defense containment controls.
           </p>
         </div>
 
         {/* View Perspective Toggle */}
         <div style={{
-          display: 'flex', background: 'var(--bg-base)', padding: '3px', borderRadius: '8px',
+          display: 'flex', background: 'var(--bg-overlay)', padding: '3px', borderRadius: '8px',
           border: '1px solid var(--border)'
         }}>
           {[
             { id: 'dual', label: 'Full Breakdown' },
-            { id: 'simple', label: 'Adversary Objective' },
-            { id: 'technical', label: 'Forensic Telemetry' }
+            { id: 'simple', label: 'Attack Vector' },
+            { id: 'technical', label: 'SOC Forensics' }
           ].map(m => (
             <button
               key={m.id}
               onClick={() => setViewMode(m.id)}
               style={{
-                background: viewMode === m.id ? 'var(--bg-overlay)' : 'transparent',
+                background: viewMode === m.id ? 'var(--bg-elevated)' : 'transparent',
                 color: viewMode === m.id ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                border: 'none', borderRadius: '6px', padding: '5px 11px',
-                fontSize: '12px', fontWeight: viewMode === m.id ? '600' : '400',
+                border: `1px solid ${viewMode === m.id ? 'var(--border-strong)' : 'transparent'}`,
+                borderRadius: '6px', padding: '5px 12px',
+                fontSize: '11.5px', fontWeight: viewMode === m.id ? '700' : '500',
                 cursor: 'pointer', transition: 'all 0.15s ease'
               }}
             >
@@ -149,7 +146,7 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
       <div style={{
         display: 'grid',
         gridTemplateColumns: `repeat(${stages.length}, 1fr)`,
-        gap: '8px',
+        gap: '10px',
         position: 'relative'
       }}>
         {stages.map((stage, idx) => {
@@ -165,14 +162,15 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                padding: '14px 8px',
+                padding: '14px 10px',
                 borderRadius: '10px',
                 background: isSelected
-                  ? 'rgba(56, 189, 248, 0.1)'
+                  ? 'linear-gradient(180deg, rgba(56, 189, 248, 0.12) 0%, rgba(56, 189, 248, 0.02) 100%)'
                   : isPast
                   ? 'rgba(255, 255, 255, 0.02)'
-                  : 'var(--bg-base)',
+                  : 'var(--bg-overlay)',
                 border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
+                boxShadow: isSelected ? '0 0 16px rgba(56, 189, 248, 0.15)' : 'none',
                 cursor: 'pointer',
                 transition: 'all 0.18s ease',
                 position: 'relative',
@@ -181,28 +179,30 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
             >
               {/* Top Phase Number */}
               <div style={{
-                fontSize: '10px',
+                fontSize: '9.5px',
                 fontFamily: 'var(--font-mono)',
-                fontWeight: '700',
+                fontWeight: '800',
                 color: isSelected ? 'var(--accent)' : 'var(--text-tertiary)',
-                marginBottom: '8px'
+                marginBottom: '8px',
+                letterSpacing: '0.04em'
               }}>
                 {stage.badge}
               </div>
 
               {/* Icon Circle */}
               <div style={{
-                width: '36px',
-                height: '36px',
+                width: '38px',
+                height: '38px',
                 borderRadius: '10px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: isSelected ? stage.color : 'var(--bg-overlay)',
+                background: isSelected ? stage.color : 'var(--bg-base)',
                 color: isSelected ? '#fff' : 'var(--text-secondary)',
                 boxShadow: isSelected ? `0 0 16px ${stage.color}66` : 'none',
                 marginBottom: '10px',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                border: `1px solid ${isSelected ? 'transparent' : 'var(--border)'}`
               }}>
                 <Icon size={18} />
               </div>
@@ -210,7 +210,7 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
               {/* Title */}
               <div style={{
                 fontSize: '12px',
-                fontWeight: isSelected ? '700' : '500',
+                fontWeight: isSelected ? '800' : '600',
                 color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
                 lineHeight: '1.25',
                 minHeight: '30px',
@@ -229,7 +229,8 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                maxWidth: '100%'
+                maxWidth: '100%',
+                fontFamily: 'var(--font-mono)'
               }}>
                 {stage.phaseRole}
               </div>
@@ -240,10 +241,10 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
 
       {/* Selected Stage Detail Card */}
       <div style={{
-        background: 'var(--bg-base)',
+        background: 'var(--bg-overlay)',
         border: '1px solid var(--border)',
         borderRadius: '10px',
-        padding: '20px 24px',
+        padding: '20px 22px',
         display: 'grid',
         gridTemplateColumns: 'auto 1fr',
         gap: '20px',
@@ -251,11 +252,11 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
       }}>
         {/* Stage Icon Showcase */}
         <div style={{
-          width: '52px',
-          height: '52px',
+          width: '54px',
+          height: '54px',
           borderRadius: '12px',
-          background: `${activeStage.color}1a`,
-          border: `1px solid ${activeStage.color}44`,
+          background: `${activeStage.color}15`,
+          border: `1px solid ${activeStage.color}40`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -270,23 +271,24 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <span style={{
-                padding: '3px 8px', borderRadius: '4px', fontSize: '11px',
-                fontWeight: '700', background: `${activeStage.color}22`, color: activeStage.color,
-                fontFamily: 'var(--font-mono)'
+                padding: '2.5px 8px', borderRadius: '4px', fontSize: '10.5px',
+                fontWeight: '800', background: `${activeStage.color}20`, color: activeStage.color,
+                fontFamily: 'var(--font-mono)', border: `1px solid ${activeStage.color}35`
               }}>
                 {activeStage.badge}
               </span>
-              <h4 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
+              <h4 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
                 {activeStage.name}
               </h4>
-              <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
+              <span style={{ fontSize: '11.5px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
                 {activeStage.phaseRole}
               </span>
               {activeStage.tacticMapped && (
                 <span style={{
-                  padding: '2px 8px', borderRadius: '4px', fontSize: '11px',
+                  padding: '2.5px 8px', borderRadius: '4px', fontSize: '10.5px',
                   background: 'rgba(56,189,248,0.1)', color: 'var(--accent)',
-                  border: '1px solid var(--border-accent)', marginLeft: 'auto'
+                  border: '1px solid var(--border-accent)', marginLeft: 'auto',
+                  fontFamily: 'var(--font-mono)', fontWeight: '700'
                 }}>
                   {activeStage.tacticMapped}
                 </span>
@@ -294,7 +296,7 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'dual' ? '1fr 1fr' : '1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'dual' ? '1fr 1fr' : '1fr', gap: '14px' }}>
             {/* Attack Activity & Objective */}
             {(viewMode === 'dual' || viewMode === 'simple') && (
               <div style={{
@@ -305,10 +307,10 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
               }}>
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
-                  fontSize: '12px', fontWeight: '700', color: 'var(--accent)',
-                  marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em'
+                  fontSize: '11.5px', fontWeight: '800', color: 'var(--accent)',
+                  marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em'
                 }}>
-                  <Eye size={14} />
+                  <Eye size={13} />
                   <span>Adversary Phase & Attack Objective</span>
                 </div>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
@@ -327,13 +329,13 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
               }}>
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
-                  fontSize: '12px', fontWeight: '700', color: 'var(--amber)',
-                  marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em'
+                  fontSize: '11.5px', fontWeight: '800', color: 'var(--amber)',
+                  marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em'
                 }}>
-                  <Zap size={14} />
+                  <Zap size={13} />
                   <span>Forensic Telemetry & Extracted Evidence</span>
                 </div>
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0, fontFamily: 'var(--font-mono)' }}>
+                <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0, fontFamily: 'var(--font-mono)' }}>
                   {activeStage.analystForensics}
                 </p>
               </div>
@@ -342,20 +344,20 @@ export default function CyberKillChainVisual({ attackSteps = [], attackFlowSteps
 
           {/* Defense Mitigation Directive */}
           <div style={{
-            background: 'rgba(56, 189, 248, 0.06)',
-            border: '1px solid rgba(56, 189, 248, 0.25)',
+            background: 'rgba(56, 189, 248, 0.05)',
+            border: '1px solid rgba(56, 189, 248, 0.22)',
             borderRadius: '8px',
-            padding: '12px 16px',
+            padding: '13px 16px',
             display: 'flex',
             alignItems: 'flex-start',
-            gap: '10px'
+            gap: '12px'
           }}>
             <ShieldCheck size={18} color="var(--accent)" style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', marginBottom: '3px' }}>
+              <div style={{ fontSize: '11.5px', fontWeight: '800', color: 'var(--accent)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Recommended Defense & Containment Directives:
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+              <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.55' }}>
                 {activeStage.defenseControl}
               </div>
             </div>

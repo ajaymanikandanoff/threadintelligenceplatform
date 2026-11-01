@@ -3,7 +3,7 @@ import {
   ShieldAlert, Bug, ShieldCheck,
   Volume2, VolumeX,
   Zap, TrendingUp, Activity, Eye, Lock,
-  ChevronRight, ExternalLink
+  ChevronRight, ExternalLink, Terminal, Layers
 } from 'lucide-react';
 import ThreatRadarGauge from './ThreatRadarGauge';
 import CyberKillChainVisual from './CyberKillChainVisual';
@@ -12,10 +12,10 @@ import KnowledgeGraph from './KnowledgeGraph';
 /* ─── Severity helpers ─── */
 const SEVERITY_ORDER = ['critical', 'high', 'medium', 'low'];
 const SEVERITY_COLORS = {
-  critical: { text: 'var(--red)', bg: 'var(--red-dim)', border: 'rgba(248,113,113,0.25)' },
-  high:     { text: 'var(--amber)', bg: 'var(--amber-dim)', border: 'rgba(251,191,36,0.25)' },
-  medium:   { text: 'var(--purple)', bg: 'var(--purple-dim)', border: 'rgba(167,139,250,0.25)' },
-  low:      { text: 'var(--green)', bg: 'var(--green-dim)', border: 'rgba(52,211,153,0.25)' },
+  critical: { text: 'var(--red)', bg: 'var(--red-dim)', border: 'rgba(244,63,94,0.25)' },
+  high:     { text: 'var(--amber)', bg: 'var(--amber-dim)', border: 'rgba(245,158,11,0.25)' },
+  medium:   { text: 'var(--purple)', bg: 'var(--purple-dim)', border: 'rgba(129,140,248,0.25)' },
+  low:      { text: 'var(--green)', bg: 'var(--green-dim)', border: 'rgba(16,185,129,0.25)' },
 };
 const getSev = (s = '') => SEVERITY_ORDER.find(k => s.toLowerCase().includes(k)) || 'medium';
 
@@ -26,17 +26,21 @@ function KPICard({ label, value, sub, color = 'var(--accent)', icon: Icon }) {
     <div className="stat-card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-tertiary)', marginBottom: '6px' }}>
+          <div style={{ fontSize: '10.5px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-tertiary)', marginBottom: '6px' }}>
             {label}
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '800', color, lineHeight: 1, letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: '26px', fontWeight: '900', color, lineHeight: 1, letterSpacing: '-0.03em', fontFamily: 'var(--font-mono)' }}>
             {value}
           </div>
-          {sub && <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>{sub}</div>}
+          {sub && <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '5px' }}>{sub}</div>}
         </div>
         {Icon && (
-          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: `rgba(0,0,0,0.1)`, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon size={15} color={color} />
+          <div style={{
+            width: '34px', height: '34px', borderRadius: '8px',
+            background: 'var(--bg-overlay)', border: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <Icon size={16} color={color} />
           </div>
         )}
       </div>
@@ -50,26 +54,31 @@ function ChecklistItem({ step, idx, checked, onToggle }) {
       onClick={() => onToggle(idx)}
       style={{
         display: 'flex', alignItems: 'flex-start', gap: '12px',
-        padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
+        padding: '11px 14px', borderRadius: '8px', cursor: 'pointer',
         background: checked ? 'var(--green-dim)' : 'var(--bg-overlay)',
-        border: `1px solid ${checked ? 'rgba(52,211,153,0.25)' : 'var(--border)'}`,
+        border: `1px solid ${checked ? 'rgba(16,185,129,0.3)' : 'var(--border)'}`,
         transition: 'all 0.15s ease'
       }}
     >
       <div style={{
-        width: '18px', height: '18px', borderRadius: '50%', flexShrink: 0,
+        width: '18px', height: '18px', borderRadius: '4px', flexShrink: 0,
         background: checked ? 'var(--green)' : 'transparent',
-        border: `2px solid ${checked ? 'var(--green)' : 'var(--border-strong)'}`,
+        border: `1.5px solid ${checked ? 'var(--green)' : 'var(--border-strong)'}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         marginTop: '1px', transition: 'all 0.15s ease'
       }}>
-        {checked && <span style={{ color: '#fff', fontSize: '10px', fontWeight: '800' }}>✓</span>}
+        {checked && <span style={{ color: '#fff', fontSize: '11px', fontWeight: '900' }}>✓</span>}
       </div>
-      <div style={{ flex: 1, fontSize: '13px', color: checked ? 'var(--text-tertiary)' : 'var(--text-primary)', textDecoration: checked ? 'line-through' : 'none', lineHeight: '1.5' }}>
+      <div style={{
+        flex: 1, fontSize: '13px',
+        color: checked ? 'var(--text-tertiary)' : 'var(--text-primary)',
+        textDecoration: checked ? 'line-through' : 'none',
+        lineHeight: '1.5'
+      }}>
         {typeof step === 'string' ? step : step.action || step}
       </div>
-      <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', flexShrink: 0, marginTop: '3px' }}>
-        Step {idx + 1}
+      <span style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', flexShrink: 0, marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+        PHASE {idx + 1}
       </span>
     </div>
   );
@@ -78,41 +87,70 @@ function ChecklistItem({ step, idx, checked, onToggle }) {
 function ThreatDossierCard({ summary, actor, sectors }) {
   const safeSectors = Array.isArray(sectors) ? sectors : [];
   return (
-    <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
-      <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div style={{
+      background: 'var(--bg-elevated)',
+      border: '1px solid var(--border)',
+      borderRadius: '12px',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      <div style={{
+        padding: '13px 18px',
+        borderBottom: '1px solid var(--border)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        background: 'var(--bg-overlay)'
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Eye size={14} color="var(--accent)" />
-          <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
+          <Eye size={15} color="var(--accent)" />
+          <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
             Threat Incident Dossier
           </span>
-          <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '3px', background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px solid rgba(56,189,248,0.2)', fontWeight: '700' }}>
-            OPERATIONAL BRIEF
+          <span style={{
+            fontSize: '9.5px', padding: '1.5px 6px', borderRadius: '3px',
+            background: 'var(--accent-dim)', color: 'var(--accent)',
+            border: '1px solid rgba(56,189,248,0.25)', fontWeight: '700', fontFamily: 'var(--font-mono)'
+          }}>
+            TACTICAL INTEL
           </span>
         </div>
       </div>
-      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <div style={{ padding: '12px', background: 'var(--bg-overlay)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-          <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)', marginBottom: '6px' }}>
+
+      <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px', flex: 1 }}>
+        <div style={{ padding: '14px', background: 'var(--bg-overlay)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+          <div style={{ fontSize: '10.5px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--accent)', marginBottom: '6px' }}>
             🚨 Incident Overview & Attack Vector
           </div>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.65', margin: 0 }}>
             {summary || 'No threat summary available.'}
           </p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          <div style={{ padding: '12px', background: 'var(--red-dim)', borderRadius: '8px', border: '1px solid rgba(248,113,113,0.2)' }}>
-            <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--red)', marginBottom: '6px' }}>
-              🕵️ Threat Actor / Origin
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div style={{ padding: '12px 14px', background: 'var(--red-dim)', borderRadius: '8px', border: '1px solid rgba(244,63,94,0.25)' }}>
+            <div style={{ fontSize: '10.5px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--red)', marginBottom: '5px' }}>
+              Attribution / Threat Actor
             </div>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{actor?.name || 'Unknown Actor'}</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>{actor?.country || actor?.origin || actor?.type || 'Nation-state / Cybercriminal'}</div>
+            <div style={{ fontSize: '13.5px', fontWeight: '800', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
+              {actor?.name || 'Unknown Actor'}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+              {actor?.country || actor?.origin || actor?.type || 'Nation-State / Cybercrime Cartel'}
+            </div>
           </div>
-          <div style={{ padding: '12px', background: 'var(--amber-dim)', borderRadius: '8px', border: '1px solid rgba(251,191,36,0.2)' }}>
-            <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--amber)', marginBottom: '6px' }}>
-              🏭 Targeted Sectors
+
+          <div style={{ padding: '12px 14px', background: 'var(--amber-dim)', borderRadius: '8px', border: '1px solid rgba(245,158,11,0.25)' }}>
+            <div style={{ fontSize: '10.5px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--amber)', marginBottom: '5px' }}>
+              Targeted Critical Sectors
             </div>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{safeSectors.slice(0, 2).join(', ') || 'Multiple Sectors'}</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>{safeSectors.length > 2 ? `+${safeSectors.length - 2} additional industries` : 'Targeted industries'}</div>
+            <div style={{ fontSize: '13.5px', fontWeight: '800', color: 'var(--text-primary)' }}>
+              {safeSectors.slice(0, 2).join(', ') || 'Multiple Infrastructure Sectors'}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+              {safeSectors.length > 2 ? `+${safeSectors.length - 2} additional industries affected` : 'Enterprise Infrastructure'}
+            </div>
           </div>
         </div>
       </div>
@@ -169,57 +207,93 @@ export default function OverviewTab({ threatData, onSwitchTab, _onOpenIngest }) 
   };
 
   const SECTION_TABS = [
-    { id: 'briefing',  label: 'Threat Dossier' },
-    { id: 'killchain', label: 'Attack Lifecycle' },
-    { id: 'checklist', label: 'Response Checklist' },
-    { id: 'graph',     label: 'Knowledge Graph' },
+    { id: 'briefing',  label: 'Threat Dossier',    icon: Eye },
+    { id: 'killchain', label: 'Attack Lifecycle',  icon: Terminal },
+    { id: 'checklist', label: 'Response Playbook', icon: ShieldCheck },
+    { id: 'graph',     label: 'Knowledge Graph',   icon: Layers },
   ];
 
   const doneCount = Object.values(checkedSteps).filter(Boolean).length;
-  const totalSteps = blue_team_actions.length || attack_flow_steps.length;
+  const totalSteps = safeActions.length || safeFlow.length;
 
   return (
-    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
 
-      {/* ── Page Title ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      {/* ── Page Title & Controls ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <span className="badge badge-red">ACTIVE THREAT</span>
-            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
-              {threat_actor?.origin && `Origin: ${threat_actor.origin}`}
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <span className="badge badge-red">VERIFIED ADVISORY</span>
+            {threat_actor?.origin && (
+              <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
+                ORIGIN: {threat_actor.origin.toUpperCase()}
+              </span>
+            )}
           </div>
-          <h1 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em', lineHeight: '1.3', maxWidth: '680px' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em', lineHeight: '1.3', maxWidth: '780px' }}>
             {title}
           </h1>
         </div>
+
         <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
           <button
             onClick={toggleAudio}
             className="btn-ghost"
             style={{ fontSize: '12px', color: isPlayingAudio ? 'var(--red)' : undefined }}
-            title={isPlayingAudio ? 'Stop audio' : 'Listen to briefing'}
+            title={isPlayingAudio ? 'Stop audio playback' : 'Listen to executive summary read-out'}
           >
-            {isPlayingAudio ? <VolumeX size={13} /> : <Volume2 size={13} />}
-            {isPlayingAudio ? 'Stop Audio' : 'Listen'}
+            {isPlayingAudio ? <VolumeX size={14} /> : <Volume2 size={14} />}
+            <span>{isPlayingAudio ? 'Stop Audio' : 'Audio Brief'}</span>
           </button>
         </div>
       </div>
 
-      {/* ── KPI Grid ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-        <KPICard label="Risk Score"       value={`${riskScore}%`} sub="Composite severity" color={riskScore > 70 ? 'var(--red)' : riskScore > 40 ? 'var(--amber)' : 'var(--green)'} icon={Activity} />
-        <KPICard label="CVEs Found"       value={cves.length}  sub={`${cves.filter(c=>c.severity==='critical').length} Critical`} color="var(--amber)"  icon={Bug} />
-        <KPICard label="Attack Techniques" value={mitre_techniques.length} sub="MITRE ATT&CK mapped" color="var(--purple)" icon={TrendingUp} />
-        <KPICard label="Threat Indicators" value={iocs.length}  sub="IPs, hashes & domains" color="var(--red)" icon={ShieldAlert} />
+      {/* ── Executive KPI Metric Strip ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+        <KPICard
+          label="Composite Threat Index"
+          value={`${riskScore}%`}
+          sub="Risk severity score"
+          color={riskScore > 70 ? 'var(--red)' : riskScore > 40 ? 'var(--amber)' : 'var(--green)'}
+          icon={Activity}
+        />
+        <KPICard
+          label="Identified CVE Exploits"
+          value={cves.length}
+          sub={`${cves.filter(c => c && c.severity === 'critical').length} Critical CVSS flaws`}
+          color="var(--amber)"
+          icon={Bug}
+        />
+        <KPICard
+          label="MITRE ATT&CK Techniques"
+          value={mitre_techniques.length}
+          sub="Adversary behaviors mapped"
+          color="var(--purple)"
+          icon={TrendingUp}
+        />
+        <KPICard
+          label="Network & File Indicators"
+          value={iocs.length}
+          sub="Actionable blocklist IoCs"
+          color="var(--accent)"
+          icon={ShieldAlert}
+        />
       </div>
 
-      {/* ── Risk Gauge + Plain English ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '16px' }}>
-        <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
-            Threat Risk Level
+      {/* ── Dual-Pane Tactical Center: Gauge + Dossier ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '16px', alignItems: 'stretch' }}>
+        <div style={{
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border)',
+          borderRadius: '12px',
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+            Composite Risk Index
           </div>
           <ThreatRadarGauge score={riskScore} cveCount={cves.length} iocCount={iocs.length} tacticCount={mitre_techniques.length} />
         </div>
@@ -231,103 +305,150 @@ export default function OverviewTab({ threatData, onSwitchTab, _onOpenIngest }) 
         />
       </div>
 
-      {/* ── Section Sub-Tabs ── */}
+      {/* ── Segmented Sub-Tab Switcher ── */}
       <div>
-        <div style={{ display: 'flex', gap: '2px', borderBottom: '1px solid var(--border)', marginBottom: '16px' }}>
-          {SECTION_TABS.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setActiveSection(t.id)}
-              style={{
-                padding: '8px 14px', fontSize: '13px', fontWeight: '600',
-                background: 'transparent', border: 'none', cursor: 'pointer',
-                color: activeSection === t.id ? 'var(--accent)' : 'var(--text-secondary)',
-                borderBottom: `2px solid ${activeSection === t.id ? 'var(--accent)' : 'transparent'}`,
-                fontFamily: 'var(--font-sans)', transition: 'all 0.12s ease', marginBottom: '-1px'
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div style={{
+          display: 'flex',
+          gap: '4px',
+          background: 'var(--bg-overlay)',
+          padding: '4px',
+          borderRadius: '10px',
+          border: '1px solid var(--border)',
+          width: 'fit-content',
+          marginBottom: '16px'
+        }}>
+          {SECTION_TABS.map(t => {
+            const Icon = t.icon;
+            const active = activeSection === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setActiveSection(t.id)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '7px',
+                  padding: '7px 14px', fontSize: '12.5px', fontWeight: active ? '700' : '500',
+                  background: active ? 'var(--bg-elevated)' : 'transparent',
+                  color: active ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                  border: `1px solid ${active ? 'var(--border-strong)' : 'transparent'}`,
+                  borderRadius: '7px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  boxShadow: active ? 'var(--shadow-sm)' : 'none'
+                }}
+              >
+                <Icon size={14} color={active ? 'var(--accent)' : 'var(--text-tertiary)'} />
+                <span>{t.label}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* AI Briefing */}
+        {/* Threat Dossier: CVEs & MITRE Grid */}
         {activeSection === 'briefing' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             {/* CVEs */}
             <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                  <Bug size={13} color="var(--amber)" />
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Software Vulnerabilities</span>
+              <div style={{ padding: '13px 18px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-overlay)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Bug size={14} color="var(--amber)" />
+                  <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-primary)' }}>Software Vulnerabilities (CVEs)</span>
                 </div>
-                <span className="badge badge-amber">{cves.length} CVEs</span>
+                <span className="badge badge-amber">{cves.length} Identified</span>
               </div>
-              <div style={{ padding: '8px' }}>
-                {cves.slice(0, 5).map((cve, i) => {
+              <div style={{ padding: '10px' }}>
+                {safeCves.slice(0, 5).map((cve, i) => {
                   const sev = getSev(cve.severity);
                   const col = SEVERITY_COLORS[sev];
                   return (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '6px', marginBottom: '2px', transition: 'background 0.1s' }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    <div
+                      key={i}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '12px',
+                        padding: '10px 12px', borderRadius: '8px', marginBottom: '4px',
+                        background: 'var(--bg-overlay)', border: '1px solid var(--border-subtle)',
+                        transition: 'border-color 0.12s'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-strong)'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-subtle)'}
                     >
-                      <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: '700', color: col.text, background: col.bg, border: `1px solid ${col.border}`, padding: '2px 6px', borderRadius: '4px', flexShrink: 0 }}>
+                      <span style={{
+                        fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: '800',
+                        color: col.text, background: col.bg, border: `1px solid ${col.border}`,
+                        padding: '2.5px 7px', borderRadius: '4px', flexShrink: 0
+                      }}>
                         {cve.id || `CVE-${i}`}
                       </span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '12px', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {cve.description || cve.affected_product || cve.software || 'Vulnerability details'}
+                        <div style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {cve.description || cve.affected_product || cve.software || 'Vulnerability flaw'}
                         </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '1px' }}>
-                          CVSS: {cve.cvss ?? cve.cvss_score ?? '—'} · {cve.affected_product || cve.software || 'Target System'}
+                        <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+                          CVSS: {cve.cvss ?? cve.cvss_score ?? '—'} · {cve.affected_product || cve.software || 'Impacted Gateway'}
                         </div>
                       </div>
-                      <a href={`https://nvd.nist.gov/vuln/detail/${cve.id}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ flexShrink: 0 }}>
-                        <ExternalLink size={11} color="var(--text-tertiary)" />
+                      <a
+                        href={`https://nvd.nist.gov/vuln/detail/${cve.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        style={{ padding: '4px', borderRadius: '4px', color: 'var(--text-tertiary)' }}
+                        title="View Official NIST NVD Advisory"
+                      >
+                        <ExternalLink size={13} />
                       </a>
                     </div>
                   );
                 })}
-                {cves.length > 5 && (
-                  <button onClick={() => onSwitchTab('technical')} style={{ width: '100%', padding: '8px', marginTop: '4px', background: 'var(--bg-overlay)', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-                    View all {cves.length} CVEs →
+                {safeCves.length > 5 && (
+                  <button onClick={() => onSwitchTab('technical')} style={{ width: '100%', padding: '9px', marginTop: '6px', background: 'var(--bg-overlay)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+                    View all {safeCves.length} CVEs in Technical Deep Dive →
                   </button>
                 )}
-                {cves.length === 0 && <div style={{ textAlign: 'center', padding: '20px', fontSize: '12px', color: 'var(--text-tertiary)' }}>No CVEs identified in this report</div>}
+                {safeCves.length === 0 && <div style={{ textAlign: 'center', padding: '30px', fontSize: '12.5px', color: 'var(--text-tertiary)' }}>No CVEs extracted from this advisory.</div>}
               </div>
             </div>
 
             {/* MITRE Techniques */}
             <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                  <Zap size={13} color="var(--purple)" />
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Attack Techniques</span>
+              <div style={{ padding: '13px 18px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-overlay)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Zap size={14} color="var(--purple)" />
+                  <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-primary)' }}>Adversary Techniques</span>
                 </div>
                 <span className="badge badge-purple">MITRE ATT&CK</span>
               </div>
-              <div style={{ padding: '8px' }}>
-                {mitre_techniques.slice(0, 5).map((tech, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '8px', borderRadius: '6px', marginBottom: '2px', transition: 'background 0.1s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              <div style={{ padding: '10px' }}>
+                {safeMitre.slice(0, 5).map((tech, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex', alignItems: 'flex-start', gap: '12px',
+                      padding: '10px 12px', borderRadius: '8px', marginBottom: '4px',
+                      background: 'var(--bg-overlay)', border: '1px solid var(--border-subtle)',
+                      transition: 'border-color 0.12s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-strong)'}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-subtle)'}
                   >
-                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: '700', color: 'var(--purple)', background: 'var(--purple-dim)', border: '1px solid rgba(167,139,250,0.2)', padding: '2px 6px', borderRadius: '4px', flexShrink: 0, marginTop: '1px' }}>
+                    <span style={{
+                      fontSize: '10.5px', fontFamily: 'var(--font-mono)', fontWeight: '800',
+                      color: 'var(--purple)', background: 'var(--purple-dim)', border: '1px solid rgba(129,140,248,0.25)',
+                      padding: '2.5px 7px', borderRadius: '4px', flexShrink: 0, marginTop: '1px'
+                    }}>
                       {tech.id || `T${1000 + i}`}
                     </span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>{tech.name}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '1px' }}>{tech.tactic || 'Attack Tactic'}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--text-primary)' }}>{tech.name}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>{tech.tactic || 'Adversary Tactic'}</div>
                     </div>
                   </div>
                 ))}
-                {mitre_techniques.length > 5 && (
-                  <button onClick={() => onSwitchTab('technical')} style={{ width: '100%', padding: '8px', marginTop: '4px', background: 'var(--bg-overlay)', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-                    View all {mitre_techniques.length} techniques →
+                {safeMitre.length > 5 && (
+                  <button onClick={() => onSwitchTab('technical')} style={{ width: '100%', padding: '9px', marginTop: '6px', background: 'var(--bg-overlay)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+                    View full {safeMitre.length} techniques on Heatmap →
                   </button>
                 )}
-                {mitre_techniques.length === 0 && <div style={{ textAlign: 'center', padding: '20px', fontSize: '12px', color: 'var(--text-tertiary)' }}>No techniques mapped yet</div>}
+                {safeMitre.length === 0 && <div style={{ textAlign: 'center', padding: '30px', fontSize: '12.5px', color: 'var(--text-tertiary)' }}>No techniques mapped yet.</div>}
               </div>
             </div>
           </div>
@@ -335,10 +456,7 @@ export default function OverviewTab({ threatData, onSwitchTab, _onOpenIngest }) 
 
         {/* Attack Kill Chain */}
         {activeSection === 'killchain' && (
-          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px' }}>
-            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-              Visualizing the attacker's step-by-step progression through your network — from initial access to their final objective.
-            </div>
+          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '12px', padding: '22px' }}>
             <CyberKillChainVisual attackFlowSteps={attack_flow_steps} />
           </div>
         )}
@@ -346,30 +464,30 @@ export default function OverviewTab({ threatData, onSwitchTab, _onOpenIngest }) 
         {/* Response Checklist */}
         {activeSection === 'checklist' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
               <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                Complete each action to contain the threat. Click to mark as done.
+                Execute and verify each containment action to neutralize the threat. Click item to mark as verified.
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 {totalSteps > 0 && (
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    <span style={{ color: 'var(--green)', fontWeight: '700' }}>{doneCount}</span> / {totalSteps} complete
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                    <span style={{ color: 'var(--green)', fontWeight: '800' }}>{doneCount}</span> / {totalSteps} COMPLETE
                   </div>
                 )}
                 {totalSteps > 0 && (
-                  <div style={{ width: '80px', height: '5px', background: 'var(--bg-raised)', borderRadius: '99px', overflow: 'hidden' }}>
+                  <div style={{ width: '100px', height: '6px', background: 'var(--bg-raised)', borderRadius: '99px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${(doneCount / totalSteps) * 100}%`, background: 'var(--green)', borderRadius: '99px', transition: 'width 0.4s ease' }} />
                   </div>
                 )}
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {(safeActions.length ? safeActions : safeFlow).map((step, i) => (
                 <ChecklistItem key={i} step={step} idx={i} checked={!!checkedSteps[i]} onToggle={toggleCheck} />
               ))}
               {!safeActions.length && !safeFlow.length && (
                 <div style={{ textAlign: 'center', padding: '40px', fontSize: '13px', color: 'var(--text-tertiary)', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '12px' }}>
-                  No response actions extracted from this report.
+                  No containment playbooks extracted from this report.
                 </div>
               )}
             </div>
@@ -380,13 +498,12 @@ export default function OverviewTab({ threatData, onSwitchTab, _onOpenIngest }) 
         {activeSection === 'graph' && (
           <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px' }}>
             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-              Interactive network map showing how the attacker, malware, vulnerabilities and targets are connected. Click nodes to explore.
+              Adversary ontology and relationship network connecting actor, exploits, malware strains and targeted sectors.
             </div>
             {graph_data ? (
-              <KnowledgeGraph graphData={graph_data} height={400} />
+              <KnowledgeGraph graphData={graph_data} height={420} />
             ) : (
               <div style={{ textAlign: 'center', padding: '60px 20px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                <div style={{ marginBottom: '8px', fontSize: '24px' }}>🕸️</div>
                 Knowledge graph not available for this report.
               </div>
             )}
@@ -395,35 +512,47 @@ export default function OverviewTab({ threatData, onSwitchTab, _onOpenIngest }) 
       </div>
 
       {/* ── Quick Navigation Shortcuts ── */}
-      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-        <div className="section-label" style={{ marginBottom: '10px' }}>Quick Actions</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '18px' }}>
+        <div className="section-label" style={{ marginBottom: '10px' }}>Direct Incident Response Shortcuts</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
           {[
-            { tab: 'defense',   icon: ShieldCheck, label: 'Generate Firewall Rules',    desc: 'Block attack vectors instantly', color: 'var(--green)' },
-            { tab: 'iocs',      icon: Lock,        label: 'View Block Indicators',       desc: `${iocs.length} IoCs ready to block`, color: 'var(--red)' },
-            { tab: 'technical', icon: TrendingUp,  label: 'MITRE ATT&CK Matrix',         desc: `${mitre_techniques.length} mapped techniques`, color: 'var(--purple)' },
+            { tab: 'defense',   icon: ShieldCheck, label: 'Perimeter Defense Generator', desc: 'Deploy firewall & SIEM rules', color: 'var(--green)' },
+            { tab: 'iocs',      icon: Lock,        label: 'Blocklist IoC Telemetry',     desc: `${iocs.length} extracted indicators`, color: 'var(--red)' },
+            { tab: 'technical', icon: TrendingUp,  label: 'MITRE ATT&CK Matrix Heatmap', desc: `${mitre_techniques.length} techniques mapped`, color: 'var(--purple)' },
           ].map(a => (
             <button
               key={a.tab}
               onClick={() => onSwitchTab(a.tab)}
               style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '12px 14px', borderRadius: '10px', textAlign: 'left',
+                display: 'flex', alignItems: 'center', gap: '14px',
+                padding: '14px 16px', borderRadius: '10px', textAlign: 'left',
                 background: 'var(--bg-elevated)', border: '1px solid var(--border)',
                 cursor: 'pointer', transition: 'all 0.15s ease',
                 fontFamily: 'var(--font-sans)'
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = a.color; e.currentTarget.style.background = 'var(--bg-overlay)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-elevated)'; }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = a.color;
+                e.currentTarget.style.background = 'var(--bg-hover)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = 'var(--border)';
+                e.currentTarget.style.background = 'var(--bg-elevated)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
             >
-              <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'var(--bg-overlay)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <a.icon size={15} color={a.color} />
+              <div style={{
+                width: '36px', height: '36px', borderRadius: '9px',
+                background: 'var(--bg-overlay)', border: '1px solid var(--border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+              }}>
+                <a.icon size={17} color={a.color} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '1px' }}>{a.label}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{a.desc}</div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '2px' }}>{a.label}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{a.desc}</div>
               </div>
-              <ChevronRight size={13} color="var(--text-tertiary)" />
+              <ChevronRight size={14} color="var(--text-tertiary)" />
             </button>
           ))}
         </div>

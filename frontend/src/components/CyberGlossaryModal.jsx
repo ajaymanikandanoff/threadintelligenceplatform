@@ -35,7 +35,7 @@ const FEATURES = [
     category: 'Platform Navigation',
   },
   {
-    title: 'MITRE ATT&CK Matrix',
+    title: 'MITRE ATT&CK Matrix Heatmap',
     emoji: '🗺️',
     role: '14-tactic Enterprise adversary behavior heatmap.',
     whatItDoes: 'Maps unstructured threat narrative text against the global MITRE ATT&CK framework, illuminating all active attacker techniques in glowing red columns.',
@@ -45,13 +45,13 @@ const FEATURES = [
   {
     title: 'Interactive Knowledge Graph',
     emoji: '🕸️',
-    role: 'GraphRAG ontology and adversary relationship visualizer.',
+    role: 'Graph ontology and adversary relationship visualizer.',
     whatItDoes: 'Constructs an interactive SVG network linking the Threat Actor to deployed Malware payloads, exploited CVEs, MITRE attack techniques, target sectors, and C2 servers.',
     action: 'Drag nodes to reposition them, zoom in and out, and click any node to view entity attributes in the inspector drawer or pass it directly into AI Copilot for analysis.',
     category: 'Threat Forensics',
   },
   {
-    title: 'Cyber Kill Chain Pipeline',
+    title: 'Cyber Kill Chain Intrusion Timeline',
     emoji: '⚡',
     role: '5-phase attacker intrusion progression timeline.',
     whatItDoes: 'Visualizes the sequential attack lifecycle across Perimeter Breach, Malware Execution, Backdoor Implant, C2 Beaconing, and Data Theft & Extortion.',
@@ -87,7 +87,7 @@ const FEATURES = [
     emoji: '📥',
     role: 'Document ingestion portal and automated intelligence extractor.',
     whatItDoes: 'Extracts threat data from government PDFs (CISA, NSA, FBI) or custom incident writeups and generates a full threat intelligence model in seconds.',
-    action: 'Click "Analyze Threat" in the top header, pick an advisory from the live feeds, upload your own PDF, or paste raw server incident logs.',
+    action: 'Click "Analyze Advisory" in the top header, pick an advisory from the live feeds, upload your own PDF, or paste raw server incident logs.',
     category: 'Data Ingestion',
   },
   {
@@ -95,7 +95,7 @@ const FEATURES = [
     emoji: '📄',
     role: 'C-suite and Board of Directors threat briefing generator.',
     whatItDoes: 'Synthesizes high-level executive summaries, attacker motivations, business impact statements, and defense readiness into clean printable reports and STIX 2.1 JSON.',
-    action: 'Click "Export Report" in the header to preview the briefing, click "Print / PDF" for executive distribution, or download the standard STIX 2.1 JSON bundle.',
+    action: 'Click "Export CTI Dossier" in the header to preview the briefing, click "Print / PDF" for executive distribution, or download the standard STIX 2.1 JSON bundle.',
     category: 'Data Ingestion',
   },
 ];
@@ -120,11 +120,11 @@ export default function CyberGlossaryModal({ isOpen, onClose }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container" style={{ maxWidth: '720px' }} onClick={e => e.stopPropagation()}>
+      <div className="modal-container" style={{ maxWidth: '740px' }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
         <div style={{
-          padding: '20px 24px',
+          padding: '20px 26px',
           borderBottom: '1px solid var(--border)',
           display: 'flex',
           justifyContent: 'space-between',
@@ -137,49 +137,49 @@ export default function CyberGlossaryModal({ isOpen, onClose }) {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
               <BookOpen size={16} color="var(--accent)" />
-              <h2 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
-                Platform Feature Guide
+              <h2 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.01em' }}>
+                Platform Capabilities & Feature Guide
               </h2>
               <span style={{
-                fontSize: '10px', padding: '1px 7px', borderRadius: '4px',
+                fontSize: '9.5px', padding: '1.5px 7px', borderRadius: '4px',
                 background: 'var(--accent-dim)', color: 'var(--accent)',
-                border: '1px solid var(--border-accent)', fontWeight: '700'
+                border: '1px solid var(--border-accent)', fontWeight: '800', fontFamily: 'var(--font-mono)'
               }}>
-                WHAT IT IS & HOW TO USE IT
+                OPERATIONAL DIRECTORY
               </span>
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', margin: 0 }}>
-              Practical breakdown of every feature in this platform — what it does and what actions to take.
+            <p style={{ fontSize: '12.5px', color: 'var(--text-tertiary)', margin: 0 }}>
+              Practical operational breakdown of each intelligence module — purpose, capabilities, and direct analyst workflows.
             </p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: '4px', borderRadius: '6px' }}>
+          <button onClick={onClose} className="btn-ghost" style={{ padding: '6px', border: 'none', background: 'transparent' }}>
             <X size={18} />
           </button>
         </div>
 
         {/* Search + Category Filter */}
-        <div style={{ padding: '14px 24px', borderBottom: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ padding: '14px 26px', borderBottom: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '10px', background: 'var(--bg-overlay)' }}>
           <div style={{ position: 'relative' }}>
-            <Search size={13} color="var(--text-tertiary)" style={{ position: 'absolute', left: '11px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            <Search size={14} color="var(--text-tertiary)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
             <input
               className="input"
-              style={{ paddingLeft: '32px', fontSize: '13px' }}
-              placeholder="Search features (e.g. Firewall, Copilot, MITRE, CVE, Ingestion)…"
+              style={{ paddingLeft: '34px', fontSize: '12.5px' }}
+              placeholder="Search platform capabilities (e.g. Firewall, Copilot, MITRE, CVE, Ingestion)…"
               value={search}
               onChange={e => setSearch(e.target.value)}
               autoFocus
             />
           </div>
-          <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             {CATEGORIES.map(c => (
               <button
                 key={c}
                 onClick={() => setActiveCat(c)}
                 style={{
-                  padding: '5px 11px', borderRadius: '6px', fontSize: '11px', fontWeight: '700',
+                  padding: '5px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '700',
                   cursor: 'pointer', fontFamily: 'var(--font-sans)',
-                  background: activeCat === c ? 'var(--accent)' : 'var(--bg-overlay)',
-                  color: activeCat === c ? '#0a0f1a' : 'var(--text-secondary)',
+                  background: activeCat === c ? 'var(--accent)' : 'var(--bg-elevated)',
+                  color: activeCat === c ? '#06090f' : 'var(--text-secondary)',
                   border: `1px solid ${activeCat === c ? 'transparent' : 'var(--border)'}`,
                   transition: 'all 0.12s'
                 }}
@@ -191,7 +191,7 @@ export default function CyberGlossaryModal({ isOpen, onClose }) {
         </div>
 
         {/* Feature Cards List */}
-        <div style={{ padding: '14px 24px 24px', display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '55vh', overflowY: 'auto' }}>
+        <div style={{ padding: '16px 26px 26px', display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '55vh', overflowY: 'auto' }}>
           {filtered.map((f, i) => {
             const isOpen = expanded === i;
             return (
@@ -202,20 +202,20 @@ export default function CyberGlossaryModal({ isOpen, onClose }) {
                   border: `1px solid ${isOpen ? 'var(--border-accent)' : 'var(--border)'}`,
                   overflow: 'hidden',
                   transition: 'all 0.15s ease',
-                  background: isOpen ? 'var(--bg-active)' : 'var(--bg-overlay)'
+                  background: isOpen ? 'rgba(56,189,248,0.04)' : 'var(--bg-elevated)'
                 }}
               >
                 <button
                   onClick={() => setExpanded(isOpen ? null : i)}
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
-                    padding: '12px 14px', background: 'transparent', border: 'none',
+                    padding: '13px 16px', background: 'transparent', border: 'none',
                     cursor: 'pointer', textAlign: 'left', fontFamily: 'var(--font-sans)'
                   }}
                 >
                   <span style={{ fontSize: '20px', flexShrink: 0 }}>{f.emoji}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: isOpen ? 'var(--accent)' : 'var(--text-primary)', marginBottom: '2px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '800', color: isOpen ? 'var(--accent)' : 'var(--text-primary)', marginBottom: '2px' }}>
                       {f.title}
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isOpen ? 'normal' : 'nowrap' }}>
@@ -223,30 +223,31 @@ export default function CyberGlossaryModal({ isOpen, onClose }) {
                     </div>
                   </div>
                   <span style={{
-                    fontSize: '10px', fontWeight: '700', padding: '2px 7px', borderRadius: '4px',
-                    background: 'var(--bg-raised)', color: 'var(--text-tertiary)', flexShrink: 0, marginRight: '4px'
+                    fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '4px',
+                    background: 'var(--bg-overlay)', color: 'var(--text-tertiary)', flexShrink: 0, marginRight: '6px',
+                    fontFamily: 'var(--font-mono)'
                   }}>
-                    {f.category}
+                    {f.category.toUpperCase()}
                   </span>
                   <ChevronRight size={14} color="var(--text-tertiary)" style={{ transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
                 </button>
 
                 {isOpen && (
-                  <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ padding: '10px 12px', background: 'var(--bg-elevated)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                      <div style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)', marginBottom: '4px' }}>
-                        ⚙️ What This Feature Does
+                  <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ padding: '12px 14px', background: 'var(--bg-overlay)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: '10.5px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--accent)', marginBottom: '5px' }}>
+                        ⚙️ Operational Functionality
                       </div>
-                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.6' }}>
+                      <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.6' }}>
                         {f.whatItDoes}
                       </p>
                     </div>
 
-                    <div style={{ padding: '10px 12px', background: 'var(--green-dim)', borderRadius: '8px', border: '1px solid rgba(52,211,153,0.2)' }}>
-                      <div style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--green)', marginBottom: '4px' }}>
-                        ⚡ How To Use It
+                    <div style={{ padding: '12px 14px', background: 'var(--green-dim)', borderRadius: '8px', border: '1px solid rgba(16,185,129,0.25)' }}>
+                      <div style={{ fontSize: '10.5px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--green)', marginBottom: '5px' }}>
+                        ⚡ Analyst Workflow & Action
                       </div>
-                      <p style={{ fontSize: '12px', color: 'var(--text-primary)', margin: 0, lineHeight: '1.6' }}>
+                      <p style={{ fontSize: '12.5px', color: 'var(--text-primary)', margin: 0, lineHeight: '1.6' }}>
                         {f.action}
                       </p>
                     </div>
@@ -259,7 +260,7 @@ export default function CyberGlossaryModal({ isOpen, onClose }) {
           {filtered.length === 0 && (
             <div style={{ textAlign: 'center', padding: '48px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔍</div>
-              No features match your search.
+              No platform features match your search.
             </div>
           )}
         </div>

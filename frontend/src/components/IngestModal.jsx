@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, FileUp, FileText, Shield, Loader, ChevronRight, ArrowRight } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, FileUp, FileText, Shield, Loader, ChevronRight, ArrowRight, UploadCloud } from 'lucide-react';
 
 export default function IngestModal({ isOpen, onClose, sampleReports = [], onAnalyze, onUploadFile, isAnalyzing }) {
   const [mode, setMode] = useState('feeds');
@@ -7,7 +7,7 @@ export default function IngestModal({ isOpen, onClose, sampleReports = [], onAna
   const [customText, setCustomText] = useState('');
   const [file, setFile] = useState(null);
   const [isDrag, setIsDrag] = useState(false);
-  const fileRef = React.useRef(null);
+  const fileRef = useRef(null);
 
   if (!isOpen) return null;
 
@@ -24,35 +24,35 @@ export default function IngestModal({ isOpen, onClose, sampleReports = [], onAna
   const canGo = mode === 'upload' ? !!file : mode === 'feeds' ? true : !!customText.trim();
 
   const MODES = [
-    { id: 'feeds', label: 'Government Feeds', icon: Shield, desc: 'CISA, FBI, NSA bulletins' },
-    { id: 'upload', label: 'Upload PDF', icon: FileUp, desc: 'Any security advisory' },
-    { id: 'custom', label: 'Paste Text', icon: FileText, desc: 'Raw incident logs' },
+    { id: 'feeds', label: 'Government Bulletins', icon: Shield, desc: 'CISA, FBI, NSA advisories' },
+    { id: 'upload', label: 'Upload Incident PDF', icon: FileUp, desc: 'Parse document with OCR' },
+    { id: 'custom', label: 'Raw Log Stream', icon: FileText, desc: 'Paste telemetry / writeups' },
   ];
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="modal-container"
-        style={{ maxWidth: '580px' }}
+        style={{ maxWidth: '600px' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div style={{ padding: '20px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ padding: '22px 26px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border)' }}>
           <div>
-            <h2 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
-              Analyze Threat Report
+            <h2 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.01em' }}>
+              Ingest & Analyze Threat Advisory
             </h2>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
-              Select a source to extract intelligence automatically with Gemini AI.
+            <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+              Select a verified source or upload telemetry to extract adversary TTPs with Gemini AI.
             </p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: '2px' }}>
+          <button onClick={onClose} className="btn-ghost" style={{ padding: '6px', border: 'none', background: 'transparent' }}>
             <X size={18} />
           </button>
         </div>
 
-        {/* Mode Tabs */}
-        <div style={{ display: 'flex', gap: '6px', padding: '16px 24px 0' }}>
+        {/* Source Mode Tabs */}
+        <div style={{ display: 'flex', gap: '8px', padding: '16px 26px 0' }}>
           {MODES.map(m => {
             const Icon = m.icon;
             const active = mode === m.id;
@@ -61,16 +61,17 @@ export default function IngestModal({ isOpen, onClose, sampleReports = [], onAna
                 key={m.id}
                 onClick={() => setMode(m.id)}
                 style={{
-                  flex: 1, padding: '10px 8px', borderRadius: '8px', cursor: 'pointer',
-                  background: active ? 'var(--bg-active)' : 'var(--bg-overlay)',
-                  border: `1px solid ${active ? 'var(--border-accent)' : 'var(--border)'}`,
-                  color: active ? 'var(--accent)' : 'var(--text-secondary)',
-                  fontFamily: 'var(--font-sans)', fontWeight: '600', fontSize: '12px',
+                  flex: 1, padding: '12px 10px', borderRadius: '10px', cursor: 'pointer',
+                  background: active ? 'linear-gradient(180deg, rgba(56,189,248,0.12) 0%, rgba(56,189,248,0.02) 100%)' : 'var(--bg-overlay)',
+                  border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                  color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  fontFamily: 'var(--font-sans)', fontWeight: active ? '700' : '500', fontSize: '12px',
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-                  transition: 'all 0.15s ease'
+                  transition: 'all 0.15s ease',
+                  boxShadow: active ? 'var(--shadow-glow)' : 'none'
                 }}
               >
-                <Icon size={15} />
+                <Icon size={16} color={active ? 'var(--accent)' : 'var(--text-tertiary)'} />
                 <span>{m.label}</span>
               </button>
             );
@@ -78,14 +79,14 @@ export default function IngestModal({ isOpen, onClose, sampleReports = [], onAna
         </div>
 
         {/* Content Area */}
-        <div style={{ padding: '16px 24px' }}>
+        <div style={{ padding: '20px 26px' }}>
 
           {/* Feeds Mode */}
           {mode === 'feeds' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
-                Select an official government advisory to analyze:
-              </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div className="section-label" style={{ marginBottom: '4px' }}>
+                Verified CISA & Federal Threat Feeds
+              </div>
               {sampleReports.map(rep => {
                 const selected = selectedId === rep.id;
                 return (
@@ -93,21 +94,21 @@ export default function IngestModal({ isOpen, onClose, sampleReports = [], onAna
                     key={rep.id}
                     onClick={() => setSelectedId(rep.id)}
                     style={{
-                      padding: '12px 14px', borderRadius: '8px', cursor: 'pointer',
-                      background: selected ? 'var(--bg-active)' : 'var(--bg-overlay)',
-                      border: `1px solid ${selected ? 'var(--border-accent)' : 'var(--border)'}`,
+                      padding: '14px 16px', borderRadius: '10px', cursor: 'pointer',
+                      background: selected ? 'rgba(56,189,248,0.08)' : 'var(--bg-overlay)',
+                      border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
                       transition: 'all 0.15s ease', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
                     }}
                   >
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: '600', color: selected ? 'var(--accent)' : 'var(--text-primary)', marginBottom: '2px' }}>
+                      <div style={{ fontSize: '13px', fontWeight: '700', color: selected ? 'var(--accent)' : 'var(--text-primary)', marginBottom: '3px' }}>
                         {rep.title}
                       </div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
                         {rep.source} · {rep.date}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, marginLeft: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: '12px' }}>
                       <span className="badge badge-red">{rep.severity || 'CRITICAL'}</span>
                       <ChevronRight size={14} color={selected ? 'var(--accent)' : 'var(--text-tertiary)'} />
                     </div>
@@ -126,18 +127,18 @@ export default function IngestModal({ isOpen, onClose, sampleReports = [], onAna
               onClick={() => fileRef.current?.click()}
               style={{
                 border: `2px dashed ${isDrag ? 'var(--accent)' : file ? 'var(--green)' : 'var(--border-strong)'}`,
-                background: isDrag ? 'var(--bg-active)' : file ? 'rgba(52,211,153,0.05)' : 'var(--bg-overlay)',
-                borderRadius: '10px', padding: '40px 20px', textAlign: 'center', cursor: 'pointer',
+                background: isDrag ? 'rgba(56,189,248,0.06)' : file ? 'rgba(16,185,129,0.06)' : 'var(--bg-overlay)',
+                borderRadius: '12px', padding: '44px 20px', textAlign: 'center', cursor: 'pointer',
                 transition: 'all 0.2s ease'
               }}
             >
               <input ref={fileRef} type="file" accept=".pdf,.txt,.json,.md" onChange={e => { if (e.target.files[0]) setFile(e.target.files[0]); }} style={{ display: 'none' }} />
-              <FileUp size={32} color={file ? 'var(--green)' : 'var(--accent)'} style={{ marginBottom: '10px', opacity: 0.8 }} />
-              <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}>
-                {file ? file.name : 'Drop PDF or click to browse'}
+              <UploadCloud size={36} color={file ? 'var(--green)' : 'var(--accent)'} style={{ marginBottom: '12px', opacity: 0.9 }} />
+              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px' }}>
+                {file ? file.name : 'Drag and drop advisory PDF, or browse files'}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
-                {file ? `${(file.size / 1024).toFixed(1)} KB — Ready` : 'PDF, TXT, JSON, MD up to 20MB'}
+                {file ? `${(file.size / 1024).toFixed(1)} KB — Document ready for ingestion` : 'Supports official PDF, TXT, JSON, MD threat advisories up to 15MB'}
               </div>
             </div>
           )}
@@ -145,42 +146,44 @@ export default function IngestModal({ isOpen, onClose, sampleReports = [], onAna
           {/* Custom Text Mode */}
           {mode === 'custom' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                Paste raw security alert or advisory text:
+              <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                Paste raw incident narrative or SIEM log text:
               </label>
               <textarea
                 value={customText}
                 onChange={e => setCustomText(e.target.value)}
-                placeholder="Paste firewall logs, SIEM alerts, security bulletins, or incident reports here..."
-                rows={7}
+                placeholder="Paste raw firewall alerts, intrusion writeups, forensic notes, or email threat bulletins here..."
+                rows={8}
                 style={{
                   width: '100%', background: 'var(--bg-input)', border: '1px solid var(--border)',
-                  borderRadius: '8px', padding: '10px 12px', color: 'var(--text-primary)',
+                  borderRadius: '10px', padding: '12px 14px', color: 'var(--text-primary)',
                   fontSize: '12px', fontFamily: 'var(--font-mono)', outline: 'none', resize: 'vertical'
                 }}
-                onFocus={e => e.target.style.borderColor = 'var(--border-accent)'}
+                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                 onBlur={e => e.target.style.borderColor = 'var(--border)'}
               />
             </div>
           )}
         </div>
 
-        {/* Footer */}
+        {/* Modal Footer */}
         <div style={{
-          padding: '16px 24px', borderTop: '1px solid var(--border)',
-          display: 'flex', justifyContent: 'flex-end', gap: '8px'
+          padding: '16px 26px', borderTop: '1px solid var(--border)',
+          display: 'flex', justifyContent: 'flex-end', gap: '10px', background: 'var(--bg-overlay)'
         }}>
-          <button className="btn-ghost" onClick={onClose} style={{ fontSize: '13px' }}>Cancel</button>
+          <button className="btn-ghost" onClick={onClose} style={{ fontSize: '12.5px' }}>
+            Cancel
+          </button>
           <button
             className="btn-primary"
             onClick={handleGo}
             disabled={!canGo || isAnalyzing}
-            style={{ minWidth: '140px', justifyContent: 'center', fontSize: '13px' }}
+            style={{ minWidth: '150px', justifyContent: 'center', fontSize: '12.5px' }}
           >
             {isAnalyzing ? (
-              <><Loader size={13} className="spin" /><span>Analyzing…</span></>
+              <><Loader size={13} className="spin" /><span>Extracting TTPs…</span></>
             ) : (
-              <><span>Run AI Analysis</span><ArrowRight size={13} /></>
+              <><span>Run Threat Analysis</span><ArrowRight size={13} /></>
             )}
           </button>
         </div>

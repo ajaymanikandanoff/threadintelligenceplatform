@@ -2,12 +2,12 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ZoomIn, ZoomOut, RotateCcw, X, Maximize2, Minimize2, Search, MessageSquare, Copy, Check } from 'lucide-react';
 
 const NODE_TYPES = {
-  actor:     { label: 'Attacker',   color: '#f87171', bg: 'rgba(248,113,113,0.18)', ring: '#f87171' },
-  malware:   { label: 'Malware',    color: '#c084fc', bg: 'rgba(192,132,252,0.18)', ring: '#c084fc' },
-  cve:       { label: 'CVE Flaw',   color: '#fbbf24', bg: 'rgba(251,191,36,0.18)',  ring: '#fbbf24' },
+  actor:     { label: 'Attacker',   color: '#f43f5e', bg: 'rgba(244,63,94,0.18)', ring: '#f43f5e' },
+  malware:   { label: 'Malware',    color: '#818cf8', bg: 'rgba(129,140,248,0.18)', ring: '#818cf8' },
+  cve:       { label: 'CVE Flaw',   color: '#f59e0b', bg: 'rgba(245,158,11,0.18)',  ring: '#f59e0b' },
   technique: { label: 'Technique',  color: '#38bdf8', bg: 'rgba(56,189,248,0.18)',  ring: '#38bdf8' },
-  ioc:       { label: 'Indicator',  color: '#34d399', bg: 'rgba(52,211,153,0.18)',  ring: '#34d399' },
-  target:    { label: 'Target',     color: '#f472b6', bg: 'rgba(244,114,182,0.18)', ring: '#f472b6' },
+  ioc:       { label: 'Indicator',  color: '#10b981', bg: 'rgba(16,185,129,0.18)',  ring: '#10b981' },
+  target:    { label: 'Target',     color: '#ec4899', bg: 'rgba(236,72,153,0.18)', ring: '#ec4899' },
   default:   { label: 'Entity',     color: '#94a3b8', bg: 'rgba(148,163,184,0.18)', ring: '#94a3b8' }
 };
 
@@ -89,21 +89,21 @@ export default function KnowledgeGraph({ graphData, onAskCopilot }) {
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         flexWrap: 'wrap', gap: '12px', background: 'var(--bg-elevated)',
-        padding: '12px 18px', borderRadius: '10px', border: '1px solid var(--border)'
+        padding: '12px 18px', borderRadius: '12px', border: '1px solid var(--border)'
       }}>
         {/* Left: Node Type Quick Filters */}
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={() => setTypeFilter('all')}
             style={{
-              padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600',
+              padding: '5px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '700',
               background: typeFilter === 'all' ? 'var(--bg-overlay)' : 'transparent',
               border: `1px solid ${typeFilter === 'all' ? 'var(--border-accent)' : 'transparent'}`,
               color: typeFilter === 'all' ? 'var(--text-primary)' : 'var(--text-tertiary)',
-              cursor: 'pointer'
+              cursor: 'pointer', fontFamily: 'var(--font-mono)'
             }}
           >
-            All ({nodes.length})
+            ALL ({nodes.length})
           </button>
           {Object.entries(NODE_TYPES).filter(([k]) => k !== 'default').map(([key, meta]) => {
             const count = nodes.filter(n => n.type === key).length;
@@ -114,22 +114,22 @@ export default function KnowledgeGraph({ graphData, onAskCopilot }) {
                 key={key}
                 onClick={() => setTypeFilter(key)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '4px',
-                  padding: '4px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: '600',
+                  display: 'flex', alignItems: 'center', gap: '5px',
+                  padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700',
                   background: active ? meta.bg : 'transparent',
                   border: `1px solid ${active ? meta.ring : 'transparent'}`,
                   color: active ? meta.color : 'var(--text-tertiary)',
-                  cursor: 'pointer'
+                  cursor: 'pointer', fontFamily: 'var(--font-mono)'
                 }}
               >
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: meta.color }} />
-                <span>{meta.label} ({count})</span>
+                <span>{meta.label.toUpperCase()} ({count})</span>
               </button>
             );
           })}
         </div>
 
-        {/* Right: Search & Zoom Controls */}
+        {/* Right: Search & HUD Zoom Controls */}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: '6px',
@@ -144,7 +144,8 @@ export default function KnowledgeGraph({ graphData, onAskCopilot }) {
               onChange={e => setSearchFilter(e.target.value)}
               style={{
                 background: 'transparent', border: 'none', outline: 'none',
-                color: 'var(--text-primary)', fontSize: '11px', width: '100%'
+                color: 'var(--text-primary)', fontSize: '11px', width: '100%',
+                fontFamily: 'var(--font-sans)'
               }}
             />
           </div>
@@ -184,8 +185,8 @@ export default function KnowledgeGraph({ graphData, onAskCopilot }) {
         >
           <svg ref={svgRef} width="100%" height="100%" style={{ display: 'block' }}>
             <defs>
-              <pattern id="graph-grid" width="24" height="24" patternUnits="userSpaceOnUse">
-                <circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.06)" />
+              <pattern id="graph-grid" width="28" height="28" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.05)" />
               </pattern>
               <marker id="arrow-threat" viewBox="0 0 10 10" refX="24" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(56,189,248,0.5)" />
@@ -204,7 +205,7 @@ export default function KnowledgeGraph({ graphData, onAskCopilot }) {
                   <g key={`edge-${i}`}>
                     <line
                       x1={s.x} y1={s.y} x2={t.x} y2={t.y}
-                      stroke={isConnected ? 'rgba(56,189,248,0.7)' : 'rgba(148,163,184,0.18)'}
+                      stroke={isConnected ? 'rgba(56,189,248,0.8)' : 'rgba(148,163,184,0.18)'}
                       strokeWidth={isConnected ? 2 : 1.2}
                       markerEnd="url(#arrow-threat)"
                     />
@@ -258,7 +259,7 @@ export default function KnowledgeGraph({ graphData, onAskCopilot }) {
                       fill={isSel ? 'var(--text-primary)' : 'var(--text-secondary)'}
                       fontSize="10"
                       fontFamily="var(--font-mono)"
-                      fontWeight={isSel ? '700' : '500'}
+                      fontWeight={isSel ? '800' : '500'}
                       textAnchor="middle"
                     >
                       {(n.label || n.id).length > 20 ? (n.label || n.id).slice(0, 18) + '…' : (n.label || n.id)}
@@ -286,8 +287,8 @@ export default function KnowledgeGraph({ graphData, onAskCopilot }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <span style={{
-                  padding: '2px 8px', borderRadius: '4px', fontSize: '10px',
-                  fontWeight: '700', textTransform: 'uppercase', fontFamily: 'var(--font-mono)',
+                  padding: '2.5px 8px', borderRadius: '4px', fontSize: '10px',
+                  fontWeight: '800', textTransform: 'uppercase', fontFamily: 'var(--font-mono)',
                   background: getTypeMeta(selected.type).bg, color: getTypeMeta(selected.type).color,
                   border: `1px solid ${getTypeMeta(selected.type).ring}`
                 }}>
@@ -311,20 +312,20 @@ export default function KnowledgeGraph({ graphData, onAskCopilot }) {
               borderRadius: '8px', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '8px'
             }}>
               <div>
-                <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Node ID</div>
+                <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>Node Identifier</div>
                 <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>{selected.id}</div>
               </div>
               {(selected.details || selected.description) && (
                 <div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Details / Context</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{selected.details || selected.description}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>Extracted Telemetry</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.45' }}>{selected.details || selected.description}</div>
                 </div>
               )}
             </div>
 
             {/* Connected Relations */}
             <div>
-              <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
                 Connected Relationships
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '160px', overflowY: 'auto' }}>
@@ -338,8 +339,8 @@ export default function KnowledgeGraph({ graphData, onAskCopilot }) {
                       key={i}
                       onClick={() => otherNode && setSelected(otherNode)}
                       style={{
-                        padding: '6px 10px', borderRadius: '6px', background: 'var(--bg-base)',
-                        border: '1px solid var(--border)', fontSize: '11px', cursor: 'pointer',
+                        padding: '7px 10px', borderRadius: '6px', background: 'var(--bg-base)',
+                        border: '1px solid var(--border)', fontSize: '11.5px', cursor: 'pointer',
                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                         transition: 'all 0.12s ease'
                       }}

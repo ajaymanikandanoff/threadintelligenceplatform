@@ -43,19 +43,19 @@ export default function MitreMatrix({ tactics = [], activeTechniques = [], onAsk
       }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
-              MITRE ATT&CK® Enterprise Matrix
+            <h2 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.01em' }}>
+              MITRE ATT&CK® Enterprise Matrix Heatmap
             </h2>
             <span style={{
-              background: 'rgba(248,113,113,0.15)', color: 'var(--red)',
-              border: '1px solid rgba(248,113,113,0.3)', padding: '2px 8px',
-              borderRadius: '4px', fontSize: '11px', fontWeight: '700'
+              background: 'var(--red-dim)', color: 'var(--red)',
+              border: '1px solid rgba(244,63,94,0.3)', padding: '2px 8px',
+              borderRadius: '4px', fontSize: '10.5px', fontWeight: '800', fontFamily: 'var(--font-mono)'
             }}>
-              {activeTechniques.length} Active in Report
+              {activeTechniques.length} DETECTED IN REPORT
             </span>
           </div>
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
-            Tactics, Techniques and Procedures (TTPs) mapped from adversary telemetry.
+            Tactics, Techniques and Procedures (TTPs) mapped from extracted adversary telemetry.
           </p>
         </div>
 
@@ -64,7 +64,7 @@ export default function MitreMatrix({ tactics = [], activeTechniques = [], onAsk
           <div style={{
             display: 'flex', alignItems: 'center', gap: '8px',
             background: 'var(--bg-base)', border: '1px solid var(--border)',
-            borderRadius: '8px', padding: '6px 12px', width: '220px'
+            borderRadius: '8px', padding: '6px 12px', width: '230px'
           }}>
             <Search size={14} color="var(--text-tertiary)" />
             <input
@@ -74,7 +74,8 @@ export default function MitreMatrix({ tactics = [], activeTechniques = [], onAsk
               onChange={e => setSearchQuery(e.target.value)}
               style={{
                 background: 'transparent', border: 'none', outline: 'none',
-                color: 'var(--text-primary)', fontSize: '12px', width: '100%'
+                color: 'var(--text-primary)', fontSize: '12px', width: '100%',
+                fontFamily: 'var(--font-sans)'
               }}
             />
             {searchQuery && (
@@ -86,15 +87,15 @@ export default function MitreMatrix({ tactics = [], activeTechniques = [], onAsk
             onClick={() => setFilterDetectedOnly(p => !p)}
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '6px 12px', borderRadius: '8px',
-              background: filterDetectedOnly ? 'rgba(248,113,113,0.15)' : 'var(--bg-base)',
-              border: `1px solid ${filterDetectedOnly ? 'rgba(248,113,113,0.35)' : 'var(--border)'}`,
+              padding: '7px 12px', borderRadius: '8px',
+              background: filterDetectedOnly ? 'var(--red-dim)' : 'var(--bg-base)',
+              border: `1px solid ${filterDetectedOnly ? 'rgba(244,63,94,0.35)' : 'var(--border)'}`,
               color: filterDetectedOnly ? 'var(--red)' : 'var(--text-secondary)',
-              fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s ease'
+              fontSize: '11.5px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.15s ease'
             }}
           >
-            <Filter size={13} />
-            <span>Detected Only</span>
+            <Filter size={12} />
+            <span>DETECTED ONLY</span>
           </button>
         </div>
       </div>
@@ -136,15 +137,16 @@ export default function MitreMatrix({ tactics = [], activeTechniques = [], onAsk
                   <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--accent)', fontWeight: '700' }}>
                     {tactic.id}
                   </span>
-                  <h4 style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', margin: '2px 0 0' }}>
+                  <h4 style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-primary)', margin: '2px 0 0' }}>
                     {tactic.name}
                   </h4>
                 </div>
                 {detectedCountInTactic > 0 && (
                   <span style={{
                     padding: '2px 6px', borderRadius: '4px',
-                    background: 'rgba(248,113,113,0.15)', color: 'var(--red)',
-                    fontSize: '10px', fontWeight: '700', fontFamily: 'var(--font-mono)'
+                    background: 'var(--red-dim)', color: 'var(--red)',
+                    fontSize: '10px', fontWeight: '800', fontFamily: 'var(--font-mono)',
+                    border: '1px solid rgba(244,63,94,0.25)'
                   }}>
                     {detectedCountInTactic}
                   </span>
@@ -164,27 +166,28 @@ export default function MitreMatrix({ tactics = [], activeTechniques = [], onAsk
                       key={i}
                       onClick={() => setSelectedTech({ id: techId, name: techName, tactic: tactic.name, isActive, details })}
                       style={{
-                        padding: '8px 10px',
-                        borderRadius: '6px',
+                        padding: '9px 11px',
+                        borderRadius: '7px',
                         cursor: 'pointer',
                         background: isActive
-                          ? 'rgba(248,113,113,0.12)'
+                          ? 'rgba(244,63,94,0.1)'
                           : 'var(--bg-base)',
-                        border: `1px solid ${isActive ? 'rgba(248,113,113,0.35)' : 'var(--border)'}`,
+                        border: `1px solid ${isActive ? 'rgba(244,63,94,0.35)' : 'var(--border)'}`,
+                        boxShadow: isActive ? '0 0 10px rgba(244,63,94,0.1)' : 'none',
                         transition: 'all 0.15s ease'
                       }}
                       onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = isActive ? 'var(--red)' : 'var(--border-accent)';
+                        e.currentTarget.style.borderColor = isActive ? 'var(--red)' : 'var(--accent)';
                         e.currentTarget.style.transform = 'translateY(-1px)';
                       }}
                       onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = isActive ? 'rgba(248,113,113,0.35)' : 'var(--border)';
+                        e.currentTarget.style.borderColor = isActive ? 'rgba(244,63,94,0.35)' : 'var(--border)';
                         e.currentTarget.style.transform = 'none';
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{
-                          fontFamily: 'var(--font-mono)', fontWeight: '700', fontSize: '11px',
+                          fontFamily: 'var(--font-mono)', fontWeight: '800', fontSize: '11px',
                           color: isActive ? 'var(--red)' : 'var(--accent)'
                         }}>
                           {techId}
@@ -198,8 +201,8 @@ export default function MitreMatrix({ tactics = [], activeTechniques = [], onAsk
                       </div>
                       <div style={{
                         color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                        fontSize: '11px', marginTop: '3px', lineHeight: '1.3',
-                        fontWeight: isActive ? '600' : '400'
+                        fontSize: '11.5px', marginTop: '3px', lineHeight: '1.35',
+                        fontWeight: isActive ? '700' : '500'
                       }}>
                         {techName}
                       </div>
@@ -215,40 +218,24 @@ export default function MitreMatrix({ tactics = [], activeTechniques = [], onAsk
       {/* Technique Detail Modal Drawer */}
       {selectedTech && (
         <div
-          style={{
-            position: 'fixed', inset: 0,
-            background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 100, padding: '20px'
-          }}
+          className="modal-overlay"
           onClick={() => setSelectedTech(null)}
         >
           <div
-            style={{
-              maxWidth: '520px', width: '100%',
-              background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-              borderRadius: '14px', padding: '28px', boxShadow: '0 24px 64px rgba(0,0,0,0.7)'
-            }}
+            className="modal-container"
+            style={{ maxWidth: '540px', padding: '24px' }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
               <div>
-                <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                   <span style={{
-                    padding: '3px 8px', borderRadius: '4px', fontSize: '11px',
-                    fontFamily: 'var(--font-mono)', fontWeight: '700',
-                    background: selectedTech.isActive ? 'rgba(248,113,113,0.15)' : 'rgba(56,189,248,0.15)',
-                    color: selectedTech.isActive ? 'var(--red)' : 'var(--accent)',
-                    border: `1px solid ${selectedTech.isActive ? 'rgba(248,113,113,0.3)' : 'var(--border-accent)'}`
+                    fontFamily: 'var(--font-mono)', fontWeight: '800', fontSize: '12px',
+                    color: selectedTech.isActive ? 'var(--red)' : 'var(--accent)'
                   }}>
                     {selectedTech.id}
                   </span>
-                  <span style={{
-                    padding: '3px 8px', borderRadius: '4px', fontSize: '11px',
-                    background: 'var(--bg-base)', color: 'var(--text-secondary)',
-                    border: '1px solid var(--border)'
-                  }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
                     {selectedTech.tactic}
                   </span>
                 </div>
@@ -258,65 +245,63 @@ export default function MitreMatrix({ tactics = [], activeTechniques = [], onAsk
               </div>
               <button
                 onClick={() => setSelectedTech(null)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: '4px' }}
+                className="btn-ghost"
+                style={{ padding: '6px', border: 'none', background: 'transparent' }}
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            {/* Status Details */}
             {selectedTech.isActive ? (
-              <div style={{
-                background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)',
-                padding: '14px 16px', borderRadius: '8px', marginBottom: '18px'
-              }}>
-                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--red)', marginBottom: '4px' }}>
-                  Observed in Active Threat Advisory
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ padding: '12px 14px', background: 'var(--red-dim)', borderRadius: '8px', border: '1px solid rgba(244,63,94,0.25)' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--red)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+                    🚨 Verified Attacker Telemetry in Advisory
+                  </div>
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
+                    {selectedTech.details?.description || selectedTech.details?.evidence || 'Adversary leveraged this technique during active operations.'}
+                  </p>
                 </div>
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: 0 }}>
-                  {selectedTech.details?.evidence || selectedTech.details?.description || 'Adversary behavior telemetry matches this technique signature.'}
-                </p>
-                <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
-                  <span style={{
-                    padding: '2px 8px', borderRadius: '4px', fontSize: '11px',
-                    background: 'rgba(52,211,153,0.15)', color: 'var(--green)',
-                    border: '1px solid rgba(52,211,153,0.3)', fontWeight: '600'
-                  }}>
-                    {selectedTech.details?.confidence || 'HIGH'} Confidence
-                  </span>
-                </div>
+
+                {selectedTech.details?.mitigation && (
+                  <div style={{ padding: '12px 14px', background: 'var(--bg-overlay)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+                      🛡️ Recommended Defense Mitigation
+                    </div>
+                    <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: 0 }}>
+                      {selectedTech.details.mitigation}
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
-              <div style={{
-                background: 'var(--bg-base)', border: '1px solid var(--border)',
-                padding: '14px 16px', borderRadius: '8px', marginBottom: '18px',
-                fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5'
-              }}>
-                This technique is part of the official MITRE ATT&CK framework catalog, but was not directly identified in the current report telemetry.
+              <div style={{ padding: '20px', textAlign: 'center', background: 'var(--bg-overlay)', borderRadius: '8px', border: '1px solid var(--border)', color: 'var(--text-tertiary)', fontSize: '13px' }}>
+                This MITRE ATT&CK technique was not actively observed in the loaded advisory telemetry.
               </div>
             )}
 
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
               <a
-                href={`https://attack.mitre.org/techniques/${selectedTech.id.replace('.', '/')}/`}
+                href={`https://attack.mitre.org/techniques/${selectedTech.id.replace('.', '/')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-ghost"
-                style={{ flex: 1, justifyContent: 'center', padding: '9px 12px', fontSize: '12px' }}
+                style={{ flex: 1, fontSize: '12px' }}
               >
-                <ExternalLink size={14} /><span>MITRE ATT&CK Docs</span>
+                <ExternalLink size={13} /> Official MITRE Page
               </a>
-              <button
-                className="btn-primary"
-                style={{ flex: 1, justifyContent: 'center', padding: '9px 12px', fontSize: '12px' }}
-                onClick={() => {
-                  onAskCopilot?.(`How can our security team detect, block, and hunt for MITRE technique ${selectedTech.id} (${selectedTech.name})?`);
-                  setSelectedTech(null);
-                }}
-              >
-                <MessageSquare size={14} /><span>Ask AI Copilot</span>
-              </button>
+              {onAskCopilot && (
+                <button
+                  className="btn-primary"
+                  onClick={() => {
+                    onAskCopilot(`How do we detect and mitigate MITRE ATT&CK technique ${selectedTech.id} (${selectedTech.name})?`);
+                    setSelectedTech(null);
+                  }}
+                  style={{ flex: 1, fontSize: '12px' }}
+                >
+                  <MessageSquare size={13} /> Ask Copilot
+                </button>
+              )}
             </div>
           </div>
         </div>
