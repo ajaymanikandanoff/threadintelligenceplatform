@@ -18,23 +18,7 @@ def _hash_password(password: str, salt: str) -> str:
 
 def _load_users() -> Dict[str, Dict[str, Any]]:
     if not os.path.exists(USERS_FILE):
-        # Initialize with default analyst account
-        default_salt = secrets.token_hex(8)
-        default_hash = _hash_password("analyst123", default_salt)
-        initial_users = {
-            "analyst@example.com": {
-                "id": "usr-default-01",
-                "name": "Ajay M.",
-                "email": "analyst@example.com",
-                "password_hash": default_hash,
-                "salt": default_salt,
-                "auth_provider": "LOCAL",
-                "role": "Security analyst",
-                "phone": "+1 555-0199",
-                "occupation": "Security Analyst",
-                "picture_url": ""
-            }
-        }
+        initial_users = {}
         with open(USERS_FILE, "w", encoding="utf-8") as f:
             json.dump(initial_users, f, indent=2)
         return initial_users
