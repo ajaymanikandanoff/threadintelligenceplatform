@@ -620,3 +620,4 @@ def get_threat_density_geojson(time_range: str = "24H", severity: str = "ALL") -
         "type": "FeatureCollection",
         "features": features
     }
+
