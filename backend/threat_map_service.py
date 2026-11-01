@@ -588,11 +588,26 @@ def get_threat_routes_geojson(time_range: str = "24H", severity: str = "ALL") ->
 
 def get_threat_countries_data() -> Dict[str, Any]:
     """Returns verified country profiles and telemetry."""
-    return {
-        "status": "success",
-        "countries": VERIFIED_COUNTRIES_DATA,
-        "count": len(VERIFIED_COUNTRIES_DATA)
-    }
+    normalized: Dict[str, Any] = {}
+    for iso, c in VERIFIED_COUNTRIES_DATA.items():
+        entry = dict(c)
+        entry["threatLevel"] = c.get("threat_level") or "Monitored Region"
+        entry["threatScore"] = c.get("threat_score") if c.get("threat_score") is not None else 50
+        entry["observedEvents"] = c.get("observed_events") if c.get("observed_events") is not None else 1
+        entry["primaryVectors"] = c.get("primary_vectors") or []
+        entry["verifiedActors"] = c.get("verified_actors") or []
+        entry["malwareFamilies"] = c.get("malware_families") or []
+        entry["mitreTechniques"] = c.get("mitre_techniques") or []
+        entry["affectedSectors"] = c.get("affected_sectors") or []
+        entry["evidenceAttribution"] = c.get("evidence_attribution") or ""
+        entry["infrastructureNote"] = c.get("infrastructure_note") or ""
+        normalized[iso] = entry
+
+    res = dict(normalized)
+    res["countries"] = normalized
+    res["status"] = "success"
+    res["count"] = len(normalized)
+    return res
 
 def get_threat_density_geojson(time_range: str = "24H", severity: str = "ALL") -> Dict[str, Any]:
     """Returns weighted Point features for MapLibre heatmap visualization."""

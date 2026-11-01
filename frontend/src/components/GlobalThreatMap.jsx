@@ -101,12 +101,33 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
       // Country Profiles
       if (countriesRes.status === 'fulfilled' && countriesRes.value.ok) {
         const countriesData = await countriesRes.value.json();
-        if (countriesData && Object.keys(countriesData).length > 0) {
-          setCountryProfiles(countriesData);
-          if (selectedCountry && countriesData[selectedCountry.iso3]) {
-            setSelectedCountry(countriesData[selectedCountry.iso3]);
+        const rawMap = countriesData.countries || countriesData;
+        if (rawMap && typeof rawMap === 'object') {
+          const normalized = {};
+          Object.entries(rawMap).forEach(([k, c]) => {
+            if (c && typeof c === 'object' && (c.name || c.iso3)) {
+              normalized[k] = {
+                ...c,
+                threatLevel: c.threatLevel || c.threat_level || 'Monitored Region',
+                threatScore: c.threatScore ?? c.threat_score ?? 50,
+                observedEvents: c.observedEvents ?? c.observed_events ?? 1,
+                primaryVectors: c.primaryVectors || c.primary_vectors || [],
+                verifiedActors: c.verifiedActors || c.verified_actors || [],
+                malwareFamilies: c.malwareFamilies || c.malware_families || [],
+                mitreTechniques: c.mitreTechniques || c.mitre_techniques || [],
+                affectedSectors: c.affectedSectors || c.affected_sectors || [],
+                evidenceAttribution: c.evidenceAttribution || c.evidence_attribution || '',
+                sources: c.sources || []
+              };
+            }
+          });
+          if (Object.keys(normalized).length > 0) {
+            setCountryProfiles(normalized);
+            if (selectedCountry && normalized[selectedCountry.iso3]) {
+              setSelectedCountry(normalized[selectedCountry.iso3]);
+            }
+            backendOperational = true;
           }
-          backendOperational = true;
         }
       }
 

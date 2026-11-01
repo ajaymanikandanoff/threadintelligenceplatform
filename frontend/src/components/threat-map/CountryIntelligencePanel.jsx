@@ -48,19 +48,41 @@ export default function CountryIntelligencePanel({
     );
   }
 
-  // Filter events related to this country
-  const countryEvents = allEvents.filter(e =>
-    e.sourceGeo.iso3 === selectedCountry.iso3 ||
-    e.destGeo.iso3 === selectedCountry.iso3 ||
-    e.sourceGeo.country === selectedCountry.name ||
-    e.destGeo.country === selectedCountry.name
-  );
+  // Defensively normalize properties (supporting both camelCase and snake_case)
+  const threatScore = selectedCountry.threatScore ?? selectedCountry.threat_score ?? 50;
+  const threatLevel = selectedCountry.threatLevel || selectedCountry.threat_level || 'Monitored Region';
+  const observedEvents = selectedCountry.observedEvents ?? selectedCountry.observed_events ?? 1;
+  const primaryVectors = selectedCountry.primaryVectors || selectedCountry.primary_vectors || [];
+  const verifiedActors = selectedCountry.verifiedActors || selectedCountry.verified_actors || [];
+  const malwareFamilies = selectedCountry.malwareFamilies || selectedCountry.malware_families || [];
+  const mitreTechniques = selectedCountry.mitreTechniques || selectedCountry.mitre_techniques || [];
+  const affectedSectors = selectedCountry.affectedSectors || selectedCountry.affected_sectors || [];
+  const evidenceAttribution = selectedCountry.evidenceAttribution || selectedCountry.evidence_attribution || 'Attribution strictly verified against official CISA, CERT, and MITRE evidence.';
+  const infrastructureNote = selectedCountry.infrastructureNote || selectedCountry.infrastructure_note || 'Residential proxy gateways, compromised SOHO edge appliances, or fast-flux bulletproof servers.';
+  const sources = selectedCountry.sources || [];
 
-  const sevColor = selectedCountry.threatScore >= 90
+  // Filter events related to this country
+  const countryEvents = (allEvents || []).filter(e => {
+    if (!e) return false;
+    const sIso = e.sourceGeo?.iso3 || e.source_geo?.iso3;
+    const dIso = e.destGeo?.iso3 || e.dest_geo?.iso3;
+    const sCountry = e.sourceGeo?.country || e.source_geo?.country;
+    const dCountry = e.destGeo?.country || e.dest_geo?.country;
+    const targetIso = selectedCountry.iso3;
+    const targetName = selectedCountry.name;
+    return (
+      (sIso && targetIso && sIso === targetIso) ||
+      (dIso && targetIso && dIso === targetIso) ||
+      (sCountry && targetName && sCountry === targetName) ||
+      (dCountry && targetName && dCountry === targetName)
+    );
+  });
+
+  const sevColor = threatScore >= 90
     ? SEVERITY_COLORS.critical
-    : selectedCountry.threatScore >= 80
+    : threatScore >= 80
       ? SEVERITY_COLORS.high
-      : selectedCountry.threatScore >= 70
+      : threatScore >= 70
         ? SEVERITY_COLORS.medium
         : SEVERITY_COLORS.low;
 
@@ -97,7 +119,7 @@ export default function CountryIntelligencePanel({
           color: sevColor,
           border: `1px solid ${sevColor}45`
         }}>
-          {selectedCountry.threatLevel}
+          {threatLevel}
         </span>
       </div>
 
@@ -114,14 +136,14 @@ export default function CountryIntelligencePanel({
         <div>
           <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)' }}>Threat Index</div>
           <div style={{ fontSize: '17px', fontWeight: '800', color: sevColor, fontFamily: 'var(--font-mono)' }}>
-            {selectedCountry.threatScore}/100
+            {threatScore}/100
           </div>
         </div>
 
         <div>
           <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)' }}>Observed CTI Events</div>
           <div style={{ fontSize: '17px', fontWeight: '800', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
-            {countryEvents.length > 0 ? countryEvents.length : selectedCountry.observedEvents} Verified
+            {countryEvents.length > 0 ? countryEvents.length : observedEvents} Verified
           </div>
         </div>
       </div>
@@ -145,19 +167,19 @@ export default function CountryIntelligencePanel({
 
         <div style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
           <div><strong>1. IP Geolocation:</strong> {selectedCountry.name} hosting infrastructure / ASN block.</div>
-          <div><strong>2. Observed Infrastructure:</strong> {selectedCountry.infrastructureNote || 'Residential proxy gateways, compromised SOHO edge appliances, or fast-flux bulletproof servers.'}</div>
-          <div><strong>3. Threat Attribution:</strong> {selectedCountry.evidenceAttribution || 'Attribution strictly verified against official CISA, CERT, and MITRE evidence.'}</div>
+          <div><strong>2. Observed Infrastructure:</strong> {infrastructureNote}</div>
+          <div><strong>3. Threat Attribution:</strong> {evidenceAttribution}</div>
         </div>
       </div>
 
       {/* SECTION 2: Verified Threat Actors & Syndicates */}
-      {selectedCountry.verifiedActors && selectedCountry.verifiedActors.length > 0 && (
+      {verifiedActors && verifiedActors.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Verified Threat Actors
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-            {selectedCountry.verifiedActors.map(actor => (
+            {verifiedActors.map(actor => (
               <span
                 key={actor}
                 style={{
@@ -178,13 +200,13 @@ export default function CountryIntelligencePanel({
       )}
 
       {/* SECTION 3: Known Malware Families & Tooling */}
-      {selectedCountry.malwareFamilies && selectedCountry.malwareFamilies.length > 0 && (
+      {malwareFamilies && malwareFamilies.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Known Malware Families
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-            {selectedCountry.malwareFamilies.map(malware => (
+            {malwareFamilies.map(malware => (
               <span
                 key={malware}
                 style={{
@@ -205,13 +227,13 @@ export default function CountryIntelligencePanel({
       )}
 
       {/* SECTION 4: MITRE ATT&CK Techniques */}
-      {selectedCountry.mitreTechniques && selectedCountry.mitreTechniques.length > 0 && (
+      {mitreTechniques && mitreTechniques.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             MITRE ATT&CK Techniques
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-            {selectedCountry.mitreTechniques.map(tech => (
+            {mitreTechniques.map(tech => (
               <a
                 key={tech}
                 href={`https://attack.mitre.org/techniques/${tech.replace('.', '/')}`}
@@ -241,32 +263,27 @@ export default function CountryIntelligencePanel({
       )}
 
       {/* SECTION 5: Affected Sectors */}
-      {selectedCountry.affectedSectors && selectedCountry.affectedSectors.length > 0 && (
+      {affectedSectors && affectedSectors.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Primary Sectors Targeted
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-            {selectedCountry.affectedSectors.join(', ')}
+            {affectedSectors.join(', ')}
           </div>
         </div>
       )}
 
-      {/* SECTION 6: Associated Observed Events */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Observed Incident Telemetry
-          </span>
-          <span style={{ fontSize: '10.5px', color: 'var(--text-tertiary)' }}>
-            {countryEvents.length} Events
-          </span>
+      {/* SECTION 6: Intersecting Vectors List */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          Observed Vectors Intersecting Region ({countryEvents.length})
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {countryEvents.length > 0 ? (
             countryEvents.map(evt => {
-              const isSelectedEvt = selectedEvent?.id === evt.id;
+              const isSelectedEvt = selectedEvent && selectedEvent.id === evt.id;
               const evtColor = SEVERITY_COLORS[evt.severity] || '#f43f5e';
 
               return (
@@ -298,12 +315,12 @@ export default function CountryIntelligencePanel({
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10.5px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
-                    <span>{evt.sourceIp} ? {evt.destIp}</span>
+                    <span>{evt.sourceIp || evt.source_ip || 'Origin'} &rarr; {evt.destIp || evt.dest_ip || 'Target'}</span>
                     <span>{evt.confidence}% conf</span>
                   </div>
 
                   <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                    Source: {evt.dataSource}
+                    Source: {evt.dataSource || evt.data_source || 'CTI Feed'}
                   </div>
                 </div>
               );
@@ -317,15 +334,18 @@ export default function CountryIntelligencePanel({
       </div>
 
       {/* SECTION 7: Intelligence References */}
-      {selectedCountry.sources && (
-        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', fontSize: '10.5px', color: 'var(--text-tertiary)' }}>
-          <div><strong>Intelligence Attributions:</strong></div>
-          <div style={{ marginTop: '3px', lineHeight: 1.4 }}>
-            {selectedCountry.sources.join(' ? ')}
+      {sources && sources.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Attribution References
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            {sources.map((src, i) => (
+              <span key={i}>&bull; {src}</span>
+            ))}
           </div>
         </div>
       )}
     </div>
   );
 }
-

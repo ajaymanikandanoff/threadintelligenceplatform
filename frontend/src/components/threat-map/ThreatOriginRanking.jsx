@@ -9,9 +9,18 @@ export default function ThreatOriginRanking({
   timeRange = '24H'
 }) {
   // Sort countries by observed events (actual collected/recorded telemetry)
-  const rankingList = Object.values(countryProfiles)
-    .filter(c => c.threatLevel.includes('Critical') || c.threatLevel.includes('Origin') || c.threatLevel.includes('High') || c.observedEvents > 5)
-    .sort((a, b) => b.threatScore - a.threatScore);
+  const rankingList = Object.values(countryProfiles || {})
+    .filter(c => c && typeof c === 'object' && (c.name || c.iso3))
+    .filter(c => {
+      const lvl = (c.threatLevel || c.threat_level || '').toLowerCase();
+      const events = c.observedEvents ?? c.observed_events ?? 0;
+      return lvl.includes('critical') || lvl.includes('origin') || lvl.includes('high') || events > 5;
+    })
+    .sort((a, b) => {
+      const scoreA = a.threatScore ?? a.threat_score ?? 0;
+      const scoreB = b.threatScore ?? b.threat_score ?? 0;
+      return scoreB - scoreA;
+    });
 
   return (
     <div style={{
@@ -70,15 +79,20 @@ export default function ThreatOriginRanking({
       }}>
         {rankingList.slice(0, 5).map((country, idx) => {
           const isSelected = selectedCountry?.iso3 === country.iso3;
-          const sevColor = country.threatScore >= 90
+          const score = country.threatScore ?? country.threat_score ?? 0;
+          const level = country.threatLevel || country.threat_level || 'Monitored Region';
+          const events = country.observedEvents ?? country.observed_events ?? 0;
+          const actors = country.verifiedActors || country.verified_actors || [];
+
+          const sevColor = score >= 90
             ? SEVERITY_COLORS.critical
-            : country.threatScore >= 80
+            : score >= 80
               ? SEVERITY_COLORS.high
               : SEVERITY_COLORS.medium;
 
           return (
             <div
-              key={country.iso3}
+              key={country.iso3 || `country-${idx}`}
               onClick={() => onSelectCountry && onSelectCountry(country)}
               style={{
                 background: isSelected ? 'var(--accent-dim)' : 'var(--bg-elevated)',
@@ -123,21 +137,21 @@ export default function ThreatOriginRanking({
                   padding: '2px 6px',
                   borderRadius: '4px'
                 }}>
-                  Score {country.threatScore}
+                  Score {score}
                 </span>
               </div>
 
               {/* Observed Telemetry Count & Primary Adversary */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--text-secondary)' }}>
-                <span>Observed Events: <strong style={{ color: 'var(--text-primary)' }}>{country.observedEvents}</strong></span>
+                <span>Observed Events: <strong style={{ color: 'var(--text-primary)' }}>{events}</strong></span>
                 <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
-                  {country.verifiedActors?.[0] || 'State / Cybercrime'}
+                  {actors[0] || 'State / Cybercrime'}
                 </span>
               </div>
 
               {/* Severity Distribution Bar */}
               <div style={{ width: '100%', height: '4px', borderRadius: '2px', background: 'rgba(255, 255, 255, 0.06)', overflow: 'hidden', display: 'flex' }}>
-                <div style={{ width: `${country.threatScore}%`, height: '100%', background: sevColor }} />
+                <div style={{ width: `${Math.min(score, 100)}%`, height: '100%', background: sevColor }} />
               </div>
             </div>
           );
@@ -152,4 +166,3 @@ export default function ThreatOriginRanking({
     </div>
   );
 }
-
