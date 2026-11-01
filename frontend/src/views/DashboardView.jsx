@@ -13,7 +13,6 @@ import {
   FileText,
   Plus
 } from 'lucide-react';
-import GlobalThreatMap from '../components/GlobalThreatMap';
 
 const INITIAL_RECENT_THREATS = [
   {
@@ -329,20 +328,6 @@ export default function DashboardView({
           </div>
         </div>
       </div>
-
-      {/* ─── Global Threat Activity & Attack Origins World Map ─── */}
-      <GlobalThreatMap
-        onSelectCountry={(hotspot) => {
-          if (hotspot && onSelectIndicator) {
-            onSelectIndicator({
-              type: 'country',
-              value: hotspot.country,
-              threatLevel: hotspot.threatLevel,
-              details: hotspot
-            });
-          }
-        }}
-      />
 
       {/* ─── Middle Row: Threat Activity & Severity Distribution ─── */}
       <div style={{
