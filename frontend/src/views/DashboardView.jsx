@@ -13,6 +13,7 @@ import {
   FileText,
   Plus
 } from 'lucide-react';
+import GlobalThreatMap from '../components/GlobalThreatMap';
 
 const INITIAL_RECENT_THREATS = [
   {
@@ -150,15 +151,31 @@ export default function DashboardView({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
-      {/* ─── Top Header Row ─── */}
+      {/* ─── Top Header Row with Official Brand Logo ─── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-        <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
-            Threat Intelligence Overview
-          </h1>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
-            Monitor, analyze, and investigate emerging cyber threats.
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{
+            width: '46px', height: '46px', borderRadius: '12px',
+            background: 'rgba(0, 229, 255, 0.08)',
+            border: '1px solid rgba(0, 229, 255, 0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 0 20px rgba(0, 229, 255, 0.35)',
+            overflow: 'hidden', padding: '3px', flexShrink: 0
+          }}>
+            <img
+              src="/logo.png"
+              alt="ThreatLens Cyber Shield"
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+              Threat Intelligence Overview
+            </h1>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+              Monitor global attack activity, analyze indicators, and investigate emerging cyber threats.
+            </p>
+          </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -328,6 +345,20 @@ export default function DashboardView({
           </div>
         </div>
       </div>
+
+      {/* ─── Global Threat Activity & Attack Origins World Map ─── */}
+      <GlobalThreatMap
+        onSelectCountry={(hotspot) => {
+          if (hotspot && onSelectIndicator) {
+            onSelectIndicator({
+              type: 'country',
+              value: hotspot.country,
+              threatLevel: hotspot.threatLevel,
+              details: hotspot
+            });
+          }
+        }}
+      />
 
       {/* ─── Middle Row: Threat Activity & Severity Distribution ─── */}
       <div style={{

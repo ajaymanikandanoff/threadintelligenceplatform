@@ -76,13 +76,20 @@ export default function Header({
       zIndex: 100,
       flexShrink: 0
     }}>
-      {/* ─── Left: Breadcrumb Navigation ─── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-        <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', letterSpacing: '0.01em' }}>
-          ThreatLens / {breadcrumb.section}
-        </div>
-        <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
-          {breadcrumb.title}
+      {/* ─── Left: Breadcrumb Navigation with Official Brand Logo ─── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <img
+          src="/logo.png"
+          alt="ThreatLens Cyber Shield"
+          style={{ width: '28px', height: '28px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(0, 229, 255, 0.45))' }}
+        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', letterSpacing: '0.01em' }}>
+            ThreatLens / {breadcrumb.section}
+          </div>
+          <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+            {breadcrumb.title}
+          </div>
         </div>
       </div>
 

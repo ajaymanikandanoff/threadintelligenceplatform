@@ -255,13 +255,20 @@ export default function App() {
           {/* Brand Logo & Name */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 6px' }}>
             <div style={{
-              width: '32px', height: '32px', borderRadius: '9px',
-              background: 'linear-gradient(135deg, #0284c7 0%, var(--accent) 100%)',
+              width: '36px', height: '36px', borderRadius: '10px',
+              background: 'rgba(0, 229, 255, 0.08)',
+              border: '1px solid rgba(0, 229, 255, 0.3)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 0 16px var(--accent-glow)',
-              flexShrink: 0
+              flexShrink: 0,
+              overflow: 'hidden',
+              padding: '2px'
             }}>
-              <Shield size={18} color="#06090f" strokeWidth={2.6} />
+              <img
+                src="/logo.png"
+                alt="ThreatLens Cyber Shield Logo"
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>

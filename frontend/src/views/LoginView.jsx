@@ -438,16 +438,23 @@ export default function LoginView({ onSignIn, onCancel }) {
       overflow: 'hidden'
     }}>
       {/* Top Left Brand */}
-      <div style={{ padding: '32px 48px', display: 'flex', alignItems: 'center', gap: '12px', zIndex: 10 }}>
+      <div style={{ padding: '32px 48px', display: 'flex', alignItems: 'center', gap: '14px', zIndex: 10 }}>
         <div style={{
-          width: '36px', height: '36px', borderRadius: '10px',
-          background: 'linear-gradient(135deg, #0284c7 0%, #00e5ff 100%)',
+          width: '42px', height: '42px', borderRadius: '12px',
+          background: 'rgba(0, 229, 255, 0.08)',
+          border: '1px solid rgba(0, 229, 255, 0.35)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 20px rgba(0, 229, 255, 0.35)'
+          boxShadow: '0 0 24px rgba(0, 229, 255, 0.4)',
+          overflow: 'hidden',
+          padding: '2px'
         }}>
-          <Shield size={20} color="#06090f" strokeWidth={2.6} />
+          <img
+            src="/logo.png"
+            alt="ThreatLens Cyber Shield"
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          />
         </div>
-        <span style={{ fontSize: '18px', fontWeight: '800', color: '#f8fafc', letterSpacing: '-0.02em' }}>
+        <span style={{ fontSize: '20px', fontWeight: '800', color: '#f8fafc', letterSpacing: '-0.02em' }}>
           ThreatLens
         </span>
       </div>
