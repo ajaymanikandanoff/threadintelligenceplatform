@@ -26,34 +26,6 @@ export default function Header({
     return name.slice(0, 2).toUpperCase();
   };
 
-  // Map active tab to Breadcrumb
-  const getBreadcrumb = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return { section: 'Overview', title: 'Dashboard' };
-      case 'analyzer':
-        return { section: 'Analyzer', title: 'Threat Analyzer' };
-      case 'intelligence':
-        return { section: 'Intelligence', title: 'Threat Intelligence' };
-      case 'attack-mapping':
-        return { section: 'Attack Mapping', title: 'Attack Mapping' };
-      case 'history':
-        return { section: 'History', title: 'Investigation History' };
-      case 'reports':
-        return { section: 'Reports', title: 'Executive Reports' };
-      case 'settings':
-        return { section: 'Settings', title: 'Platform Settings' };
-      case 'defense':
-        return { section: 'Defense', title: 'Defense Engineering' };
-      case 'copilot':
-        return { section: 'Copilot', title: 'AI SOC Copilot' };
-      default:
-        return { section: 'Workspace', title: 'ThreatLens' };
-    }
-  };
-
-  const breadcrumb = getBreadcrumb();
-
   const handleSearchSubmit = (e) => {
     if (e.key === 'Enter' && searchValue.trim()) {
       if (onSearchGlobal) onSearchGlobal(searchValue.trim());
@@ -76,21 +48,18 @@ export default function Header({
       zIndex: 100,
       flexShrink: 0
     }}>
-      {/* ─── Left: Breadcrumb Navigation with Official Brand Logo ─── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <img
-          src="/logo.png"
-          alt="ThreatLens Cyber Shield"
-          style={{ width: '28px', height: '28px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(0, 229, 255, 0.45))' }}
-        />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', letterSpacing: '0.01em' }}>
-            ThreatLens / {breadcrumb.section}
-          </div>
-          <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
-            {breadcrumb.title}
-          </div>
-        </div>
+      {/* ─── Left: Platform Title ─── */}
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <h1 style={{
+          fontSize: '18px',
+          fontWeight: '800',
+          color: 'var(--text-primary)',
+          letterSpacing: '-0.02em',
+          margin: 0,
+          userSelect: 'none'
+        }}>
+          AI ThreadLens
+        </h1>
       </div>
 
       {/* ─── Right: Global Search & Operational Status Bar ─── */}
