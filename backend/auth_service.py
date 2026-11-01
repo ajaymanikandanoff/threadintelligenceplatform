@@ -299,10 +299,21 @@ def request_password_otp(email: str) -> Dict[str, Any]:
     otp_storage[email_key] = {"otp": code, "expires_at": expires_at}
     print(f"[AUTH OTP] Generated 6-digit OTP for {email_key}: {code} (Valid for 5 min)")
 
+    # Dispatch real email via Gmail SMTP
+    email_delivered = False
+    try:
+        import email_service
+        email_delivered = email_service.send_otp_email(email_key, code)
+    except Exception as err:
+        print(f"[WARN] Email delivery exception: {err}")
+
+    delivery_status = "sent to your email inbox" if email_delivered else "generated"
+
     return {
         "success": True,
-        "message": f"A 6-digit OTP verification code has been generated for {email_key}. Valid for 5 minutes.",
-        "otp_hint": code
+        "message": f"A 6-digit OTP verification code has been {delivery_status} ({email_key}). Valid for 5 minutes.",
+        "otp_hint": code,
+        "email_delivered": email_delivered
     }
 
 def reset_password_with_otp(email: str, otp: str, new_password: str) -> Dict[str, Any]:

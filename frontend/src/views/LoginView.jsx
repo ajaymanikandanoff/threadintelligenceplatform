@@ -15,6 +15,7 @@ import {
   Sparkles,
   Check
 } from 'lucide-react';
+import { auth, googleProvider, githubProvider, signInWithPopup } from '../utils/firebase';
 
 const API_BASE = 'http://localhost:8000';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -429,6 +430,45 @@ export default function LoginView({ onSignIn, onCancel }) {
     setIsGitHubModalOpen(false);
     showAlert(`Signed in via GitHub! Welcome, ${sessionUser.name}.`, 'success');
     setTimeout(() => onSignIn(sessionUser), 400);
+  };
+
+  const handleTriggerGoogleAuth = async () => {
+    hideAlert();
+    try {
+      showAlert('Connecting to Google Identity Services...', 'info');
+      const result = await signInWithPopup(auth, googleProvider);
+      if (result && result.user) {
+        const u = result.user;
+        const email = u.email;
+        const name = u.displayName || email.split('@')[0];
+        const picture = u.photoURL || '';
+        await executeGoogleLogin(email, name, picture);
+        return;
+      }
+    } catch (popupErr) {
+      console.warn('Firebase Google Auth popup error, opening Google account chooser modal:', popupErr);
+      hideAlert();
+      setIsGoogleModalOpen(true);
+    }
+  };
+
+  const handleTriggerGitHubAuth = async () => {
+    hideAlert();
+    try {
+      showAlert('Connecting to GitHub OAuth...', 'info');
+      const result = await signInWithPopup(auth, githubProvider);
+      if (result && result.user) {
+        const u = result.user;
+        const email = u.email || `${u.uid}@github.threatlens.io`;
+        const name = u.displayName || email.split('@')[0];
+        await executeGitHubLogin(name, email);
+        return;
+      }
+    } catch (popupErr) {
+      console.warn('Firebase GitHub Auth popup error, opening GitHub authorization modal:', popupErr);
+      hideAlert();
+      setIsGitHubModalOpen(true);
+    }
   };
 
   const handleGuestLogin = () => {
@@ -920,7 +960,7 @@ export default function LoginView({ onSignIn, onCancel }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <button
                   type="button"
-                  onClick={() => setIsGoogleModalOpen(true)}
+                  onClick={handleTriggerGoogleAuth}
                   disabled={isLoading}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
@@ -944,7 +984,7 @@ export default function LoginView({ onSignIn, onCancel }) {
 
                 <button
                   type="button"
-                  onClick={() => setIsGitHubModalOpen(true)}
+                  onClick={handleTriggerGitHubAuth}
                   disabled={isLoading}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
@@ -1162,7 +1202,7 @@ export default function LoginView({ onSignIn, onCancel }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <button
                   type="button"
-                  onClick={() => setIsGoogleModalOpen(true)}
+                  onClick={handleTriggerGoogleAuth}
                   disabled={isLoading}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
@@ -1183,7 +1223,7 @@ export default function LoginView({ onSignIn, onCancel }) {
 
                 <button
                   type="button"
-                  onClick={() => setIsGitHubModalOpen(true)}
+                  onClick={handleTriggerGitHubAuth}
                   disabled={isLoading}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
@@ -1334,29 +1374,41 @@ export default function LoginView({ onSignIn, onCancel }) {
               <div style={{ fontSize: '12px', fontWeight: '600', color: '#3c4043', marginBottom: '8px' }}>
                 Or use another Google account:
               </div>
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
                 <input
-                  type="email"
-                  placeholder="Your Google email"
-                  value={googleCustomEmail}
-                  onChange={e => setGoogleCustomEmail(e.target.value)}
+                  type="text"
+                  placeholder="Your Name (e.g. Ajay M.)"
+                  value={googleCustomName}
+                  onChange={e => setGoogleCustomName(e.target.value)}
                   style={{
-                    flex: 1, padding: '8px 12px', border: '1px solid #dadce0',
+                    padding: '8px 12px', border: '1px solid #dadce0',
                     borderRadius: '6px', fontSize: '12.5px', outline: 'none'
                   }}
                 />
-                <button
-                  type="button"
-                  disabled={!googleCustomEmail.trim() || isGoogleLoading}
-                  onClick={() => executeGoogleLogin(googleCustomEmail.trim(), googleCustomName.trim() || googleCustomEmail.split('@')[0], '')}
-                  style={{
-                    background: '#1a73e8', color: '#ffffff', border: 'none',
-                    borderRadius: '6px', padding: '8px 14px', fontSize: '12.5px',
-                    fontWeight: '600', cursor: 'pointer'
-                  }}
-                >
-                  Continue
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="email"
+                    placeholder="Your Google email"
+                    value={googleCustomEmail}
+                    onChange={e => setGoogleCustomEmail(e.target.value)}
+                    style={{
+                      flex: 1, padding: '8px 12px', border: '1px solid #dadce0',
+                      borderRadius: '6px', fontSize: '12.5px', outline: 'none'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    disabled={!googleCustomEmail.trim() || isGoogleLoading}
+                    onClick={() => executeGoogleLogin(googleCustomEmail.trim(), googleCustomName.trim() || googleCustomEmail.split('@')[0], '')}
+                    style={{
+                      background: '#1a73e8', color: '#ffffff', border: 'none',
+                      borderRadius: '6px', padding: '8px 14px', fontSize: '12.5px',
+                      fontWeight: '600', cursor: 'pointer'
+                    }}
+                  >
+                    Continue
+                  </button>
+                </div>
               </div>
             </div>
 
