@@ -5,6 +5,8 @@ import ThreatAnalyzerView from './views/ThreatAnalyzerView';
 import ThreatIntelligenceView from './views/ThreatIntelligenceView';
 import AttackMappingView from './views/AttackMappingView';
 import InvestigationHistoryView from './views/InvestigationHistoryView';
+import ReportsView from './views/ReportsView';
+import SettingsView from './views/SettingsView';
 import LoginView from './views/LoginView';
 
 import DefenseCenter from './components/DefenseCenter';
@@ -32,7 +34,7 @@ export default function App() {
   const [activeTab, setActiveTab]             = useState('dashboard');
   const [threatData, setThreatData]           = useState(null);
   const [sampleReports, setSampleReports]     = useState([]);
-  const [activeReportId, setActiveReportId]   = useState(null);
+  const [_activeReportId, setActiveReportId] = useState(null);
   const [_tactics, setTactics]               = useState([]);
   const [selectedIndicator, setSelectedIndicator] = useState(null);
 
@@ -48,8 +50,9 @@ export default function App() {
     role: 'Security analyst'
   });
 
-  // Settings
+  // Themes & Cybersecurity Colors
   const [theme, setTheme]                     = useState(localStorage.getItem('CYBER_THEME') || 'dark');
+  const [cyberAccent, setCyberAccent]         = useState(localStorage.getItem('CYBER_ACCENT') || 'cyan');
   const [apiKey, setApiKey]                   = useState(localStorage.getItem('GEMINI_API_KEY') || '');
   const [selectedModel, setSelectedModel]     = useState(localStorage.getItem('GEMINI_MODEL') || 'gemini-2.5-flash');
 
@@ -66,6 +69,11 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('CYBER_THEME', theme);
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-cyber-accent', cyberAccent);
+    localStorage.setItem('CYBER_ACCENT', cyberAccent);
+  }, [cyberAccent]);
 
   const analyzeThreatReport = async (text, title, reportId = null) => {
     setIsAnalyzing(true);
@@ -160,21 +168,13 @@ export default function App() {
   };
 
   const handleNavigateTab = (tabId, params = null) => {
-    if (tabId === 'reports') {
-      setIsReportOpen(true);
-      return;
-    }
-    if (tabId === 'settings') {
-      setIsSettingsOpen(true);
-      return;
-    }
     if (params) {
       setSelectedIndicator(params);
     }
     setActiveTab(tabId);
   };
 
-  // If Auth screen is active, show the Login View (matching Image 4)
+  // If Auth screen is active, show the Login View (matching Mockup)
   if (isAuthOpen) {
     return (
       <LoginView
@@ -228,9 +228,9 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 6px' }}>
             <div style={{
               width: '32px', height: '32px', borderRadius: '9px',
-              background: 'linear-gradient(135deg, #0284c7 0%, #00e5ff 100%)',
+              background: 'linear-gradient(135deg, #0284c7 0%, var(--accent) 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 0 16px rgba(0, 229, 255, 0.35)',
+              boxShadow: '0 0 16px var(--accent-glow)',
               flexShrink: 0
             }}>
               <Shield size={18} color="#06090f" strokeWidth={2.6} />
@@ -268,6 +268,7 @@ export default function App() {
                   key={item.id}
                   onClick={() => handleNavigateTab(item.id)}
                   style={{
+                    position: 'relative',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '10px',
@@ -275,12 +276,12 @@ export default function App() {
                     padding: '8px 12px',
                     borderRadius: '8px',
                     border: 'none',
-                    background: active ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+                    background: active ? 'var(--accent-dim)' : 'transparent',
                     color: active ? 'var(--accent)' : 'var(--text-secondary)',
                     fontWeight: active ? '600' : '500',
                     fontSize: '13px',
                     cursor: 'pointer',
-                    outline: active ? '1px solid rgba(56, 189, 248, 0.3)' : 'none',
+                    outline: active ? '1px solid var(--border-accent)' : 'none',
                     transition: 'all 0.12s ease',
                     textAlign: 'left'
                   }}
@@ -297,6 +298,18 @@ export default function App() {
                     }
                   }}
                 >
+                  {/* Left Cyan/Accent Vertical Bar (Matches Mockup) */}
+                  {active && (
+                    <span style={{
+                      position: 'absolute',
+                      left: '-14px',
+                      width: '3.5px',
+                      height: '24px',
+                      borderRadius: '0 4px 4px 0',
+                      background: 'var(--accent)',
+                      boxShadow: '0 0 10px var(--accent)'
+                    }} />
+                  )}
                   <Icon size={16} style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }} />
                   <span>{item.label}</span>
                 </button>
@@ -322,6 +335,7 @@ export default function App() {
                   key={item.id}
                   onClick={() => handleNavigateTab(item.id)}
                   style={{
+                    position: 'relative',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '10px',
@@ -329,12 +343,12 @@ export default function App() {
                     padding: '8px 12px',
                     borderRadius: '8px',
                     border: 'none',
-                    background: active ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+                    background: active ? 'var(--accent-dim)' : 'transparent',
                     color: active ? 'var(--accent)' : 'var(--text-secondary)',
                     fontWeight: active ? '600' : '500',
                     fontSize: '13px',
                     cursor: 'pointer',
-                    outline: active ? '1px solid rgba(56, 189, 248, 0.3)' : 'none',
+                    outline: active ? '1px solid var(--border-accent)' : 'none',
                     transition: 'all 0.12s ease',
                     textAlign: 'left'
                   }}
@@ -351,6 +365,17 @@ export default function App() {
                     }
                   }}
                 >
+                  {active && (
+                    <span style={{
+                      position: 'absolute',
+                      left: '-14px',
+                      width: '3.5px',
+                      height: '24px',
+                      borderRadius: '0 4px 4px 0',
+                      background: 'var(--accent)',
+                      boxShadow: '0 0 10px var(--accent)'
+                    }} />
+                  )}
                   <Icon size={16} style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }} />
                   <span>{item.label}</span>
                 </button>
@@ -384,7 +409,7 @@ export default function App() {
 
             {/* User Profile Card */}
             <div
-              onClick={() => setIsAuthOpen(true)}
+              onClick={() => handleNavigateTab('settings')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -396,7 +421,7 @@ export default function App() {
               }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              title="Click to manage analyst session"
+              title="Click to view Settings & Profile"
             >
               <div style={{
                 width: '32px', height: '32px', borderRadius: '50%',
@@ -477,15 +502,24 @@ export default function App() {
 
               {activeTab === 'history' && (
                 <InvestigationHistoryView
-                  sampleReports={sampleReports}
-                  activeReportId={activeReportId}
-                  onSelectReport={(repId) => {
-                    const rep = sampleReports.find(x => x.id === repId);
-                    if (rep) analyzeThreatReport(rep.content, rep.title, rep.id);
-                  }}
-                  onOpenIngest={() => setIsIngestOpen(true)}
-                  onOpenReport={() => setIsReportOpen(true)}
+                  onNavigateTab={handleNavigateTab}
+                />
+              )}
+
+              {activeTab === 'reports' && (
+                <ReportsView
                   threatData={threatData}
+                  onOpenExecutiveModal={() => setIsReportOpen(true)}
+                />
+              )}
+
+              {activeTab === 'settings' && (
+                <SettingsView
+                  currentUser={currentUser}
+                  onUpdateUser={setCurrentUser}
+                  onSignOut={() => setIsAuthOpen(true)}
+                  cyberAccent={cyberAccent}
+                  onChangeCyberAccent={setCyberAccent}
                 />
               )}
 

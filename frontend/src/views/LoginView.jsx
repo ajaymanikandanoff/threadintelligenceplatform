@@ -264,3 +264,4 @@ export default function LoginView({ onSignIn, onCancel }) {
     </div>
   );
 }
+
