@@ -40,37 +40,37 @@ import {
 } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab]             = useState('dashboard');
-  const [threatData, setThreatData]           = useState(null);
-  const [sampleReports, setSampleReports]     = useState([]);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [threatData, setThreatData] = useState(null);
+  const [sampleReports, setSampleReports] = useState([]);
   const [_activeReportId, setActiveReportId] = useState(null);
-  const [_tactics, setTactics]               = useState([]);
+  const [_tactics, setTactics] = useState([]);
   const [selectedIndicator, setSelectedIndicator] = useState(null);
 
   // Modals & Auth
-  const [isIngestOpen, setIsIngestOpen]       = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen]   = useState(false);
-  const [isReportOpen, setIsReportOpen]       = useState(false);
-  const [isGlossaryOpen, setIsGlossaryOpen]   = useState(false);
-  const [currentUser, setCurrentUser]         = useState(() => {
+  const [isIngestOpen, setIsIngestOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isGlossaryOpen, setIsGlossaryOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(() => {
     try {
       const stored = localStorage.getItem('user_session') || sessionStorage.getItem('user_session');
       if (stored) {
         const u = JSON.parse(stored);
         if (u && (u.email || u.name)) return u;
       }
-    } catch {}
+    } catch { }
     return null;
   });
 
   // Themes & Cybersecurity Colors
-  const [theme, setTheme]                     = useState(localStorage.getItem('CYBER_THEME') || 'dark');
-  const [cyberAccent, setCyberAccent]         = useState(localStorage.getItem('CYBER_ACCENT') || 'cyan');
-  const [apiKey, setApiKey]                   = useState(localStorage.getItem('GEMINI_API_KEY') || '');
-  const [selectedModel, setSelectedModel]     = useState(localStorage.getItem('GEMINI_MODEL') || 'gemini-2.5-flash');
+  const [theme, setTheme] = useState(localStorage.getItem('CYBER_THEME') || 'dark');
+  const [cyberAccent, setCyberAccent] = useState(localStorage.getItem('CYBER_ACCENT') || 'cyan');
+  const [apiKey, setApiKey] = useState(localStorage.getItem('GEMINI_API_KEY') || '');
+  const [selectedModel, setSelectedModel] = useState(localStorage.getItem('GEMINI_MODEL') || 'gemini-2.5-flash');
 
   // Loading States
-  const [isAnalyzing, setIsAnalyzing]         = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isCopilotLoading, setIsCopilotLoading] = useState(false);
   const [externalCopilotQuery, setExternalCopilotQuery] = useState('');
   const [copilotMessages, setCopilotMessages] = useState([{
@@ -250,9 +250,9 @@ export default function App() {
             </div>
 
             {[
-              { id: 'dashboard',      label: 'Dashboard',             icon: LayoutDashboard },
-              { id: 'analyzer',       label: 'Unified Analyzer',       icon: Search },
-              { id: 'history',        label: 'Investigation History', icon: Clock },
+              { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+              { id: 'analyzer', label: 'Unified Analyzer', icon: Search },
+              { id: 'history', label: 'Investigation History', icon: Clock },
             ].map(item => {
               const Icon = item.icon;
               const active = activeTab === item.id;
@@ -317,11 +317,11 @@ export default function App() {
             </div>
 
             {[
-              { id: 'ip-scanner',     label: 'IP Intelligence',     icon: Activity },
+              { id: 'ip-scanner', label: 'IP Intelligence', icon: Activity },
               { id: 'domain-scanner', label: 'Domain Intelligence', icon: Globe },
-              { id: 'url-scanner',    label: 'URL Threat Analysis', icon: Link2 },
-              { id: 'pdf-research',   label: 'PDF Threat Research', icon: FileSearch },
-              { id: 'threat-graph',   label: 'Threat Graph',        icon: Share2 },
+              { id: 'url-scanner', label: 'URL Threat Analysis', icon: Link2 },
+              { id: 'pdf-research', label: 'PDF Threat Research', icon: FileSearch },
+              { id: 'threat-graph', label: 'Threat Graph', icon: Share2 },
             ].map(item => {
               const Icon = item.icon;
               const active = activeTab === item.id;
@@ -386,8 +386,8 @@ export default function App() {
             </div>
 
             {[
-              { id: 'intelligence',   label: 'Threat Intelligence',   icon: Globe },
-              { id: 'attack-mapping', label: 'ATT&CK Matrix',         icon: Crosshair },
+              { id: 'intelligence', label: 'Threat Intelligence', icon: Globe },
+              { id: 'attack-mapping', label: 'ATT&CK Matrix', icon: Crosshair },
             ].map(item => {
               const Icon = item.icon;
               const active = activeTab === item.id;

@@ -480,7 +480,68 @@ async def chat_with_copilot(context_threat: Dict[str, Any], query: str, chat_his
     if not api_key or not api_key.strip():
         # Smart local response
         q_lower = query.lower()
-        if "mitigat" in q_lower or "remediat" in q_lower or "defen" in q_lower or "block" in q_lower:
+        if "patch" in q_lower or "version" in q_lower or "software" in q_lower or "cve" in q_lower or "vulnerab" in q_lower:
+            return f"""### 🩹 Emergency Patching & Vulnerability Advisory for **{actor}**
+
+**Critical Vulnerability Correlation:**
+The active campaign heavily leverages **{', '.join(cves) if cves else 'CVE-2023-34362'}** to achieve initial foothold and unauthenticated data access.
+
+| Affected Application | Vulnerability / CVE | Impacted Software Versions | Fixed / Patched Target Version | Severity |
+| :--- | :--- | :--- | :--- | :--- |
+| **Progress MOVEit Transfer** | {cves[0] if cves else 'CVE-2023-34362'} (SQLi / RCE) | • 2023.0.0<br/>• 2022.1.0 to 2022.1.4<br/>• 2022.0.0 to 2022.0.3<br/>• 2021.1.0 to 2021.1.3<br/>• 2021.0.0 to 2021.0.5 | **2023.0.1+**<br/>**2022.1.5+**<br/>**2022.0.4+**<br/>**2021.1.4+**<br/>**2021.0.6+** | 🔴 CRITICAL (CVSS 9.8) |
+
+#### 🚨 Immediate Containment Steps (Prior to Patch Installation):
+1. **Network Egress / Ingress Isolation:** Immediately block all external HTTP and HTTPS traffic to ports 80 and 443 on exposed servers.
+2. **Web Shell Inspection:** Audit the web application root directory (e.g., `C:\\MOVEitTransfer\\wwwroot\\`) for unauthorized `.aspx` files such as `human2.aspx` (LEMURLOOT webshell).
+3. **Database Review:** Query transactional logs for unexpected user creation or arbitrary data dumps executed under service account permissions.
+4. **Deploy Hotfix:** Apply the vendor-provided security patches immediately and reboot all web service workers.
+
+*Tip: You can export detection rules (YARA & Sigma) directly from the Defense Engineering tab.*"""
+
+        elif "1 hour" in q_lower or "hour" in q_lower or "execute" in q_lower or ("what" in q_lower and "team" in q_lower):
+            return f"""### ⚡ Incident Response Playbook: 1-Hour SOC Containment Sequence
+
+For active containment against **{actor}**, execute the following time-critical sequence:
+
+1. **[Minutes 00–15] Perimeter Ingress & Egress Isolation:**
+   - Block all external traffic to public-facing file transfer / portal endpoints.
+   - Ingest confirmed C2 IP addresses into border firewall rules:
+{chr(10).join([f"     - Block `{x}`" for x in iocs[:4]])}
+
+2. **[Minutes 15–30] Endpoint & Web Shell Sweep:**
+   - Scan web directories for implanted web shells (`human2.aspx` / LEMURLOOT) and unauthorized `.ashx` / `.aspx` scripts.
+   - Inspect PowerShell command history for base64 encoded scripts or `T1059.001` executions.
+
+3. **[Minutes 30–45] Identity & Session Invalidation:**
+   - Revoke all active enterprise sessions on DMZ systems.
+   - Force password and secret resets for database administrators, service accounts, and cloud storage tokens (Azure/AWS).
+
+4. **[Minutes 45–60] Forensic Preservation & Patching:**
+   - Snapshot virtual machine disks and capture memory dumps of affected servers before rebooting for patch deployment."""
+
+        elif "vector" in q_lower or "asset" in q_lower or ("summar" in q_lower and "attack" in q_lower):
+            return f"""### 🛡️ Threat Vector & Asset Impact Summary for **{actor}**
+
+- **Primary Attack Vector:** Initial access is obtained by exploiting **{', '.join(cves) if cves else 'CVE-2023-34362'}** via unauthenticated SQL Injection (`T1190: Exploit Public-Facing Application`).
+- **Persistence Mechanism:** Placement of customized web shells (`T1505.003: Web Shell`, e.g., LEMURLOOT `human2.aspx`) within web server root directories.
+- **Impacted Critical Assets:**
+  - Public-facing DMZ file transfer and web application servers.
+  - Relational database management systems (Microsoft SQL Server, MySQL, Azure SQL).
+  - Target Industry Sectors: {', '.join(context_threat.get('target_sectors', ['Healthcare, Finance, Government']))}.
+- **Adversary Objective:** Mass data theft, cloud credential harvesting, and multi-million dollar extortion."""
+
+        elif "ioc" in q_lower or "ip" in q_lower or "hash" in q_lower or "indicator" in q_lower:
+            return f"""### 🔍 Extracted Indicators of Compromise (IoCs) for **{actor}**
+
+The following indicators have been extracted and correlated with this attack campaign for immediate firewall and SIEM ingestion:
+
+| Type | Indicator Value | Recommended Action |
+| :--- | :--- | :--- |
+""" + "\n".join([f"| `{i.split(':')[0].strip()}` | `{i.split(':')[1].strip()}` | Block in perimeter firewall / SIEM alert |" for i in iocs]) + f"""
+
+*Export the full STIX 2.1 JSON bundle from the Defense Center tab to ingest directly into ThreatConnect or MISP.*"""
+
+        elif "mitigat" in q_lower or "remediat" in q_lower or "defen" in q_lower or "block" in q_lower:
             return f"""### 🛡️ Recommended Blue Team Mitigation Strategy for **{actor}**
 
 Based on the active threat intelligence context, here are the immediate hardening priorities:
@@ -500,17 +561,6 @@ Based on the active threat intelligence context, here are the immediate hardenin
    - Rotate all administrative and service account secrets that interacted with DMZ servers within the last 30 days.
 
 *You can also copy the auto-generated Sigma and YARA rules from the Defense Center tab!*"""
-
-        elif "ioc" in q_lower or "ip" in q_lower or "hash" in q_lower:
-            return f"""### 🔍 Extracted Indicators of Compromise (IoCs) for **{actor}**
-
-The following indicators have been extracted and correlated with this attack campaign:
-
-| Type | Indicator Value | Recommended Action |
-| :--- | :--- | :--- |
-""" + "\n".join([f"| `{i.split(':')[0].strip()}` | `{i.split(':')[1].strip()}` | Block in perimeter firewall / SIEM alert |" for i in iocs]) + f"""
-
-*Export the full STIX 2.1 JSON bundle from the Defense Center tab to ingest directly into ThreatConnect or MISP.*"""
 
         elif "actor" in q_lower or "who" in q_lower or "apt" in q_lower:
             return f"""### 🕵️ Threat Actor Profile: **{actor}**
