@@ -460,8 +460,7 @@ export default function App() {
             </div>
 
             {[
-              { id: 'copilot', label: 'AI Security Copilot', icon: MessageSquare },
-              { id: 'defense', label: 'Defense Engineering', icon: ShieldCheck }
+              { id: 'copilot', label: 'AI Security Copilot', icon: MessageSquare }
             ].map(item => {
               const Icon = item.icon;
               const active = activeTab === item.id;
@@ -675,13 +674,6 @@ export default function App() {
                   onClearExternalQuery={() => setExternalCopilotQuery('')}
                   apiKey={apiKey}
                   onNavigateTab={handleNavigateTab}
-                />
-              )}
-
-              {activeTab === 'defense' && (
-                <DefenseCenter
-                  defenseArtifacts={threatData?.defense_artifacts}
-                  threatData={threatData}
                 />
               )}
             </>

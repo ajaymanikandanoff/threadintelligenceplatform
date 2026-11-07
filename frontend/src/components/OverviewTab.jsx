@@ -516,7 +516,7 @@ export default function OverviewTab({ threatData, onSwitchTab, _onOpenIngest }) 
         <div className="section-label" style={{ marginBottom: '10px' }}>Direct Incident Response Shortcuts</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
           {[
-            { tab: 'defense',   icon: ShieldCheck, label: 'Perimeter Defense Generator', desc: 'Deploy firewall & SIEM rules', color: 'var(--green)' },
+            { tab: 'threat-intelligence', icon: ShieldCheck, label: 'Threat Intelligence Store', desc: 'Active indicators & risk telemetry', color: 'var(--green)' },
             { tab: 'iocs',      icon: Lock,        label: 'Blocklist IoC Telemetry',     desc: `${iocs.length} extracted indicators`, color: 'var(--red)' },
             { tab: 'technical', icon: TrendingUp,  label: 'MITRE ATT&CK Matrix Heatmap', desc: `${mitre_techniques.length} techniques mapped`, color: 'var(--purple)' },
           ].map(a => (
