@@ -14,7 +14,9 @@ export default function ThreatCopilot({
   isLoading,
   threatActor,
   externalQuery,
-  onClearExternalQuery
+  onClearExternalQuery,
+  apiKey,
+  onNavigateTab
 }) {
   const [input, setInput] = useState('');
   const endRef = useRef(null);
@@ -61,23 +63,52 @@ export default function ThreatCopilot({
                 AI Threat Intelligence Copilot
               </span>
               {threatActor && (
-                <span className="badge badge-red">{threatActor}</span>
+                <span className="badge badge-red" title="Active workspace investigation report">
+                  {threatActor}
+                </span>
               )}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '1px' }}>
-              Context-grounded autonomous security assistant · Powered by Gemini 2.5 Flash
+              {apiKey 
+                ? 'Context-grounded autonomous security assistant · Powered by Gemini 2.5 Flash + Google Search Grounding' 
+                : 'Autonomous security assistant · Running in Local Heuristic CTI Mode'}
             </div>
           </div>
         </div>
 
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px',
-          color: 'var(--text-tertiary)', background: 'var(--bg-overlay)',
-          padding: '4px 10px', borderRadius: '20px', border: '1px solid var(--border)',
-          fontFamily: 'var(--font-mono)'
-        }}>
-          <span className="status-dot" style={{ background: 'var(--green)', width: '6px', height: '6px' }} />
-          <span>CONNECTED & SYNCED</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px',
+            color: apiKey ? 'var(--green)' : 'var(--amber)', background: 'var(--bg-overlay)',
+            padding: '4px 10px', borderRadius: '20px',
+            border: `1px solid ${apiKey ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}`,
+            fontFamily: 'var(--font-mono)'
+          }}>
+            <span className="status-dot" style={{ background: apiKey ? 'var(--green)' : 'var(--amber)', width: '6px', height: '6px' }} />
+            <span>{apiKey ? 'LIVE AGENT · ONLINE' : 'LOCAL ENGINE · OFFLINE'}</span>
+          </div>
+
+          {!apiKey && onNavigateTab && (
+            <button
+              onClick={() => onNavigateTab('settings')}
+              style={{
+                fontSize: '11px',
+                fontWeight: '700',
+                background: 'linear-gradient(135deg, #0284c7 0%, #06b6d4 100%)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '20px',
+                padding: '4px 12px',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                boxShadow: '0 0 10px rgba(6, 182, 212, 0.3)'
+              }}
+            >
+              <span>⚙️ Connect Gemini Key</span>
+            </button>
+          )}
         </div>
       </div>
 

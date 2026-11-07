@@ -30,3 +30,4 @@ echo   To STOP both servers anytime, run: stop_all.bat
 echo ================================================================
 echo.
 pause
+

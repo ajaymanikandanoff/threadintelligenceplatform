@@ -654,6 +654,16 @@ export default function App() {
                   onSignOut={handleSignOut}
                   cyberAccent={cyberAccent}
                   onChangeCyberAccent={setCyberAccent}
+                  apiKey={apiKey}
+                  onSaveApiKey={(key) => {
+                    setApiKey(key);
+                    localStorage.setItem('GEMINI_API_KEY', key);
+                  }}
+                  selectedModel={selectedModel}
+                  onChangeModel={(m) => {
+                    setSelectedModel(m);
+                    localStorage.setItem('GEMINI_MODEL', m);
+                  }}
                 />
               )}
 
@@ -665,6 +675,8 @@ export default function App() {
                   threatActor={threatData?.threat_actor?.name}
                   externalQuery={externalCopilotQuery}
                   onClearExternalQuery={() => setExternalCopilotQuery('')}
+                  apiKey={apiKey}
+                  onNavigateTab={handleNavigateTab}
                 />
               )}
 
