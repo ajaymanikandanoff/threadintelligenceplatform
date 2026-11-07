@@ -123,9 +123,26 @@ def process_pdf_threat_report(pdf_bytes: bytes, filename: str = "threat_report.p
             "status": "empty_file"
         }
 
+    try:
+        pdf_file = io.BytesIO(pdf_bytes)
+        reader = PdfReader(pdf_file)
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Failed to parse PDF document: {str(e)}",
+            "status": "corrupt_pdf"
+        }
+
+    total_pages = len(reader.pages)
+    if total_pages == 0:
+        return {
+            "success": False,
+            "error": "The PDF contains no readable pages.",
+            "status": "zero_pages"
+        }
+
     full_document_text = ""
     pages_data = []
-    total_pages = 1
 
     all_iocs = {
         "ipv4": [],
@@ -135,84 +152,37 @@ def process_pdf_threat_report(pdf_bytes: bytes, filename: str = "threat_report.p
         "hashes": {"md5": [], "sha1": [], "sha256": []},
         "cves": []
     }
+
     seen_ioc_values = set()
 
-    is_pdf = False
-    reader = None
-    try:
-        pdf_file = io.BytesIO(pdf_bytes)
-        reader = PdfReader(pdf_file)
-        if len(reader.pages) > 0:
-            is_pdf = True
-    except Exception:
-        is_pdf = False
+    for idx, page in enumerate(reader.pages):
+        page_num = idx + 1
+        page_text = page.extract_text() or ""
+        clean_page_text = refang_text(page_text)
+        
+        full_document_text += f"\n--- Page {page_num} ---\n" + clean_page_text
 
-    if is_pdf and reader is not None:
-        total_pages = len(reader.pages)
-        for idx, page in enumerate(reader.pages):
-            page_num = idx + 1
-            page_text = page.extract_text() or ""
-            clean_page_text = refang_text(page_text)
-            
-            full_document_text += f"\n--- Page {page_num} ---\n" + clean_page_text
+        # Run IOC extraction on this specific page
+        page_iocs = extract_all_iocs(clean_page_text, page_number=page_num)
 
-            page_iocs = extract_all_iocs(clean_page_text, page_number=page_num)
+        # Merge deduplicated IOCs
+        for cat in ["ipv4", "ipv6", "domains", "urls", "cves"]:
+            for item in page_iocs[cat]:
+                if item["value"] not in seen_ioc_values:
+                    seen_ioc_values.add(item["value"])
+                    all_iocs[cat].append(item)
 
-            for cat in ["ipv4", "ipv6", "domains", "urls", "cves"]:
-                for item in page_iocs[cat]:
-                    if item["value"] not in seen_ioc_values:
-                        seen_ioc_values.add(item["value"])
-                        all_iocs[cat].append(item)
+        for htype in ["md5", "sha1", "sha256"]:
+            for item in page_iocs["hashes"][htype]:
+                if item["value"] not in seen_ioc_values:
+                    seen_ioc_values.add(item["value"])
+                    all_iocs["hashes"][htype].append(item)
 
-            for htype in ["md5", "sha1", "sha256"]:
-                for item in page_iocs["hashes"][htype]:
-                    if item["value"] not in seen_ioc_values:
-                        seen_ioc_values.add(item["value"])
-                        all_iocs["hashes"][htype].append(item)
-
-            pages_data.append({
-                "page_number": page_num,
-                "character_count": len(clean_page_text),
-                "has_text": len(clean_page_text.strip()) > 0
-            })
-    else:
-        # Fallback for plain-text threat intel documents (e.g. sample reports or .txt files)
-        try:
-            raw_text = pdf_bytes.decode("utf-8", errors="ignore").strip()
-            if not raw_text:
-                return {
-                    "success": False,
-                    "error": "Uploaded document is empty or could not be parsed.",
-                    "status": "empty_file"
-                }
-            clean_page_text = refang_text(raw_text)
-            full_document_text = clean_page_text
-            total_pages = 1
-            page_iocs = extract_all_iocs(clean_page_text, page_number=1)
-
-            for cat in ["ipv4", "ipv6", "domains", "urls", "cves"]:
-                for item in page_iocs[cat]:
-                    if item["value"] not in seen_ioc_values:
-                        seen_ioc_values.add(item["value"])
-                        all_iocs[cat].append(item)
-
-            for htype in ["md5", "sha1", "sha256"]:
-                for item in page_iocs["hashes"][htype]:
-                    if item["value"] not in seen_ioc_values:
-                        seen_ioc_values.add(item["value"])
-                        all_iocs["hashes"][htype].append(item)
-
-            pages_data.append({
-                "page_number": 1,
-                "character_count": len(clean_page_text),
-                "has_text": True
-            })
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"Failed to parse document: {str(e)}",
-                "status": "corrupt_file"
-            }
+        pages_data.append({
+            "page_number": page_num,
+            "character_count": len(clean_page_text),
+            "has_text": len(clean_page_text.strip()) > 0
+        })
 
     # If text is extremely short across all pages, document may be a scanned image
     total_chars = len(full_document_text.strip())
