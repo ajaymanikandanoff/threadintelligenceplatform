@@ -279,11 +279,7 @@ export default function DashboardView({
       </div>
 
       {/* ─── 5 KPI Metric Cards ─── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '12px'
-      }}>
+      <div className="dashboard-kpi-grid">
         {/* Total Analyzed */}
         <div style={{
           background: 'var(--bg-elevated)',
@@ -421,11 +417,7 @@ export default function DashboardView({
       </div>
 
       {/* ─── Middle Row: Threat Activity & Severity Distribution ─── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.8fr) minmax(0, 1fr)',
-        gap: '16px'
-      }}>
+      <div className="dashboard-middle-grid">
         {/* Threat Activity Dual-Wave Chart */}
         <div style={{
           background: 'var(--bg-elevated)',
@@ -664,11 +656,7 @@ export default function DashboardView({
       </div>
 
       {/* ─── Lower Row: Top Threat Categories & Quick Actions ─── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-        gap: '16px'
-      }}>
+      <div className="dashboard-lower-grid">
         {/* Top Threat Categories */}
         <div style={{
           background: 'var(--bg-elevated)',
@@ -713,7 +701,7 @@ export default function DashboardView({
             <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>Quick actions</div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', flex: 1 }}>
+          <div className="dashboard-quick-actions-grid" style={{ flex: 1 }}>
             {/* Analyze URL */}
             <button
               onClick={() => onNavigateTab('url-scanner')}

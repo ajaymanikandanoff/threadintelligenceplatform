@@ -38,7 +38,8 @@ import {
   FileSearch,
   Share2,
   Radio,
-  LogOut
+  LogOut,
+  X
 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
@@ -50,6 +51,7 @@ export default function App() {
   const [_activeReportId, setActiveReportId] = useState(null);
   const [_tactics, setTactics] = useState([]);
   const [selectedIndicator, setSelectedIndicator] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Modals & Auth
   const [isIngestOpen, setIsIngestOpen] = useState(false);
@@ -198,6 +200,7 @@ export default function App() {
       setSelectedIndicator(params);
     }
     setActiveTab(tabId);
+    setIsMobileMenuOpen(false);
   };
 
   const handleSignOut = () => {
@@ -231,23 +234,65 @@ export default function App() {
         theme={theme}
         onToggleTheme={() => setTheme(p => p === 'dark' ? 'light' : 'dark')}
         onSearchGlobal={handleGlobalSearch}
-        onOpenAuth={() => setIsAuthOpen(true)}
         onSignOut={handleSignOut}
+        isMobileMenuOpen={isMobileMenuOpen}
+        onToggleMobileMenu={() => setIsMobileMenuOpen(prev => !prev)}
       />
 
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* ─── Sidebar Navigation (Clean Workspace Items) ─── */}
-        <aside style={{
-          width: '220px',
-          flexShrink: 0,
-          borderRight: '1px solid var(--border)',
-          background: 'var(--bg-elevated)',
-          padding: '12px 10px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-          overflowY: 'auto'
-        }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {/* Mobile Backdrop Overlay */}
+        {isMobileMenuOpen && (
+          <div
+            className="mobile-drawer-backdrop"
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-label="Close navigation"
+          />
+        )}
+
+        {/* ─── Sidebar Navigation (Responsive Drawer on Mobile) ─── */}
+        <aside className={`app-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
+          {/* Mobile Drawer Header with Close Button */}
+          <div
+            className="mobile-drawer-header"
+            style={{
+              display: 'none',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingBottom: '12px',
+              borderBottom: '1px solid var(--border)',
+              marginBottom: '6px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <img
+                src="/logo.png"
+                alt="Logo"
+                style={{ height: '22px', width: 'auto' }}
+              />
+              <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                AI ThreatLens
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(false)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-tertiary)',
+                padding: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '4px'
+              }}
+              title="Close navigation menu"
+              aria-label="Close navigation menu"
+            >
+              <X size={18} />
+            </button>
+          </div>
           {/* WORKSPACE Menu Section */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <div className="section-label" style={{ marginBottom: '4px', fontSize: '10px' }}>
@@ -599,12 +644,7 @@ export default function App() {
         </aside>
 
         {/* ─── Main Content Canvas ─── */}
-        <main style={{
-          flex: 1,
-          padding: '24px 32px',
-          overflowY: 'auto',
-          maxHeight: 'calc(100vh - 56px)'
-        }}>
+        <main className="app-main-canvas">
           {isAnalyzing ? (
             <div style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',

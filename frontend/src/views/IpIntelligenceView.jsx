@@ -101,7 +101,7 @@ export default function IpIntelligenceView({ onSelectIndicator }) {
         padding: '22px 26px',
         display: 'flex', flexDirection: 'column', gap: '16px'
       }}>
-        <form onSubmit={(e) => { e.preventDefault(); handleScan(); }} style={{ display: 'flex', gap: '10px' }}>
+        <form className="scanner-form" onSubmit={(e) => { e.preventDefault(); handleScan(); }} style={{ display: 'flex', gap: '10px' }}>
           <div style={{
             flex: 1,
             display: 'flex',

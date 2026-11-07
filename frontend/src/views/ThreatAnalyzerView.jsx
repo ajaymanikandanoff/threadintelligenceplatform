@@ -204,7 +204,7 @@ export default function ThreatAnalyzerView({ onSelectIndicator, initialIndicator
         </div>
 
         {/* Input Form */}
-        <form onSubmit={(e) => { e.preventDefault(); runAnalysis(); }} style={{ display: 'flex', gap: '12px' }}>
+        <form className="scanner-form" onSubmit={(e) => { e.preventDefault(); runAnalysis(); }} style={{ display: 'flex', gap: '12px' }}>
           <div style={{
             flex: 1, display: 'flex', alignItems: 'center', gap: '12px',
             background: 'var(--bg-base)', border: '1px solid var(--border)',

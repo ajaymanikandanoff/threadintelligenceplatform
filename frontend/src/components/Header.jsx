@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
-import { Search, Bell, Sun, Moon } from 'lucide-react';
+import { Search, Bell, Sun, Moon, Menu, X } from 'lucide-react';
 
-export default function Header({ activeTab, currentUser, theme, onToggleTheme, onSearchGlobal, onSignOut }) {
+export default function Header({
+  activeTab,
+  currentUser,
+  theme,
+  onToggleTheme,
+  onSearchGlobal,
+  onSignOut,
+  isMobileMenuOpen,
+  onToggleMobileMenu
+}) {
   const [searchValue, setSearchValue] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -19,29 +28,40 @@ export default function Header({ activeTab, currentUser, theme, onToggleTheme, o
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '0 20px',
+      padding: '0 16px',
       position: 'sticky',
       top: 0,
       zIndex: 100,
       flexShrink: 0
     }}>
-      {/* Left: Brand */}
+      {/* Left: Hamburger Button (Mobile) + Brand */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <button
+          type="button"
+          onClick={onToggleMobileMenu}
+          className="mobile-hamburger-btn"
+          aria-label="Toggle navigation drawer"
+          title="Toggle Navigation Menu"
+        >
+          {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+        </button>
+
         <img
           src="/logo.png"
           alt="AI ThreatLens"
-          style={{ height: '28px', width: 'auto', objectFit: 'contain', flexShrink: 0 }}
+          style={{ height: '26px', width: 'auto', objectFit: 'contain', flexShrink: 0 }}
         />
         <span style={{
           fontSize: '15px',
           fontWeight: '700',
           color: 'var(--text-primary)',
           letterSpacing: '-0.01em',
-          userSelect: 'none'
+          userSelect: 'none',
+          whiteSpace: 'nowrap'
         }}>
           AI ThreatLens
         </span>
-        <span style={{
+        <span className="header-subtitle-badge" style={{
           fontSize: '10px',
           fontWeight: '600',
           color: 'var(--text-tertiary)',
@@ -49,25 +69,17 @@ export default function Header({ activeTab, currentUser, theme, onToggleTheme, o
           textTransform: 'uppercase',
           borderLeft: '1px solid var(--border)',
           paddingLeft: '10px',
-          marginLeft: '2px'
+          marginLeft: '2px',
+          whiteSpace: 'nowrap'
         }}>
           SOC Platform
         </span>
       </div>
 
       {/* Right: Search + Status + Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         {/* Search */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '7px',
-          background: 'var(--bg-input)',
-          border: '1px solid var(--border)',
-          borderRadius: '6px',
-          padding: '5px 10px',
-          width: '240px'
-        }}>
+        <div className="header-search-container">
           <Search size={13} color="var(--text-tertiary)" />
           <input
             type="text"
@@ -85,7 +97,7 @@ export default function Header({ activeTab, currentUser, theme, onToggleTheme, o
               fontFamily: 'inherit'
             }}
           />
-          <kbd style={{
+          <kbd className="header-search-kbd" style={{
             background: 'var(--bg-overlay)',
             border: '1px solid var(--border)',
             borderRadius: '3px',
