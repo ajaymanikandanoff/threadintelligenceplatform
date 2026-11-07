@@ -206,12 +206,15 @@ async def copilot_chat(payload: CopilotRequest):
     if not payload.query or not payload.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
     
+    server_key = os.environ.get("GEMINI_API_KEY", "")
+    effective_key = payload.api_key.strip() if (payload.api_key and payload.api_key.strip()) else server_key
+
     reply = await chat_with_copilot(
         context_threat=payload.context_threat,
         query=payload.query,
         chat_history=payload.chat_history or [],
-        api_key=payload.api_key,
-        model=payload.model or "gemini-2.5-flash"
+        api_key=effective_key,
+        model=payload.model or "gemini-3-flash-preview"
     )
     return {"reply": reply}
 
@@ -475,6 +478,9 @@ def list_investigations_endpoint(
     limit: int = 50
 ):
     items = threat_correlation_service.get_all_investigations(query=query, ioc_type=type, severity=severity, limit=limit)
+    for item in items:
+        if not item.get("graph"):
+            item["graph"] = threat_graph_service.build_graph_for_investigation(item)
     return {"investigations": items, "count": len(items)}
 
 @app.get("/api/investigations/{inv_id}")
@@ -522,6 +528,34 @@ def get_global_threat_graph_endpoint(limit: int = 25):
                 seen_e.add(e["id"])
                 edges.append(e)
     return {"nodes": nodes, "edges": edges, "summary": {"total_nodes": len(nodes), "total_edges": len(edges)}}
+
+@app.get("/api/graph/pdf")
+def get_pdf_threat_graph_endpoint():
+    """Returns the dedicated knowledge graph for the active PDF threat research dossier."""
+    items = threat_correlation_service.get_all_investigations(ioc_type="pdf", limit=10)
+    if not items:
+        all_items = threat_correlation_service.get_all_investigations(limit=50)
+        items = [x for x in all_items if "pdf" in x.get("type", "").lower() or str(x.get("indicator", "")).lower().endswith(".pdf")]
+    
+    if items:
+        pdf_item = items[0]
+        graph = threat_graph_service.build_graph_for_investigation(pdf_item)
+        graph["pdf_metadata"] = {
+            "indicator": pdf_item.get("indicator"),
+            "risk_score": pdf_item.get("risk_score"),
+            "classification": pdf_item.get("classification"),
+            "created_at": pdf_item.get("created_at"),
+            "id": pdf_item.get("id"),
+            "details": pdf_item.get("details", {})
+        }
+        return graph
+    
+    return {
+        "nodes": [],
+        "edges": [],
+        "summary": {"total_nodes": 0, "total_edges": 0},
+        "pdf_metadata": None
+    }
 
 # ==============================================================================
 # GEOSPATIAL CYBER THREAT MAP ENDPOINTS

@@ -20,18 +20,21 @@ const API_BASE = 'http://localhost:8000';
 
 export default function ThreatGraphView({ onAskCopilot }) {
   const [graphData, setGraphData] = useState({ nodes: [], edges: [], summary: {} });
+  const [pdfMeta, setPdfMeta] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
-  const [selectedEntityFilter, setSelectedEntityFilter] = useState('all');
 
-  const fetchGlobalGraph = async () => {
+  const fetchPdfGraph = async () => {
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      const resp = await fetch(`${API_BASE}/api/graph/global?limit=30`);
+      const resp = await fetch(`${API_BASE}/api/graph/pdf`);
       const data = await resp.json();
-      if (!resp.ok) throw new Error(data.detail || 'Failed to fetch global graph');
+      if (!resp.ok) throw new Error(data.detail || 'Failed to fetch PDF threat graph');
       setGraphData(data);
+      if (data.pdf_metadata) {
+        setPdfMeta(data.pdf_metadata);
+      }
     } catch (err) {
       setErrorMsg(err.message);
     } finally {
@@ -40,7 +43,7 @@ export default function ThreatGraphView({ onAskCopilot }) {
   };
 
   useEffect(() => {
-    fetchGlobalGraph();
+    fetchPdfGraph();
   }, []);
 
   return (
@@ -56,17 +59,29 @@ export default function ThreatGraphView({ onAskCopilot }) {
               <Share2 size={18} color="var(--accent)" />
             </div>
             <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
-              Interactive Threat Intelligence Graph
+              PDF Research Threat Graph
             </h1>
+            {pdfMeta && (
+              <span style={{
+                background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.3)',
+                color: 'var(--accent)', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '6px'
+              }}>
+                Active Dossier
+              </span>
+            )}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
-            Unified relational knowledge graph linking threat actors, malware, campaigns, IPs, domains, and MITRE ATT&CK techniques.
+            {pdfMeta?.indicator ? (
+              <span>Correlated threat campaign graph for <strong>{pdfMeta.indicator}</strong></span>
+            ) : (
+              'Dedicated relational knowledge graph extracted from active PDF cybersecurity threat dossiers.'
+            )}
           </p>
         </div>
 
         <button
           type="button"
-          onClick={fetchGlobalGraph}
+          onClick={fetchPdfGraph}
           disabled={isLoading}
           style={{
             display: 'flex', alignItems: 'center', gap: '8px',
@@ -76,7 +91,7 @@ export default function ThreatGraphView({ onAskCopilot }) {
           }}
         >
           <RotateCcw size={14} className={isLoading ? 'animate-spin' : ''} />
-          <span>Refresh Global Graph</span>
+          <span>Refresh PDF Graph</span>
         </button>
       </div>
 

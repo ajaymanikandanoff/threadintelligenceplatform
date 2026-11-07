@@ -9,8 +9,10 @@ import {
   FileSearch,
   ShieldCheck,
   Download,
-  Activity
+  Activity,
+  Share2
 } from 'lucide-react';
+import KnowledgeGraph from '../components/KnowledgeGraph';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -24,6 +26,7 @@ export default function ThreatIntelligenceView({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('All types');
   const [filterSeverity, setFilterSeverity] = useState('Any severity');
+  const [activeItemGraph, setActiveItemGraph] = useState(null);
 
   const fetchScannedIndicators = async () => {
     setIsLoading(true);
@@ -72,6 +75,26 @@ export default function ThreatIntelligenceView({
   }, []);
 
   const selectedItem = investigations.find(x => x.id === selectedId) || investigations[0] || null;
+
+  useEffect(() => {
+    if (!selectedItem) {
+      setActiveItemGraph(null);
+      return;
+    }
+    const directGraph = selectedItem.raw?.graph || selectedItem.graph;
+    if (directGraph && directGraph.nodes && directGraph.nodes.length > 0) {
+      setActiveItemGraph(directGraph);
+    } else if (selectedItem.id) {
+      fetch(`${API_BASE}/api/investigations/${selectedItem.id}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.graph) {
+            setActiveItemGraph(data.graph);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [selectedItem?.id]);
 
   const filteredIndicators = investigations.filter(item => {
     if (filterType !== 'All types') {
@@ -475,6 +498,38 @@ export default function ThreatIntelligenceView({
                     borderRadius: '3px',
                     background: getScoreColor(selectedItem.score)
                   }} />
+                </div>
+              </div>
+
+              {/* Individual Entity Threat Graph */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Share2 size={12} color="var(--accent)" />
+                    <span>Entity Threat Graph</span>
+                  </span>
+                  {activeItemGraph?.nodes?.length > 0 && (
+                    <span style={{ fontSize: '11px', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
+                      {activeItemGraph.nodes.length} nodes · {activeItemGraph.edges.length} edges
+                    </span>
+                  )}
+                </div>
+
+                <div style={{
+                  height: '240px',
+                  borderRadius: '10px',
+                  overflow: 'hidden',
+                  border: '1px solid var(--border)',
+                  background: 'var(--bg-base)',
+                  position: 'relative'
+                }}>
+                  {activeItemGraph && activeItemGraph.nodes?.length > 0 ? (
+                    <KnowledgeGraph graphData={activeItemGraph} />
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: '12px' }}>
+                      Synthesizing entity relationship graph...
+                    </div>
+                  )}
                 </div>
               </div>
 

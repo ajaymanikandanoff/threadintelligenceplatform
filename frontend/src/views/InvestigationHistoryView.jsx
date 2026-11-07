@@ -137,14 +137,6 @@ export default function InvestigationHistoryView({ onOpenInvestigation }) {
     return matchQ && matchType && matchSev;
   });
 
-  const getScoreBadge = (score) => {
-    const s = Number(score) || 0;
-    if (s >= 80) return { bg: 'rgba(244, 63, 94, 0.15)', text: '#f43f5e', border: 'rgba(244, 63, 94, 0.3)' };
-    if (s >= 50) return { bg: 'rgba(249, 115, 22, 0.15)', text: '#f97316', border: 'rgba(249, 115, 22, 0.3)' };
-    if (s >= 25) return { bg: 'rgba(245, 158, 11, 0.15)', text: '#f59e0b', border: 'rgba(245, 158, 11, 0.3)' };
-    return { bg: 'rgba(16, 185, 129, 0.15)', text: '#10b981', border: 'rgba(16, 185, 129, 0.3)' };
-  };
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
       {/* Header */}
@@ -307,17 +299,14 @@ export default function InvestigationHistoryView({ onOpenInvestigation }) {
                   </div>
                 </div>
 
-                {/* Score and Timestamp */}
+                {/* Investigation Timestamp & Log Metadata */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
                   <div style={{ textAlign: 'right' }}>
-                    <span style={{
-                      padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '800',
-                      background: badge.bg, color: badge.text, border: `1px solid ${badge.border}`
-                    }}>
-                      Score {item.risk_score || item.score}/100
-                    </span>
-                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                      {item.created_at ? item.created_at.split('T')[0] : item.analyzed || 'Today'}
+                    <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                      {item.created_at ? new Date(item.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : (item.analyzed || 'Recorded')}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '3px' }}>
+                      {item.analyst ? `Logged by: ${item.analyst}` : 'Archived Record'}
                     </div>
                   </div>
 

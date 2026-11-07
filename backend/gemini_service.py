@@ -3,6 +3,11 @@ import json
 import re
 import httpx
 from typing import Dict, Any, Optional
+from dotenv import load_dotenv
+
+# Ensure environment variables are loaded
+load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 DEFAULT_MODEL = "gemini-3-flash-preview"
 

@@ -21,10 +21,26 @@ export default function ScanDetailsModal({ investigation, onClose }) {
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'graph' | 'raw'
   const [hasCopied, setHasCopied] = useState(false);
   const [isPdfDownloading, setIsPdfDownloading] = useState(false);
+  const [recordData, setRecordData] = useState(investigation);
+
+  React.useEffect(() => {
+    setRecordData(investigation);
+    if (investigation && (!investigation.graph || !investigation.graph.nodes || investigation.graph.nodes.length === 0) && investigation.id) {
+      fetch(`${API_BASE}/api/investigations/${investigation.id}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.graph) {
+            setRecordData(data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [investigation]);
 
   if (!investigation) return null;
 
-  const { indicator, type, risk_score, classification, severity, created_at, details } = investigation;
+  const current = recordData || investigation;
+  const { indicator, type, risk_score, classification, severity, created_at, details } = current;
 
   const copyJson = () => {
     navigator.clipboard.writeText(JSON.stringify(investigation, null, 2));
@@ -243,8 +259,8 @@ export default function ScanDetailsModal({ investigation, onClose }) {
 
           {activeTab === 'graph' && (
             <div style={{ height: '480px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border)' }}>
-              {investigation.graph ? (
-                <KnowledgeGraph graphData={investigation.graph} />
+              {current.graph && current.graph.nodes?.length > 0 ? (
+                <KnowledgeGraph graphData={current.graph} />
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)' }}>
                   No graph generated for this record.
