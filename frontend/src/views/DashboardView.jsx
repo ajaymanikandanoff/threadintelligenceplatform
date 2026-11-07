@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   ShieldAlert,
   AlertTriangle,
@@ -87,6 +87,95 @@ export default function DashboardView({
   const criticalThreatsCount = investigations.filter(x => x.riskScore >= 85).length;
   const highRiskCount = investigations.filter(x => x.riskScore >= 70 && x.riskScore < 85).length;
   const safeCount = investigations.filter(x => x.riskScore < 40).length;
+
+  const categoryStats = useMemo(() => {
+    if (!investigations || investigations.length === 0) {
+      return [
+        { label: 'Clean / Legitimate Target', count: 0, pct: 0, color: '#10b981' }
+      ];
+    }
+    const counts = {};
+    investigations.forEach(item => {
+      let cat = item.threatType || (item.raw?.classification) || 'General Security Scan';
+      if (cat.toLowerCase().includes('clean') || cat.toLowerCase().includes('legitimate')) cat = 'Clean / Legitimate Target';
+      else if (cat.toLowerCase().includes('campaign') || cat.toLowerCase().includes('ransomware') || cat.toLowerCase().includes('dossier')) cat = 'High-Threat Campaign Dossier';
+      else if (cat.toLowerCase().includes('c2') || cat.toLowerCase().includes('control')) cat = 'Command & Control';
+      else if (cat.toLowerCase().includes('phish')) cat = 'Phishing Telemetry';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+
+    const maxCount = Math.max(...Object.values(counts), 1);
+    const colors = ['#f43f5e', '#38bdf8', '#10b981', '#f97316', '#818cf8'];
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([label, count], idx) => ({
+        label,
+        count,
+        pct: Math.round((count / maxCount) * 100),
+        color: colors[idx % colors.length]
+      }));
+  }, [investigations]);
+
+  const severityStats = useMemo(() => {
+    const total = investigations.length || 1;
+    const crit = investigations.filter(x => x.riskScore >= 85).length;
+    const high = investigations.filter(x => x.riskScore >= 70 && x.riskScore < 85).length;
+    const med = investigations.filter(x => x.riskScore >= 40 && x.riskScore < 70).length;
+    const safe = investigations.filter(x => x.riskScore < 40).length;
+
+    const pCrit = Math.round((crit / total) * 100);
+    const pHigh = Math.round((high / total) * 100);
+    const pMed = Math.round((med / total) * 100);
+    const pSafe = Math.round((safe / total) * 100);
+
+    const circ = 389.5;
+    const lenSafe = (safe / total) * circ;
+    const lenMed = (med / total) * circ;
+    const lenHigh = (high / total) * circ;
+    const lenCrit = (crit / total) * circ;
+
+    let off = 0;
+    const offSafe = 0;
+    off += lenSafe;
+    const offMed = -off;
+    off += lenMed;
+    const offHigh = -off;
+    off += lenHigh;
+    const offCrit = -off;
+
+    return {
+      crit, high, med, safe,
+      pCrit, pHigh, pMed, pSafe,
+      lenSafe, lenMed, lenHigh, lenCrit,
+      offSafe, offMed, offHigh, offCrit,
+      circ,
+      dominantPct: crit > 0 ? pCrit : pSafe,
+      dominantLabel: crit > 0 ? 'CRITICAL' : 'SAFE'
+    };
+  }, [investigations]);
+
+  const activityDays = useMemo(() => {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    const counts = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0 };
+    const critCounts = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0 };
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    investigations.forEach(inv => {
+      const d = inv.raw?.created_at ? new Date(inv.raw.created_at) : new Date();
+      const name = dayNames[d.getDay()];
+      if (counts[name] !== undefined) {
+        counts[name] += 1;
+        if (inv.riskScore >= 70) critCounts[name] += 1;
+      } else {
+        counts['Fri'] = (counts['Fri'] || 0) + 1;
+        if (inv.riskScore >= 70) critCounts['Fri'] += 1;
+      }
+    });
+
+    const maxVal = Math.max(...Object.values(counts), 4);
+    return { days, counts, critCounts, maxVal };
+  }, [investigations]);
 
   const getSeverityStyle = (sev) => {
     switch (sev) {
@@ -378,50 +467,69 @@ export default function DashboardView({
                 </linearGradient>
               </defs>
 
-              {/* Grid lines */}
-              {[40, 75, 110, 145].map((y, idx) => (
-                <g key={idx}>
-                  <line x1="40" y1={y} x2="590" y2={y} stroke="rgba(255, 255, 255, 0.05)" strokeDasharray="3 3" />
-                  <text x="30" y={y + 3} fill="var(--text-tertiary)" fontSize="10" textAnchor="end" fontFamily="var(--font-mono)">
-                    {idx === 0 ? '400' : idx === 1 ? '300' : idx === 2 ? '200' : '100'}
-                  </text>
-                </g>
-              ))}
+              {/* Dynamic Grid lines */}
+              {[40, 75, 110, 145].map((y, idx) => {
+                const tickVal = Math.round(activityDays.maxVal * (1 - idx * 0.25));
+                return (
+                  <g key={idx}>
+                    <line x1="40" y1={y} x2="590" y2={y} stroke="rgba(255, 255, 255, 0.05)" strokeDasharray="3 3" />
+                    <text x="30" y={y + 3} fill="var(--text-tertiary)" fontSize="10" textAnchor="end" fontFamily="var(--font-mono)">
+                      {tickVal}
+                    </text>
+                  </g>
+                );
+              })}
 
-              {/* Wave 1: Total Analyses (Purple) */}
+              {/* Dynamic Wave 1: Total Analyses */}
               <path
-                d="M 60 140 C 130 130, 170 125, 210 115 C 250 100, 270 70, 310 65 C 350 60, 380 90, 430 85 C 480 80, 520 75, 580 70 L 580 160 L 60 160 Z"
+                d={`M 80 ${155 - (activityDays.counts['Mon'] / activityDays.maxVal) * 105}
+                   C 140 ${155 - (activityDays.counts['Mon'] / activityDays.maxVal) * 105}, 140 ${155 - (activityDays.counts['Tue'] / activityDays.maxVal) * 105}, 200 ${155 - (activityDays.counts['Tue'] / activityDays.maxVal) * 105}
+                   C 260 ${155 - (activityDays.counts['Tue'] / activityDays.maxVal) * 105}, 260 ${155 - (activityDays.counts['Wed'] / activityDays.maxVal) * 105}, 320 ${155 - (activityDays.counts['Wed'] / activityDays.maxVal) * 105}
+                   C 380 ${155 - (activityDays.counts['Wed'] / activityDays.maxVal) * 105}, 380 ${155 - (activityDays.counts['Thu'] / activityDays.maxVal) * 105}, 440 ${155 - (activityDays.counts['Thu'] / activityDays.maxVal) * 105}
+                   C 500 ${155 - (activityDays.counts['Thu'] / activityDays.maxVal) * 105}, 500 ${155 - (activityDays.counts['Fri'] / activityDays.maxVal) * 105}, 560 ${155 - (activityDays.counts['Fri'] / activityDays.maxVal) * 105}
+                   L 560 160 L 80 160 Z`}
                 fill="url(#purpleWaveGrad)"
               />
               <path
-                d="M 60 140 C 130 130, 170 125, 210 115 C 250 100, 270 70, 310 65 C 350 60, 380 90, 430 85 C 480 80, 520 75, 580 70"
+                d={`M 80 ${155 - (activityDays.counts['Mon'] / activityDays.maxVal) * 105}
+                   C 140 ${155 - (activityDays.counts['Mon'] / activityDays.maxVal) * 105}, 140 ${155 - (activityDays.counts['Tue'] / activityDays.maxVal) * 105}, 200 ${155 - (activityDays.counts['Tue'] / activityDays.maxVal) * 105}
+                   C 260 ${155 - (activityDays.counts['Tue'] / activityDays.maxVal) * 105}, 260 ${155 - (activityDays.counts['Wed'] / activityDays.maxVal) * 105}, 320 ${155 - (activityDays.counts['Wed'] / activityDays.maxVal) * 105}
+                   C 380 ${155 - (activityDays.counts['Wed'] / activityDays.maxVal) * 105}, 380 ${155 - (activityDays.counts['Thu'] / activityDays.maxVal) * 105}, 440 ${155 - (activityDays.counts['Thu'] / activityDays.maxVal) * 105}
+                   C 500 ${155 - (activityDays.counts['Thu'] / activityDays.maxVal) * 105}, 500 ${155 - (activityDays.counts['Fri'] / activityDays.maxVal) * 105}, 560 ${155 - (activityDays.counts['Fri'] / activityDays.maxVal) * 105}`}
                 fill="none"
                 stroke="#818cf8"
                 strokeWidth="2.5"
                 strokeLinecap="round"
               />
 
-              {/* Peak Point on Wave 1 */}
-              <circle cx="310" cy="65" r="4.5" fill="#818cf8" stroke="#06090f" strokeWidth="2" />
-
-              {/* Wave 2: Flagged High or Critical (Cyan) */}
+              {/* Dynamic Wave 2: Flagged High or Critical */}
               <path
-                d="M 60 155 C 130 150, 170 145, 210 135 C 250 125, 270 115, 310 110 C 350 105, 380 120, 430 115 C 480 110, 520 100, 580 95 L 580 160 L 60 160 Z"
+                d={`M 80 ${155 - (activityDays.critCounts['Mon'] / activityDays.maxVal) * 105}
+                   C 140 ${155 - (activityDays.critCounts['Mon'] / activityDays.maxVal) * 105}, 140 ${155 - (activityDays.critCounts['Tue'] / activityDays.maxVal) * 105}, 200 ${155 - (activityDays.critCounts['Tue'] / activityDays.maxVal) * 105}
+                   C 260 ${155 - (activityDays.critCounts['Tue'] / activityDays.maxVal) * 105}, 260 ${155 - (activityDays.critCounts['Wed'] / activityDays.maxVal) * 105}, 320 ${155 - (activityDays.critCounts['Wed'] / activityDays.maxVal) * 105}
+                   C 380 ${155 - (activityDays.critCounts['Wed'] / activityDays.maxVal) * 105}, 380 ${155 - (activityDays.critCounts['Thu'] / activityDays.maxVal) * 105}, 440 ${155 - (activityDays.critCounts['Thu'] / activityDays.maxVal) * 105}
+                   C 500 ${155 - (activityDays.critCounts['Thu'] / activityDays.maxVal) * 105}, 500 ${155 - (activityDays.critCounts['Fri'] / activityDays.maxVal) * 105}, 560 ${155 - (activityDays.critCounts['Fri'] / activityDays.maxVal) * 105}
+                   L 560 160 L 80 160 Z`}
                 fill="url(#cyanWaveGrad)"
               />
               <path
-                d="M 60 155 C 130 150, 170 145, 210 135 C 250 125, 270 115, 310 110 C 350 105, 380 120, 430 115 C 480 110, 520 100, 580 95"
+                d={`M 80 ${155 - (activityDays.critCounts['Mon'] / activityDays.maxVal) * 105}
+                   C 140 ${155 - (activityDays.critCounts['Mon'] / activityDays.maxVal) * 105}, 140 ${155 - (activityDays.critCounts['Tue'] / activityDays.maxVal) * 105}, 200 ${155 - (activityDays.critCounts['Tue'] / activityDays.maxVal) * 105}
+                   C 260 ${155 - (activityDays.critCounts['Tue'] / activityDays.maxVal) * 105}, 260 ${155 - (activityDays.critCounts['Wed'] / activityDays.maxVal) * 105}, 320 ${155 - (activityDays.critCounts['Wed'] / activityDays.maxVal) * 105}
+                   C 380 ${155 - (activityDays.critCounts['Wed'] / activityDays.maxVal) * 105}, 380 ${155 - (activityDays.critCounts['Thu'] / activityDays.maxVal) * 105}, 440 ${155 - (activityDays.critCounts['Thu'] / activityDays.maxVal) * 105}
+                   C 500 ${155 - (activityDays.critCounts['Thu'] / activityDays.maxVal) * 105}, 500 ${155 - (activityDays.critCounts['Fri'] / activityDays.maxVal) * 105}, 560 ${155 - (activityDays.critCounts['Fri'] / activityDays.maxVal) * 105}`}
                 fill="none"
                 stroke="#00e5ff"
                 strokeWidth="2.5"
                 strokeLinecap="round"
               />
 
-              {/* Peak Point on Wave 2 */}
-              <circle cx="310" cy="110" r="4.5" fill="#00e5ff" stroke="#06090f" strokeWidth="2" />
+              {/* Peak Active Points */}
+              <circle cx="560" cy={155 - (activityDays.counts['Fri'] / activityDays.maxVal) * 105} r="4.5" fill="#818cf8" stroke="#06090f" strokeWidth="2" />
+              <circle cx="560" cy={155 - (activityDays.critCounts['Fri'] / activityDays.maxVal) * 105} r="4.5" fill="#00e5ff" stroke="#06090f" strokeWidth="2" />
 
               {/* X Axis Labels */}
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((day, idx) => (
+              {activityDays.days.map((day, idx) => (
                 <text
                   key={day}
                   x={80 + idx * 120}
@@ -466,30 +574,46 @@ export default function DashboardView({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '170px', position: 'relative' }}>
             <svg viewBox="0 0 160 160" width="160" height="160">
               <circle cx="80" cy="80" r="62" fill="none" stroke="rgba(255, 255, 255, 0.04)" strokeWidth="15" />
-              {/* Safe: 45% (Circumference ~ 389.5, stroke-dasharray) */}
-              <circle
-                cx="80" cy="80" r="62" fill="none" stroke="#10b981" strokeWidth="15"
-                strokeDasharray="175 390" strokeDashoffset="0" strokeLinecap="round"
-                transform="rotate(-90 80 80)"
-              />
-              {/* Medium: 27% */}
-              <circle
-                cx="80" cy="80" r="62" fill="none" stroke="#eab308" strokeWidth="15"
-                strokeDasharray="105 390" strokeDashoffset="-180" strokeLinecap="round"
-                transform="rotate(-90 80 80)"
-              />
-              {/* High: 20% */}
-              <circle
-                cx="80" cy="80" r="62" fill="none" stroke="#f97316" strokeWidth="15"
-                strokeDasharray="78 390" strokeDashoffset="-290" strokeLinecap="round"
-                transform="rotate(-90 80 80)"
-              />
-              {/* Critical: 8% */}
-              <circle
-                cx="80" cy="80" r="62" fill="none" stroke="#f43f5e" strokeWidth="15"
-                strokeDasharray="31 390" strokeDashoffset="-372" strokeLinecap="round"
-                transform="rotate(-90 80 80)"
-              />
+              {/* Safe */}
+              {severityStats.lenSafe > 0 && (
+                <circle
+                  cx="80" cy="80" r="62" fill="none" stroke="#10b981" strokeWidth="15"
+                  strokeDasharray={`${severityStats.lenSafe} ${severityStats.circ}`}
+                  strokeDashoffset={severityStats.offSafe}
+                  strokeLinecap="round"
+                  transform="rotate(-90 80 80)"
+                />
+              )}
+              {/* Medium */}
+              {severityStats.lenMed > 0 && (
+                <circle
+                  cx="80" cy="80" r="62" fill="none" stroke="#eab308" strokeWidth="15"
+                  strokeDasharray={`${severityStats.lenMed} ${severityStats.circ}`}
+                  strokeDashoffset={severityStats.offMed}
+                  strokeLinecap="round"
+                  transform="rotate(-90 80 80)"
+                />
+              )}
+              {/* High */}
+              {severityStats.lenHigh > 0 && (
+                <circle
+                  cx="80" cy="80" r="62" fill="none" stroke="#f97316" strokeWidth="15"
+                  strokeDasharray={`${severityStats.lenHigh} ${severityStats.circ}`}
+                  strokeDashoffset={severityStats.offHigh}
+                  strokeLinecap="round"
+                  transform="rotate(-90 80 80)"
+                />
+              )}
+              {/* Critical */}
+              {severityStats.lenCrit > 0 && (
+                <circle
+                  cx="80" cy="80" r="62" fill="none" stroke="#f43f5e" strokeWidth="15"
+                  strokeDasharray={`${severityStats.lenCrit} ${severityStats.circ}`}
+                  strokeDashoffset={severityStats.offCrit}
+                  strokeLinecap="round"
+                  transform="rotate(-90 80 80)"
+                />
+              )}
             </svg>
 
             {/* Center Label */}
@@ -497,8 +621,12 @@ export default function DashboardView({
               position: 'absolute',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
             }}>
-              <span style={{ fontSize: '24px', fontWeight: '900', color: 'var(--text-primary)', lineHeight: 1 }}>8%</span>
-              <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>critical</span>
+              <span style={{ fontSize: '24px', fontWeight: '900', color: 'var(--text-primary)', lineHeight: 1 }}>
+                {severityStats.dominantPct}%
+              </span>
+              <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {severityStats.dominantLabel}
+              </span>
             </div>
           </div>
 
@@ -506,19 +634,19 @@ export default function DashboardView({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px', paddingTop: '4px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
               <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#f43f5e' }} />
-              <span>Critical <strong>8%</strong></span>
+              <span>Critical <strong>{severityStats.pCrit}%</strong></span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
               <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#f97316' }} />
-              <span>High <strong>20%</strong></span>
+              <span>High <strong>{severityStats.pHigh}%</strong></span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
               <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#eab308' }} />
-              <span>Medium <strong>27%</strong></span>
+              <span>Medium <strong>{severityStats.pMed}%</strong></span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
               <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981' }} />
-              <span>Safe <strong>45%</strong></span>
+              <span>Safe <strong>{severityStats.pSafe}%</strong></span>
             </div>
           </div>
         </div>
@@ -543,13 +671,7 @@ export default function DashboardView({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {[
-              { label: 'Phishing', count: 412, pct: 85, color: '#38bdf8' },
-              { label: 'Malware distribution', count: 301, pct: 64, color: '#38bdf8' },
-              { label: 'Command and control', count: 188, pct: 40, color: 'linear-gradient(90deg, #38bdf8, #818cf8)' },
-              { label: 'Credential harvesting', count: 142, pct: 30, color: '#818cf8' },
-              { label: 'Port scanning', count: 97, pct: 20, color: '#3b82f6' },
-            ].map(cat => (
+            {categoryStats.map(cat => (
               <div key={cat.label} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '12.5px', color: 'var(--text-primary)', fontWeight: '500' }}>{cat.label}</span>
