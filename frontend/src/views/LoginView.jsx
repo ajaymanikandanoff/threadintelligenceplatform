@@ -446,7 +446,7 @@ export default function LoginView({ onSignIn }) {
       overflow: 'hidden'
     }}>
       {/* Top Left Brand */}
-      <div style={{ padding: '32px 48px', display: 'flex', alignItems: 'center', gap: '14px', zIndex: 10 }}>
+      <div className="login-brand-header" style={{ padding: '32px 48px', display: 'flex', alignItems: 'center', gap: '14px', zIndex: 10 }}>
         <img
           src="/logo.png"
           alt="AI ThreatLens Cyber Shield"
@@ -464,19 +464,9 @@ export default function LoginView({ onSignIn }) {
       </div>
 
       {/* Main Container: 2-Column Split */}
-      <div style={{
-        flex: 1,
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 1fr)',
-        padding: '0 48px 48px',
-        alignItems: 'center',
-        maxWidth: '1380px',
-        margin: '0 auto',
-        width: '100%',
-        gap: '48px'
-      }}>
+      <div className="login-split-grid">
         {/* Left Column: Constellation Network & Slogan */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '36px', position: 'relative' }}>
+        <div className="login-left-decoration" style={{ display: 'flex', flexDirection: 'column', gap: '36px', position: 'relative' }}>
           {/* Interactive Constellation SVG */}
           <div style={{ width: '100%', maxWidth: '480px', height: '240px', position: 'relative' }}>
             <svg viewBox="0 0 460 220" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
@@ -551,18 +541,7 @@ export default function LoginView({ onSignIn }) {
         </div>
 
         {/* Right Column: Sign in / Sign up Card */}
-        <div style={{
-          background: 'rgba(11, 17, 30, 0.88)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: '20px',
-          padding: '34px 38px',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.65)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          maxWidth: '460px',
-          width: '100%',
-          marginLeft: 'auto'
-        }}>
+        <div className="login-card-container">
           {/* Tab Switcher (Sign in vs Create account) */}
           <div style={{
             display: 'flex',

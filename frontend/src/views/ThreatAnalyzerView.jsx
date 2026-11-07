@@ -204,7 +204,7 @@ export default function ThreatAnalyzerView({ onSelectIndicator, initialIndicator
         </div>
 
         {/* Input Form */}
-        <form onSubmit={(e) => { e.preventDefault(); runAnalysis(); }} style={{ display: 'flex', gap: '12px' }}>
+        <form onSubmit={(e) => { e.preventDefault(); runAnalysis(); }} className="scanner-form" style={{ display: 'flex', gap: '12px' }}>
           <div style={{
             flex: 1, display: 'flex', alignItems: 'center', gap: '12px',
             background: 'var(--bg-base)', border: '1px solid var(--border)',
@@ -269,7 +269,7 @@ export default function ThreatAnalyzerView({ onSelectIndicator, initialIndicator
       )}
 
       {/* Main Results Layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 380px) 1fr', gap: '22px' }}>
+      <div className="scanner-main-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 380px) 1fr', gap: '22px' }}>
         {/* Left Column: Gauge & Confidence */}
         <div style={{
           background: 'var(--bg-glass-card)', border: '1px solid var(--border)',

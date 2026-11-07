@@ -40,7 +40,7 @@ export default function ThreatCopilot({
   };
 
   return (
-    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', gap: '12px' }}>
+    <div className="fade-in copilot-container">
 
       {/* Copilot Header */}
       <div style={{

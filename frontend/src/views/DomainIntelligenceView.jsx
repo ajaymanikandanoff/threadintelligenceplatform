@@ -101,7 +101,7 @@ export default function DomainIntelligenceView({ onSelectIndicator }) {
         padding: '22px 26px',
         display: 'flex', flexDirection: 'column', gap: '16px'
       }}>
-        <form onSubmit={(e) => { e.preventDefault(); handleScan(); }} style={{ display: 'flex', gap: '10px' }}>
+        <form onSubmit={(e) => { e.preventDefault(); handleScan(); }} className="scanner-form" style={{ display: 'flex', gap: '10px' }}>
           <div style={{
             flex: 1,
             display: 'flex',
@@ -216,7 +216,7 @@ export default function DomainIntelligenceView({ onSelectIndicator }) {
       {scanResult && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Top Metric Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+          <div className="scanner-metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
             {/* Risk Score */}
             <div style={{
               background: 'var(--bg-glass-card)', border: '1px solid var(--border)',
@@ -325,12 +325,12 @@ export default function DomainIntelligenceView({ onSelectIndicator }) {
             background: 'var(--bg-glass-card)', border: '1px solid var(--border)',
             borderRadius: '14px', padding: '22px', display: 'flex', flexDirection: 'column', gap: '16px'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
                 DNS Record Enumeration
               </h3>
               {/* Type Tabs */}
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div className="scanner-tabs-row" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 {['A', 'AAAA', 'MX', 'TXT', 'NS', 'CNAME'].map((rtype) => {
                   const count = scanResult.dns_records?.[rtype]?.length || 0;
                   const active = activeDnsTab === rtype;
