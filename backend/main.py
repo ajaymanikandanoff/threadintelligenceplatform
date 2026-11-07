@@ -136,7 +136,6 @@ def health_check():
         "status": "healthy",
         "service": "AI Threat Intelligence Knowledge Engine",
         "has_env_gemini_key": bool(key),
-        "api_key": key,
         "default_model": os.environ.get("GEMINI_MODEL", "gemini-3-flash-preview")
     }
 
@@ -222,42 +221,10 @@ async def test_key(payload: KeyTestRequest):
         raise HTTPException(status_code=400, detail="API Key cannot be empty.")
     try:
         test_prompt = "Respond with JSON: {\"status\": \"ok\", \"verified\": true}"
-        resp = await call_gemini_api(payload.api_key, payload.model or "gemini-2.5-flash", test_prompt)
+        resp = await call_gemini_api(payload.api_key, payload.model or "gemini-3-flash-preview", test_prompt)
         return {"success": True, "message": "Gemini API Key verified successfully!", "raw": resp}
     except Exception as e:
         return {"success": False, "error": str(e)}
-
-@app.post("/api/save-key")
-def save_key(payload: KeyTestRequest):
-    key = payload.api_key.strip()
-    if not key:
-        raise HTTPException(status_code=400, detail="API Key cannot be empty.")
-    os.environ["GEMINI_API_KEY"] = key
-    if payload.model:
-        os.environ["GEMINI_MODEL"] = payload.model
-        
-    env_path = os.path.join(os.path.dirname(__file__), ".env")
-    lines = []
-    if os.path.exists(env_path):
-        with open(env_path, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-            
-    found_key = False
-    new_lines = []
-    for line in lines:
-        if line.startswith("GEMINI_API_KEY="):
-            new_lines.append(f"GEMINI_API_KEY={key}\n")
-            found_key = True
-        else:
-            new_lines.append(line)
-            
-    if not found_key:
-        new_lines.append(f"GEMINI_API_KEY={key}\n")
-        
-    with open(env_path, "w", encoding="utf-8") as f:
-        f.writelines(new_lines)
-        
-    return {"success": True, "message": "Gemini API Key saved and activated in backend environment!"}
 
 # ==========================================
 # AUTHENTICATION ENDPOINTS (matching AI FactChecker)

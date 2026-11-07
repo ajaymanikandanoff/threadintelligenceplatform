@@ -18,7 +18,6 @@ import ThreatGraphView from './views/ThreatGraphView';
 import DefenseCenter from './components/DefenseCenter';
 import ThreatCopilot from './components/ThreatCopilot';
 import IngestModal from './components/IngestModal';
-import SettingsModal from './components/SettingsModal';
 import ExecutiveReportModal from './components/ExecutiveReportModal';
 import CyberGlossaryModal from './components/CyberGlossaryModal';
 
@@ -663,16 +662,6 @@ export default function App() {
                   onSignOut={handleSignOut}
                   cyberAccent={cyberAccent}
                   onChangeCyberAccent={setCyberAccent}
-                  apiKey={apiKey}
-                  onSaveApiKey={(key) => {
-                    setApiKey(key);
-                    localStorage.setItem('GEMINI_API_KEY', key);
-                  }}
-                  selectedModel={selectedModel}
-                  onChangeModel={(m) => {
-                    setSelectedModel(m);
-                    localStorage.setItem('GEMINI_MODEL', m);
-                  }}
                 />
               )}
 
@@ -710,14 +699,6 @@ export default function App() {
         isAnalyzing={isAnalyzing}
       />
 
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        apiKey={apiKey}
-        setApiKey={setApiKey}
-        selectedModel={selectedModel}
-        setSelectedModel={setSelectedModel}
-      />
 
       <ExecutiveReportModal
         isOpen={isReportOpen}

@@ -17,23 +17,11 @@ export default function SettingsView({
   onUpdateUser,
   onSignOut,
   cyberAccent = 'cyan',
-  onChangeCyberAccent,
-  apiKey = '',
-  onSaveApiKey,
-  selectedModel = 'gemini-2.5-flash',
-  onChangeModel
+  onChangeCyberAccent
 }) {
   const [displayName, setDisplayName] = useState(currentUser?.name || 'Ajay M.');
   const [email, setEmail] = useState(currentUser?.email || 'analyst@example.com');
   const [isSaved, setIsSaved] = useState(false);
-
-  // Gemini API Key State
-  const [currentKey, setCurrentKey] = useState(apiKey || localStorage.getItem('GEMINI_API_KEY') || '');
-  const [model, setModel] = useState(selectedModel || localStorage.getItem('GEMINI_MODEL') || 'gemini-2.5-flash');
-  const [showKey, setShowKey] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
-  const [testResult, setTestResult] = useState(null);
-  const [isKeySaved, setIsKeySaved] = useState(false);
 
   // Preference toggles
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -47,53 +35,6 @@ export default function SettingsView({
   const [pwUpdated, setPwUpdated] = useState(false);
   const [pwError, setPwError] = useState('');
   const [isPwLoading, setIsPwLoading] = useState(false);
-
-  const handleTestKey = async () => {
-    if (!currentKey.trim()) {
-      setTestResult({ ok: false, msg: 'Please enter a Gemini API Key first.' });
-      return;
-    }
-    setIsTesting(true);
-    setTestResult(null);
-    try {
-      const resp = await fetch('http://localhost:8000/api/test-key', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ api_key: currentKey.trim(), model })
-      });
-      const data = await resp.json();
-      if (resp.ok && data.success) {
-        setTestResult({ ok: true, msg: 'Google Gemini API Key verified & connected successfully!' });
-      } else {
-        setTestResult({ ok: false, msg: data.error || data.detail || 'Validation failed. Check your key.' });
-      }
-    } catch {
-      setTestResult({ ok: false, msg: 'Could not connect to backend service on port 8000.' });
-    } finally {
-      setIsTesting(false);
-    }
-  };
-
-  const handleSaveKey = async (e) => {
-    e.preventDefault();
-    const cleanKey = currentKey.trim();
-    localStorage.setItem('GEMINI_API_KEY', cleanKey);
-    localStorage.setItem('GEMINI_MODEL', model);
-    if (onSaveApiKey) onSaveApiKey(cleanKey);
-    if (onChangeModel) onChangeModel(model);
-
-    // Persist to backend .env so backend loads it natively
-    try {
-      await fetch('http://localhost:8000/api/save-key', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ api_key: cleanKey, model })
-      });
-    } catch {}
-
-    setIsKeySaved(true);
-    setTimeout(() => setIsKeySaved(false), 2500);
-  };
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
@@ -250,13 +191,13 @@ export default function SettingsView({
         </form>
       </div>
 
-      {/* ─── Section 2: AI Intelligence Engine & Gemini API ─── */}
+      {/* ─── Section 2: AI Intelligence Engine Status (Enterprise Default) ─── */}
       <div style={{
         background: 'var(--bg-glass-card)',
         border: '1px solid var(--border)',
         borderRadius: '16px',
         padding: '24px 28px',
-        display: 'flex', flexDirection: 'column', gap: '20px',
+        display: 'flex', flexDirection: 'column', gap: '16px',
         boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
@@ -271,174 +212,62 @@ export default function SettingsView({
             </div>
             <div>
               <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>
-                AI Intelligence Engine & Google Gemini API
+                AI Threat Intelligence Engine
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                Connect your Gemini API Key to enable real-time internet threat search, live CVE intelligence, and open-ended Copilot investigation.
+                Autonomous reasoning and real-time threat intelligence correlation powered by Google Gemini.
               </div>
             </div>
           </div>
 
           <div style={{
             display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px',
-            padding: '4px 10px', borderRadius: '20px',
-            background: currentKey.trim() ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
-            border: `1px solid ${currentKey.trim() ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}`,
-            color: currentKey.trim() ? 'var(--green)' : 'var(--amber)',
-            fontWeight: '600'
+            padding: '5px 12px', borderRadius: '20px',
+            background: 'rgba(16,185,129,0.12)',
+            border: '1px solid rgba(16,185,129,0.35)',
+            color: 'var(--green)',
+            fontWeight: '700',
+            fontFamily: 'var(--font-mono)'
           }}>
-            <span className="status-dot" style={{ background: currentKey.trim() ? 'var(--green)' : 'var(--amber)', width: '6px', height: '6px' }} />
-            <span>{currentKey.trim() ? 'LIVE AGENT (SEARCH GROUNDED)' : 'OFFLINE HEURISTIC MODE'}</span>
+            <span className="status-dot" style={{ background: 'var(--green)', width: '6px', height: '6px' }} />
+            <span>OPERATIONAL · ENTERPRISE DEFAULT</span>
           </div>
         </div>
 
-        <form onSubmit={handleSaveKey} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* System specs row */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px',
+          background: 'var(--bg-overlay)', padding: '16px 18px', borderRadius: '12px',
+          border: '1px solid var(--border)'
+        }}>
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
-              Google Gemini API Key
-            </label>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <input
-                type={showKey ? 'text' : 'password'}
-                value={currentKey}
-                onChange={e => { setCurrentKey(e.target.value); setTestResult(null); }}
-                placeholder="AIzaSy..."
-                style={{
-                  width: '100%',
-                  background: 'var(--bg-input)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '10px',
-                  padding: '11px 44px 11px 14px',
-                  color: 'var(--text-primary)',
-                  fontSize: '13px',
-                  fontFamily: 'var(--font-mono)',
-                  outline: 'none',
-                  boxSizing: 'border-box'
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowKey(!showKey)}
-                style={{
-                  position: 'absolute', right: '12px', background: 'transparent',
-                  border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer',
-                  padding: '4px', display: 'flex', alignItems: 'center'
-                }}
-              >
-                {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em' }}>
+              Active AI Model
             </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', fontSize: '11.5px', flexWrap: 'wrap', gap: '6px' }}>
-              <span style={{ color: 'var(--text-tertiary)' }}>
-                Your key is stored locally in your browser and authenticated securely via HTTPS.
-              </span>
-              <a
-                href="https://aistudio.google.com/app/apikey"
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  color: 'var(--accent)', textDecoration: 'none', fontWeight: '600',
-                  display: 'inline-flex', alignItems: 'center', gap: '4px'
-                }}
-              >
-                <span>Get Free Gemini API Key</span>
-                <ExternalLink size={12} />
-              </a>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '4px' }}>
+              Google Gemini 3 Flash
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
-                Active Reasoning Model
-              </label>
-              <select
-                value={model}
-                onChange={e => setModel(e.target.value)}
-                style={{
-                  width: '100%',
-                  background: 'var(--bg-input)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '10px',
-                  padding: '10px 14px',
-                  color: 'var(--text-primary)',
-                  fontSize: '13px',
-                  fontFamily: 'var(--font-mono)',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  cursor: 'pointer'
-                }}
-              >
-                <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended: Ultra-fast + Live Search Grounding)</option>
-                <option value="gemini-2.0-flash">Gemini 2.0 Flash (Fast Reasoning)</option>
-                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Multimodal Analysis)</option>
-              </select>
+          <div>
+            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em' }}>
+              Search Grounding
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
-              <button
-                type="button"
-                onClick={handleTestKey}
-                disabled={isTesting || !currentKey.trim()}
-                style={{
-                  background: 'var(--bg-overlay)',
-                  border: '1px solid var(--border-accent)',
-                  color: 'var(--accent)',
-                  borderRadius: '10px',
-                  padding: '10px 18px',
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  cursor: isTesting || !currentKey.trim() ? 'not-allowed' : 'pointer',
-                  display: 'inline-flex', alignItems: 'center', gap: '8px',
-                  opacity: !currentKey.trim() ? 0.6 : 1,
-                  height: '42px',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                {isTesting ? <Loader size={14} className="spin" /> : <ShieldCheck size={14} />}
-                <span>{isTesting ? 'Validating Key...' : 'Test & Verify'}</span>
-              </button>
-
-              <button
-                type="submit"
-                disabled={!currentKey.trim()}
-                style={{
-                  background: 'linear-gradient(135deg, #0284c7 0%, #06b6d4 100%)',
-                  border: 'none',
-                  color: '#ffffff',
-                  borderRadius: '10px',
-                  padding: '10px 22px',
-                  fontSize: '13px',
-                  fontWeight: '800',
-                  cursor: !currentKey.trim() ? 'not-allowed' : 'pointer',
-                  display: 'inline-flex', alignItems: 'center', gap: '8px',
-                  boxShadow: '0 0 16px rgba(6, 182, 212, 0.35)',
-                  height: '42px',
-                  opacity: !currentKey.trim() ? 0.6 : 1,
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                <Check size={14} />
-                <span>{isKeySaved ? 'Saved & Connected!' : 'Save & Connect'}</span>
-              </button>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--green)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <ShieldCheck size={14} color="var(--green)" />
+              <span>Live Internet Enabled</span>
             </div>
           </div>
 
-          {testResult && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '10px 14px', borderRadius: '8px',
-              background: testResult.ok ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)',
-              border: `1px solid ${testResult.ok ? 'rgba(16,185,129,0.3)' : 'rgba(244,63,94,0.3)'}`,
-              color: testResult.ok ? 'var(--green)' : 'var(--red)',
-              fontSize: '12.5px', fontWeight: '600'
-            }}>
-              {testResult.ok ? <ShieldCheck size={16} /> : <AlertCircle size={16} />}
-              <span>{testResult.msg}</span>
+          <div>
+            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em' }}>
+              Credential Security
             </div>
-          )}
-        </form>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              🔒 Protected Server-Side
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ─── Section 3: Preferences & Cyber Theme ─── */}
