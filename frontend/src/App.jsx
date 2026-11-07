@@ -52,7 +52,6 @@ export default function App() {
   const [selectedIndicator, setSelectedIndicator] = useState(null);
 
   // Modals & Auth
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isIngestOpen, setIsIngestOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -199,7 +198,6 @@ export default function App() {
       setSelectedIndicator(params);
     }
     setActiveTab(tabId);
-    setIsMobileMenuOpen(false);
   };
 
   const handleSignOut = () => {
@@ -235,21 +233,21 @@ export default function App() {
         onSearchGlobal={handleGlobalSearch}
         onOpenAuth={() => setIsAuthOpen(true)}
         onSignOut={handleSignOut}
-        isMobileMenuOpen={isMobileMenuOpen}
-        onToggleMobileMenu={() => setIsMobileMenuOpen(p => !p)}
       />
 
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
-        {/* Mobile Backdrop Overlay */}
-        {isMobileMenuOpen && (
-          <div
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="mobile-drawer-backdrop"
-          />
-        )}
-
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* ─── Sidebar Navigation (Clean Workspace Items) ─── */}
-        <aside className={`app-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
+        <aside style={{
+          width: '220px',
+          flexShrink: 0,
+          borderRight: '1px solid var(--border)',
+          background: 'var(--bg-elevated)',
+          padding: '12px 10px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+          overflowY: 'auto'
+        }}>
           {/* WORKSPACE Menu Section */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <div className="section-label" style={{ marginBottom: '4px', fontSize: '10px' }}>
@@ -601,7 +599,12 @@ export default function App() {
         </aside>
 
         {/* ─── Main Content Canvas ─── */}
-        <main className="app-main-canvas">
+        <main style={{
+          flex: 1,
+          padding: '24px 32px',
+          overflowY: 'auto',
+          maxHeight: 'calc(100vh - 56px)'
+        }}>
           {isAnalyzing ? (
             <div style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',

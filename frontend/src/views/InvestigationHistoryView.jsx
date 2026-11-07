@@ -211,7 +211,7 @@ export default function InvestigationHistoryView({ onOpenInvestigation }) {
         </div>
 
         {/* Type Filter */}
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '6px' }}>
           {['all', 'IP', 'Domain', 'URL', 'PDF'].map(t => (
             <button
               key={t}

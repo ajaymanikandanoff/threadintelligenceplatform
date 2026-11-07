@@ -444,7 +444,7 @@ export default function PdfResearchView({ onSelectIndicator }) {
           }}
         />
 
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', marginTop: '6px' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '6px' }}>
           <label
             htmlFor="pdf-upload-input"
             style={{

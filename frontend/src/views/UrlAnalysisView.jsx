@@ -100,7 +100,7 @@ export default function UrlAnalysisView({ onSelectIndicator }) {
         padding: '22px 26px',
         display: 'flex', flexDirection: 'column', gap: '16px'
       }}>
-        <form onSubmit={(e) => { e.preventDefault(); handleScan(); }} className="scanner-form" style={{ display: 'flex', gap: '10px' }}>
+        <form onSubmit={(e) => { e.preventDefault(); handleScan(); }} style={{ display: 'flex', gap: '10px' }}>
           <div style={{
             flex: 1,
             display: 'flex',
@@ -218,7 +218,7 @@ export default function UrlAnalysisView({ onSelectIndicator }) {
       {scanResult && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Top Metric Cards */}
-          <div className="scanner-metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
             {/* Risk Score */}
             <div style={{
               background: 'var(--bg-glass-card)', border: '1px solid var(--border)',
