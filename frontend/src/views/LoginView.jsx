@@ -54,10 +54,7 @@ function saveRegisteredUsers(users) {
 
 function saveSession(session, remember = true) {
   try {
-    if (!session.isGuest && session.email && session.email !== 'guest@threatlens.io') {
-      session.loggedIn = true;
-      session.isGuest = false;
-    }
+    session.loggedIn = true;
     const data = JSON.stringify(session);
     if (remember) {
       localStorage.setItem('user_session', data);
@@ -349,6 +346,31 @@ export default function LoginView({ onSignIn }) {
   };
 
   /* ==============================================================
+     INSTANT GUEST ACCESS HANDLER
+     ============================================================== */
+  const handleContinueAsGuest = () => {
+    setIsLoading(true);
+    showAlert('Entering AI ThreatLens as Guest Analyst...', 'success');
+
+    const guestUser = {
+      id: 'usr-guest-' + Math.random().toString(36).substring(2, 9),
+      name: 'Guest Analyst',
+      email: 'guest@threatlens.io',
+      role: 'Security Analyst',
+      occupation: 'Threat Intelligence Analyst',
+      authProvider: 'GUEST',
+      isGuest: false,
+      loggedIn: true,
+      loginTime: new Date().toISOString()
+    };
+
+    saveSession(guestUser, true);
+    setTimeout(() => {
+      onSignIn(guestUser);
+    }, 350);
+  };
+
+  /* ==============================================================
      GOOGLE OAUTH HANDLER (DIRECT FIREBASE POPUP + FAILOVER MODAL)
      ============================================================== */
   const executeGoogleLogin = async (selectedEmail, selectedName, selectedPicture) => {
@@ -635,37 +657,35 @@ export default function LoginView({ onSignIn }) {
                 </p>
               </div>
 
-              {/* Primary 1-Click Google Sign-In */}
+              {/* Primary 1-Click Continue as Guest */}
               <button
                 type="button"
-                onClick={handleTriggerGoogleAuth}
+                onClick={handleContinueAsGuest}
                 disabled={isLoading}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                  background: '#0d1117', border: '1px solid rgba(255, 255, 255, 0.18)',
+                  background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.16) 0%, rgba(0, 229, 255, 0.12) 100%)',
+                  border: '1px solid rgba(0, 229, 255, 0.38)',
                   borderRadius: '10px', padding: '12px 14px',
-                  color: '#f8fafc', fontSize: '13px', fontWeight: '600',
+                  color: '#f8fafc', fontSize: '13.5px', fontWeight: '700',
                   cursor: 'pointer', transition: 'all 0.15s ease',
                   width: '100%',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
+                  boxShadow: '0 2px 12px rgba(0, 229, 255, 0.15)'
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.45)';
-                  e.currentTarget.style.background = '#161b22';
+                  e.currentTarget.style.borderColor = 'var(--accent)';
+                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(0, 229, 255, 0.22) 100%)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)';
-                  e.currentTarget.style.background = '#0d1117';
+                  e.currentTarget.style.borderColor = 'rgba(0, 229, 255, 0.38)';
+                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(56, 189, 248, 0.16) 0%, rgba(0, 229, 255, 0.12) 100%)';
+                  e.currentTarget.style.transform = 'none';
                 }}
-                title="Sign in with Google Account"
+                title="Explore all SOC features instantly as Guest"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/>
-                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.25 21.35 7.31 24 12 24z"/>
-                  <path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.21 0 10.04 0 12s.46 3.79 1.26 5.41l4.02-3.09z"/>
-                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.65 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/>
-                </svg>
-                <span>Continue with Google</span>
+                <Sparkles size={16} color="var(--accent)" />
+                <span style={{ color: 'var(--text-primary)' }}>Continue as Guest</span>
               </button>
 
               {/* Or divider */}
@@ -806,37 +826,35 @@ export default function LoginView({ onSignIn }) {
                     </p>
                   </div>
 
-                  {/* Primary 1-Click Google Sign-Up */}
+                  {/* Primary 1-Click Continue as Guest */}
                   <button
                     type="button"
-                    onClick={handleTriggerGoogleAuth}
+                    onClick={handleContinueAsGuest}
                     disabled={isLoading}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                      background: '#0d1117', border: '1px solid rgba(255, 255, 255, 0.18)',
+                      background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.16) 0%, rgba(0, 229, 255, 0.12) 100%)',
+                      border: '1px solid rgba(0, 229, 255, 0.38)',
                       borderRadius: '10px', padding: '12px 14px',
-                      color: '#f8fafc', fontSize: '13px', fontWeight: '600',
+                      color: '#f8fafc', fontSize: '13.5px', fontWeight: '700',
                       cursor: 'pointer', transition: 'all 0.15s ease',
                       width: '100%',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
+                      boxShadow: '0 2px 12px rgba(0, 229, 255, 0.15)'
                     }}
                     onMouseEnter={e => {
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.45)';
-                      e.currentTarget.style.background = '#161b22';
+                      e.currentTarget.style.borderColor = 'var(--accent)';
+                      e.currentTarget.style.background = 'linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(0, 229, 255, 0.22) 100%)';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
                     }}
                     onMouseLeave={e => {
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)';
-                      e.currentTarget.style.background = '#0d1117';
+                      e.currentTarget.style.borderColor = 'rgba(0, 229, 255, 0.38)';
+                      e.currentTarget.style.background = 'linear-gradient(135deg, rgba(56, 189, 248, 0.16) 0%, rgba(0, 229, 255, 0.12) 100%)';
+                      e.currentTarget.style.transform = 'none';
                     }}
-                    title="Sign up with Google Account"
+                    title="Explore all SOC features instantly as Guest"
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24">
-                      <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/>
-                      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.25 21.35 7.31 24 12 24z"/>
-                      <path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.21 0 10.04 0 12s.46 3.79 1.26 5.41l4.02-3.09z"/>
-                      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.65 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/>
-                    </svg>
-                    <span>Continue with Google</span>
+                    <Sparkles size={16} color="var(--accent)" />
+                    <span style={{ color: 'var(--text-primary)' }}>Continue as Guest</span>
                   </button>
 
                   {/* Or divider */}
@@ -1109,170 +1127,6 @@ export default function LoginView({ onSignIn }) {
 
 
 
-
-      {/* ==============================================================
-         GOOGLE OAUTH ACCOUNT CHOOSER MODAL (FAILOVER & ZERO-CONFIG)
-         ============================================================== */}
-      {isGoogleModalOpen && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.82)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-          padding: '20px'
-        }}>
-          <div style={{
-            background: '#ffffff',
-            color: '#1f1f1f',
-            borderRadius: '16px',
-            maxWidth: '430px',
-            width: '100%',
-            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.65)',
-            overflow: 'hidden',
-            fontFamily: 'system-ui, -apple-system, sans-serif'
-          }}>
-            {/* Google Header */}
-            <div style={{ padding: '24px 28px 16px', textAlign: 'center' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-                <svg width="34" height="34" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/>
-                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.25 21.35 7.31 24 12 24z"/>
-                  <path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.21 0 10.04 0 12s.46 3.79 1.26 5.41l4.02-3.09z"/>
-                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.65 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/>
-                </svg>
-              </div>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 4px', color: '#1f1f1f' }}>
-                Sign in with Google
-              </h3>
-              <p style={{ fontSize: '13px', color: '#5f6368', margin: 0 }}>
-                Choose an account to continue to <strong>AI ThreatLens SOC</strong>
-              </p>
-            </div>
-
-            {/* Account List */}
-            <div style={{ borderTop: '1px solid #e0e0e0', borderBottom: '1px solid #e0e0e0' }}>
-              {/* Account 1: Ajay M. */}
-              <div
-                onClick={() => executeGoogleLogin('ajaymanikandanoff@gmail.com', 'Ajay M.', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80')}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '14px',
-                  padding: '14px 28px', cursor: 'pointer',
-                  borderBottom: '1px solid #f1f3f4',
-                  transition: 'background 0.15s ease'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = '#f8f9fa'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <div style={{
-                  width: '38px', height: '38px', borderRadius: '50%',
-                  background: '#1a73e8', color: '#ffffff', fontWeight: '700',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px'
-                }}>
-                  A
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '13.5px', fontWeight: '600', color: '#202124' }}>Ajay M.</div>
-                  <div style={{ fontSize: '12px', color: '#5f6368', overflow: 'hidden', textOverflow: 'ellipsis' }}>ajaymanikandanoff@gmail.com</div>
-                </div>
-                <span style={{ fontSize: '11px', color: '#1a73e8', fontWeight: '700', background: '#e8f0fe', padding: '3px 8px', borderRadius: '12px' }}>Active</span>
-              </div>
-
-              {/* Account 2: Security Analyst */}
-              <div
-                onClick={() => executeGoogleLogin('analyst.soc@gmail.com', 'Security Analyst', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80')}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '14px',
-                  padding: '14px 28px', cursor: 'pointer',
-                  borderBottom: '1px solid #f1f3f4',
-                  transition: 'background 0.15s ease'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = '#f8f9fa'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <div style={{
-                  width: '38px', height: '38px', borderRadius: '50%',
-                  background: '#0d652d', color: '#ffffff', fontWeight: '700',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px'
-                }}>
-                  S
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '13.5px', fontWeight: '600', color: '#202124' }}>Security Analyst</div>
-                  <div style={{ fontSize: '12px', color: '#5f6368', overflow: 'hidden', textOverflow: 'ellipsis' }}>analyst.soc@gmail.com</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Custom Google Account Form */}
-            <div style={{ padding: '16px 28px', background: '#fafafa' }}>
-              <div style={{ fontSize: '12px', fontWeight: '600', color: '#3c4043', marginBottom: '8px' }}>
-                Or use another Google account:
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
-                <input
-                  type="text"
-                  placeholder="Your Name (e.g. Ajay M.)"
-                  value={googleCustomName}
-                  onChange={e => setGoogleCustomName(e.target.value)}
-                  style={{
-                    padding: '9px 12px', border: '1px solid #dadce0',
-                    borderRadius: '6px', fontSize: '13px', outline: 'none'
-                  }}
-                />
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input
-                    type="email"
-                    placeholder="Your Google email"
-                    value={googleCustomEmail}
-                    onChange={e => setGoogleCustomEmail(e.target.value)}
-                    style={{
-                      flex: 1, padding: '9px 12px', border: '1px solid #dadce0',
-                      borderRadius: '6px', fontSize: '13px', outline: 'none'
-                    }}
-                  />
-                  <button
-                    type="button"
-                    disabled={!googleCustomEmail.trim() || isGoogleLoading}
-                    onClick={() => executeGoogleLogin(googleCustomEmail.trim(), googleCustomName.trim() || googleCustomEmail.split('@')[0], '')}
-                    style={{
-                      background: '#1a73e8', color: '#ffffff', border: 'none',
-                      borderRadius: '6px', padding: '9px 16px', fontSize: '12.5px',
-                      fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {isGoogleLoading ? 'Connecting...' : 'Continue'}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Google Modal Footer */}
-            <div style={{
-              padding: '14px 28px', display: 'flex', justifyContent: 'space-between',
-              alignItems: 'center', background: '#ffffff', borderTop: '1px solid #e0e0e0'
-            }}>
-              <span style={{ fontSize: '11px', color: '#70757a' }}>
-                {isGoogleLoading ? 'Connecting to Google Identity...' : 'Google Identity Services'}
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsGoogleModalOpen(false)}
-                style={{
-                  background: 'transparent', border: 'none', color: '#1a73e8',
-                  fontSize: '12.5px', fontWeight: '600', cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ==============================================================
          DEDICATED FORGOT PASSWORD MODAL (SEPARATE REACT FILE)
