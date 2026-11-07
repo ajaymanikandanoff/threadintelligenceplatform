@@ -88,8 +88,8 @@ export default function KnowledgeGraph({ graphData, onAskCopilot, compact = fals
     const isSingleEntity = !rawNodes.some(n => ['actor', 'pdf', 'malware', 'technique'].includes(n.type));
 
     if (compact || isSingleEntity || mode === 'radial') {
-      const cx = compact ? 180 : 420;
-      const cy = compact ? 120 : 260;
+      const cx = compact ? 190 : 420;
+      const cy = compact ? 130 : 260;
 
       let rootNode = rawNodes.find(n => ['pdf', 'domain', 'ip', 'url', 'actor'].includes(n.type)) || rawNodes[0];
       const satellites = rawNodes.filter(n => n.id !== rootNode.id);
@@ -98,26 +98,59 @@ export default function KnowledgeGraph({ graphData, onAskCopilot, compact = fals
         return [{ ...rootNode, x: cx, y: cy, r: getTypeMeta(rootNode.type).defaultR }];
       }
 
-      const radius = compact
-        ? Math.min(85, Math.max(55, 160 / Math.sqrt(satellites.length)))
-        : Math.min(220, Math.max(120, 360 / Math.sqrt(satellites.length)));
-
       const placedRoot = {
         ...rootNode,
         x: cx,
         y: cy,
-        r: (getTypeMeta(rootNode.type).defaultR || 18) * (compact ? 1.05 : 1.2)
+        r: compact ? (satellites.length > 8 ? 15 : 18) : (getTypeMeta(rootNode.type).defaultR || 18) * 1.2
       };
 
-      const placedSatellites = satellites.map((n, idx) => {
-        const angle = (idx / satellites.length) * 2 * Math.PI - Math.PI / 2;
-        return {
-          ...n,
-          x: Math.round(cx + radius * Math.cos(angle)),
-          y: Math.round(cy + radius * Math.sin(angle)),
-          r: getTypeMeta(n.type).defaultR || 16
-        };
-      });
+      let placedSatellites = [];
+      if (compact && satellites.length > 7) {
+        // Multi-ring concentric orbit so nodes NEVER collide or look cluttered
+        const ring1Count = Math.min(6, Math.floor(satellites.length * 0.4));
+        const ring1Nodes = satellites.slice(0, ring1Count);
+        const ring2Nodes = satellites.slice(ring1Count);
+
+        const r1 = 60;
+        const r2 = 105;
+
+        const p1 = ring1Nodes.map((n, idx) => {
+          const angle = (idx / ring1Nodes.length) * 2 * Math.PI - Math.PI / 2;
+          return {
+            ...n,
+            x: Math.round(cx + r1 * Math.cos(angle)),
+            y: Math.round(cy + r1 * Math.sin(angle)),
+            r: 10
+          };
+        });
+
+        const p2 = ring2Nodes.map((n, idx) => {
+          const angle = (idx / ring2Nodes.length) * 2 * Math.PI - Math.PI / 2 + (Math.PI / ring2Nodes.length);
+          return {
+            ...n,
+            x: Math.round(cx + r2 * Math.cos(angle)),
+            y: Math.round(cy + r2 * Math.sin(angle)),
+            r: 9
+          };
+        });
+
+        placedSatellites = [...p1, ...p2];
+      } else {
+        const radius = compact
+          ? Math.min(88, Math.max(68, 140 / Math.sqrt(satellites.length)))
+          : Math.min(220, Math.max(120, 360 / Math.sqrt(satellites.length)));
+
+        placedSatellites = satellites.map((n, idx) => {
+          const angle = (idx / satellites.length) * 2 * Math.PI - Math.PI / 2;
+          return {
+            ...n,
+            x: Math.round(cx + radius * Math.cos(angle)),
+            y: Math.round(cy + radius * Math.sin(angle)),
+            r: compact ? 13 : (getTypeMeta(n.type).defaultR || 16)
+          };
+        });
+      }
 
       return [placedRoot, ...placedSatellites];
     }
@@ -477,22 +510,10 @@ export default function KnowledgeGraph({ graphData, onAskCopilot, compact = fals
                   <g key={`compact-edge-${i}`}>
                     <line
                       x1={s.x} y1={s.y} x2={t.x} y2={t.y}
-                      stroke={isSel ? '#38bdf8' : 'rgba(148, 163, 184, 0.25)'}
-                      strokeWidth={isSel ? 2 : 1.2}
+                      stroke={isSel ? '#38bdf8' : 'rgba(148, 163, 184, 0.22)'}
+                      strokeWidth={isSel ? 2 : 1.1}
                       markerEnd="url(#compact-arrow)"
                     />
-                    {e.label && (
-                      <text
-                        x={(s.x + t.x) / 2}
-                        y={(s.y + t.y) / 2 - 3}
-                        fill={isSel ? '#38bdf8' : 'var(--text-tertiary)'}
-                        fontSize="8.5"
-                        fontFamily="var(--font-mono)"
-                        textAnchor="middle"
-                      >
-                        {e.label}
-                      </text>
-                    )}
                   </g>
                 );
               })}
@@ -500,6 +521,9 @@ export default function KnowledgeGraph({ graphData, onAskCopilot, compact = fals
               {nodes.map(n => {
                 const meta = getTypeMeta(n.type);
                 const isSel = selected?.id === n.id;
+                const isRoot = nodes.length > 0 && n.id === nodes[0].id;
+                const showLabel = nodes.length <= 6 || isRoot || isSel;
+
                 return (
                   <g
                     key={n.id}
@@ -509,21 +533,35 @@ export default function KnowledgeGraph({ graphData, onAskCopilot, compact = fals
                     onClick={e => { e.stopPropagation(); setSelected(n); }}
                   >
                     {isSel && (
-                      <circle r={n.r + 6} fill="none" stroke={meta.color} strokeWidth="2" strokeDasharray="3 2" opacity="0.9" />
+                      <circle r={n.r + 5} fill="none" stroke={meta.color} strokeWidth="2" strokeDasharray="3 2" opacity="0.9" />
                     )}
                     <circle r={n.r} fill={meta.bg} stroke={meta.color} strokeWidth={isSel ? 2.2 : 1.4} />
-                    <circle r={n.r * 0.4} fill={meta.color} />
-                    <text
-                      y={n.r + 11}
-                      fill="var(--text-primary)"
-                      fontSize="9"
-                      fontFamily="var(--font-mono)"
-                      fontWeight={isSel ? '700' : '500'}
-                      textAnchor="middle"
-                      style={{ pointerEvents: 'none' }}
-                    >
-                      {n.label.length > 14 ? `${n.label.slice(0, 12)}…` : n.label}
-                    </text>
+                    <circle r={n.r * 0.42} fill={meta.color} />
+
+                    {showLabel && (
+                      <g style={{ pointerEvents: 'none' }}>
+                        <rect
+                          x={-Math.min(50, Math.max(26, (n.label.length * 5) / 2))}
+                          y={n.r + 3}
+                          width={Math.min(100, Math.max(52, n.label.length * 5.2))}
+                          height={14}
+                          rx={3}
+                          fill="rgba(4, 7, 17, 0.9)"
+                          stroke={isSel ? meta.color : 'rgba(255, 255, 255, 0.1)'}
+                          strokeWidth="0.8"
+                        />
+                        <text
+                          y={n.r + 13}
+                          fill={isSel ? '#38bdf8' : 'var(--text-primary)'}
+                          fontSize="8.5"
+                          fontFamily="var(--font-mono)"
+                          fontWeight={isSel ? '700' : '500'}
+                          textAnchor="middle"
+                        >
+                          {n.label.length > 13 ? `${n.label.slice(0, 11)}…` : n.label}
+                        </text>
+                      </g>
+                    )}
                   </g>
                 );
               })}

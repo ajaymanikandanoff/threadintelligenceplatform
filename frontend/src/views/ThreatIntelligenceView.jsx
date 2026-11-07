@@ -516,7 +516,7 @@ export default function ThreatIntelligenceView({
                 </div>
 
                 <div style={{
-                  height: '250px',
+                  height: '260px',
                   borderRadius: '10px',
                   overflow: 'hidden',
                   border: '1px solid var(--border)',
@@ -524,13 +524,40 @@ export default function ThreatIntelligenceView({
                   position: 'relative'
                 }}>
                   {activeItemGraph && activeItemGraph.nodes?.length > 0 ? (
-                    <KnowledgeGraph graphData={activeItemGraph} compact={true} height="250px" />
+                    <KnowledgeGraph graphData={activeItemGraph} compact={true} height="260px" />
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: '12px' }}>
                       Synthesizing entity relationship graph...
                     </div>
                   )}
                 </div>
+
+                {selectedItem.type === 'PDF' && (
+                  <button
+                    type="button"
+                    onClick={() => onNavigateTab('threat-graph')}
+                    style={{
+                      background: 'rgba(56, 189, 248, 0.12)',
+                      border: '1px solid rgba(56, 189, 248, 0.35)',
+                      color: 'var(--accent)',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                      fontSize: '11.5px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.22)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.12)'}
+                  >
+                    <Share2 size={13} />
+                    <span>Open Full 22-Node Threat Graph Studio</span>
+                  </button>
+                )}
               </div>
 
               {/* Metadata Table */}
