@@ -152,10 +152,12 @@ async def analyze_threat(payload: AnalyzeRequest):
     if not payload.text or not payload.text.strip():
         raise HTTPException(status_code=400, detail="Threat report text cannot be empty.")
     
+    server_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    effective_key = server_key if server_key else (payload.api_key.strip() if payload.api_key else "")
     result = await analyze_threat_text(
         text=payload.text,
-        api_key=payload.api_key,
-        model=payload.model or "gemini-2.5-flash"
+        api_key=effective_key,
+        model=payload.model or "gemini-3.5-flash"
     )
     return result
 
@@ -206,8 +208,8 @@ async def copilot_chat(payload: CopilotRequest):
     if not payload.query or not payload.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
     
-    server_key = os.environ.get("GEMINI_API_KEY", "")
-    effective_key = payload.api_key.strip() if (payload.api_key and payload.api_key.strip()) else server_key
+    server_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    effective_key = server_key if server_key else (payload.api_key.strip() if payload.api_key else "")
 
     reply = await chat_with_copilot(
         context_threat=payload.context_threat,
