@@ -38,7 +38,18 @@ VERIFIED_CTI_EVENTS = [
         "affected_sectors": ["Critical Infrastructure", "Water Utilities", "Ports & Maritime"],
         "infrastructure_type": "Compromised Cisco & Fortinet Edge Routers",
         "evidence": "Persistent SOCKS5 reverse proxies routing commands through SOHO routers to blend with domestic ISP traffic.",
-        "hours_ago": 0.2
+        "hours_ago": 0.2,
+        "data_transfer": {
+            "direction": "Bidirectional C2 & SOCKS5 Exfil",
+            "flow_type": "c2_tunnel",
+            "bytes_transferred": "4.2 MB",
+            "bytes_raw": 4200000,
+            "transfer_rate": "120 KB/s",
+            "protocol": "SOCKS5 / TCP 1080 (TLS Encapsulated)",
+            "payload_type": "Utility SCADA Telemetry & Router Configs",
+            "packet_count": "18,420 packets",
+            "status": "Active C2 Streaming"
+        }
     },
     {
         "id": "evt-ru-us-02",
@@ -66,7 +77,18 @@ VERIFIED_CTI_EVENTS = [
         "affected_sectors": ["Cloud Hyperscalers", "Foreign Affairs Ministries", "Policy Think Tanks"],
         "infrastructure_type": "Residential Proxy Network & Bulletproof VPS",
         "evidence": "Password-spray campaign against dormant test accounts lacking MFA followed by OAuth enterprise application hijacking.",
-        "hours_ago": 0.5
+        "hours_ago": 0.5,
+        "data_transfer": {
+            "direction": "Outbound OAuth Token Exfiltration",
+            "flow_type": "exfiltration",
+            "bytes_transferred": "12.8 MB",
+            "bytes_raw": 12800000,
+            "transfer_rate": "340 KB/s",
+            "protocol": "OAuth 2.0 / HTTPS (TCP 443)",
+            "payload_type": "Entra ID Bearer Tokens & Foreign Ministry MBOX",
+            "packet_count": "24,800 packets",
+            "status": "Active Exfiltration"
+        }
     },
     {
         "id": "evt-kp-us-03",
@@ -94,7 +116,18 @@ VERIFIED_CTI_EVENTS = [
         "affected_sectors": ["Financial Services", "Decentralized Finance (DeFi)", "Digital Asset Custody"],
         "infrastructure_type": "Trojanized PyPI Packages & Web3 RPC Relays",
         "evidence": "Trojanized Web3 wallet management software used to exfiltrate private cryptographic keys via GitHub pull requests.",
-        "hours_ago": 0.8
+        "hours_ago": 0.8,
+        "data_transfer": {
+            "direction": "Cross-Border Digital Asset Exfiltration",
+            "flow_type": "exfiltration",
+            "bytes_transferred": "85.4 MB",
+            "bytes_raw": 85400000,
+            "transfer_rate": "2.8 MB/s",
+            "protocol": "Web3 JSON-RPC / HTTPS (TCP 8545)",
+            "payload_type": "Solana & Ethereum Private Key Blobs / Keystores",
+            "packet_count": "64,210 packets",
+            "status": "Active Exfiltration"
+        }
     },
     {
         "id": "evt-ru-ua-04",
@@ -122,7 +155,18 @@ VERIFIED_CTI_EVENTS = [
         "affected_sectors": ["Electrical Transmission", "District Heating", "Municipal Water"],
         "infrastructure_type": "Compromised Edge VPN Concentrators",
         "evidence": "GPO scheduled tasks configured to deploy raw disk wipers across OT engineering workstations simultaneously.",
-        "hours_ago": 2.5
+        "hours_ago": 2.5,
+        "data_transfer": {
+            "direction": "Inbound SCADA Wiper Binary Injection",
+            "flow_type": "payload_delivery",
+            "bytes_transferred": "1.1 MB",
+            "bytes_raw": 1100000,
+            "transfer_rate": "65 KB/s",
+            "protocol": "IEC-60870-5-104 SCADA / TCP 2404",
+            "payload_type": "CaddyWiper Binary & Breaker Trip Sequences",
+            "packet_count": "5,120 packets",
+            "status": "Payload Staging"
+        }
     },
     {
         "id": "evt-ir-de-05",
@@ -150,7 +194,18 @@ VERIFIED_CTI_EVENTS = [
         "affected_sectors": ["Chemical Manufacturing", "European Logistics", "Port Facilities"],
         "infrastructure_type": "Abused Commercial Remote Management (RMM) Infrastructure",
         "evidence": "Legitimate remote desktop utility downloaded from malicious staging servers to establish stealthy beaconing.",
-        "hours_ago": 3.0
+        "hours_ago": 3.0,
+        "data_transfer": {
+            "direction": "RMM Remote Management C2 Beaconing",
+            "flow_type": "c2_tunnel",
+            "bytes_transferred": "6.5 MB",
+            "bytes_raw": 6500000,
+            "transfer_rate": "210 KB/s",
+            "protocol": "SimpleHelp RMM / HTTPS (TCP 443)",
+            "payload_type": "Chemical Logistics Topology & Host Enumeration",
+            "packet_count": "14,350 packets",
+            "status": "Active C2 Streaming"
+        }
     },
     {
         "id": "evt-nl-uk-06",
@@ -178,7 +233,18 @@ VERIFIED_CTI_EVENTS = [
         "affected_sectors": ["Commercial Banking", "Healthcare Providers", "Legal Services"],
         "infrastructure_type": "Bulletproof Fast-Flux Hosting Provider",
         "evidence": "MegaSync and rclone exfiltration staging detected over TCP port 443 before automated encryption routines.",
-        "hours_ago": 3.5
+        "hours_ago": 3.5,
+        "data_transfer": {
+            "direction": "Ransomware Double-Extortion Data Dump",
+            "flow_type": "exfiltration",
+            "bytes_transferred": "142.0 MB",
+            "bytes_raw": 142000000,
+            "transfer_rate": "4.5 MB/s",
+            "protocol": "rclone MegaSync / HTTPS (TCP 443)",
+            "payload_type": "Encrypted SQL DB Dumps & Healthcare EHRs",
+            "packet_count": "98,400 packets",
+            "status": "Active Exfiltration"
+        }
     },
     {
         "id": "evt-cn-in-07",
@@ -206,7 +272,18 @@ VERIFIED_CTI_EVENTS = [
         "affected_sectors": ["Telecommunications Backbones", "National Optical Networks", "Satellite Gateways"],
         "infrastructure_type": "Compromised Edge Application Delivery Controllers (NetScaler)",
         "evidence": "Exploitation of CVE-2023-3519 in edge gateways allowing unauthenticated memory injection.",
-        "hours_ago": 4.1
+        "hours_ago": 4.1,
+        "data_transfer": {
+            "direction": "Telecom Optical Intercept & Tap Stream",
+            "flow_type": "exfiltration",
+            "bytes_transferred": "28.4 MB",
+            "bytes_raw": 28400000,
+            "transfer_rate": "1.8 MB/s",
+            "protocol": "Citrix ADC Exploit / TLS (TCP 443)",
+            "payload_type": "Optical Backbone Routing Tables & CDR Taps",
+            "packet_count": "32,150 packets",
+            "status": "Active Exfiltration"
+        }
     },
     {
         "id": "evt-br-de-08",
@@ -234,7 +311,18 @@ VERIFIED_CTI_EVENTS = [
         "affected_sectors": ["Retail Banking", "FinTech Applications", "Payment Processors"],
         "infrastructure_type": "Dynamic DNS & Abused Cloud Storage Redirects",
         "evidence": "Phishing PDF tax invoices leading to ZIP archives containing encrypted overlay components.",
-        "hours_ago": 5.2
+        "hours_ago": 5.2,
+        "data_transfer": {
+            "direction": "Banking Credential & Keylog Exfil",
+            "flow_type": "exfiltration",
+            "bytes_transferred": "6.7 MB",
+            "bytes_raw": 6700000,
+            "transfer_rate": "510 KB/s",
+            "protocol": "Dynamic DNS HTTP (TCP 8080)",
+            "payload_type": "Keystroke Logs, 2FA Cookies & Banking Sessions",
+            "packet_count": "12,940 packets",
+            "status": "Active Exfiltration"
+        }
     },
     {
         "id": "evt-nl-au-09",
@@ -261,7 +349,18 @@ VERIFIED_CTI_EVENTS = [
         "affected_sectors": ["Internet Service Providers", "Gaming Server Networks"],
         "infrastructure_type": "Misconfigured Open Memcached Daemons (UDP 11211)",
         "evidence": "Spoofed UDP request packets eliciting 18 Gbps peak amplification traffic directed at target IP range.",
-        "hours_ago": 6.0
+        "hours_ago": 6.0,
+        "data_transfer": {
+            "direction": "Reflected UDP Flood Volumetric Burst",
+            "flow_type": "ddos_flood",
+            "bytes_transferred": "18.2 Gbps Peak",
+            "bytes_raw": 18200000000,
+            "transfer_rate": "Mitigated / Filtered",
+            "protocol": "Memcached Reflection / UDP 11211",
+            "payload_type": "Spoofed UDP Get Keys Amplification Payloads",
+            "packet_count": "1,420,000 packets",
+            "status": "Mitigated & Blocked"
+        }
     }
 ]
 
@@ -573,7 +672,8 @@ def get_threat_routes_geojson(time_range: str = "24H", severity: str = "ALL") ->
                 "malware_family": e["malware_family"],
                 "evidence": e["evidence"],
                 "affected_sectors": e["affected_sectors"],
-                "infrastructure_type": e["infrastructure_type"]
+                "infrastructure_type": e["infrastructure_type"],
+                "data_transfer": e.get("data_transfer", {})
             },
             "geometry": {
                 "type": "LineString",

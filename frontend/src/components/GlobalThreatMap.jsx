@@ -10,13 +10,17 @@ import {
   CheckCircle2,
   Sparkles,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  Zap,
+  Database,
+  ArrowRight
 } from 'lucide-react';
 import MapLibreContainer from './threat-map/MapLibreContainer';
 import ThreatMapLegend from './threat-map/ThreatMapLegend';
 import ThreatMapControls from './threat-map/ThreatMapControls';
 import CountryIntelligencePanel from './threat-map/CountryIntelligencePanel';
 import ThreatOriginRanking from './threat-map/ThreatOriginRanking';
+import DataTransferPanel from './threat-map/DataTransferPanel';
 import {
   VERIFIED_THREAT_EVENTS,
   VERIFIED_COUNTRY_PROFILES,
@@ -38,6 +42,7 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
   const [liveCounter, setLiveCounter] = useState(14820);
   const [isLoading, setIsLoading] = useState(false);
   const [isBackendLive, setIsBackendLive] = useState(true);
+  const [activeRightTab, setActiveRightTab] = useState('data_transfer'); // 'data_transfer' | 'country_intel'
 
   // GeoJSON & Telemetry state from backend
   const [nodesGeoJson, setNodesGeoJson] = useState(null);
@@ -210,6 +215,19 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
     }
   };
 
+  // Trace Data Flow on Globe
+  const handleTraceRoute = (evt) => {
+    setSelectedEvent(evt);
+    if (evt.sourceGeo?.iso3 && countryProfiles[evt.sourceGeo.iso3]) {
+      setSelectedCountry(countryProfiles[evt.sourceGeo.iso3]);
+    }
+    if (mapRef.current && evt.sourceGeo && evt.destGeo) {
+      const midLng = (evt.sourceGeo.lng + evt.destGeo.lng) / 2;
+      const midLat = (evt.sourceGeo.lat + evt.destGeo.lat) / 2;
+      mapRef.current.flyToCoords(midLng, midLat, 2.4);
+    }
+  };
+
   return (
     <div
       ref={containerWrapperRef}
@@ -339,6 +357,117 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
         </div>
       </div>
 
+      {/* ─── Global Data Transfer KPI Ribbon ─── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+        gap: '12px'
+      }}>
+        <div style={{
+          background: 'rgba(244, 63, 94, 0.08)',
+          border: '1px solid rgba(244, 63, 94, 0.25)',
+          borderRadius: '10px',
+          padding: '10px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <div style={{
+            width: '34px', height: '34px', borderRadius: '8px',
+            background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <Database size={16} color="#f43f5e" />
+          </div>
+          <div>
+            <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Total Exfiltrated Volume
+            </div>
+            <div style={{ fontSize: '17px', fontWeight: '800', color: '#fca5a5', fontFamily: 'var(--font-mono)' }}>
+              280.6 MB
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          background: 'rgba(0, 229, 255, 0.08)',
+          border: '1px solid rgba(0, 229, 255, 0.25)',
+          borderRadius: '10px',
+          padding: '10px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <div style={{
+            width: '34px', height: '34px', borderRadius: '8px',
+            background: 'rgba(0, 229, 255, 0.15)', border: '1px solid rgba(0, 229, 255, 0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <Zap size={16} color="#00e5ff" />
+          </div>
+          <div>
+            <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Active Transfer Pipelines
+            </div>
+            <div style={{ fontSize: '17px', fontWeight: '800', color: '#38bdf8', fontFamily: 'var(--font-mono)' }}>
+              8 Streaming Routes
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          background: 'rgba(16, 185, 129, 0.08)',
+          border: '1px solid rgba(16, 185, 129, 0.25)',
+          borderRadius: '10px',
+          padding: '10px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <div style={{
+            width: '34px', height: '34px', borderRadius: '8px',
+            background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <CheckCircle2 size={16} color="#10b981" />
+          </div>
+          <div>
+            <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Defended & Sinkholed
+            </div>
+            <div style={{ fontSize: '17px', fontWeight: '800', color: '#34d399', fontFamily: 'var(--font-mono)' }}>
+              1 Blocked (18 Gbps)
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          background: 'rgba(234, 179, 8, 0.08)',
+          border: '1px solid rgba(234, 179, 8, 0.25)',
+          borderRadius: '10px',
+          padding: '10px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <div style={{
+            width: '34px', height: '34px', borderRadius: '8px',
+            background: 'rgba(234, 179, 8, 0.15)', border: '1px solid rgba(234, 179, 8, 0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <Activity size={16} color="#eab308" />
+          </div>
+          <div>
+            <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Peak Exfiltration Speed
+            </div>
+            <div style={{ fontSize: '17px', fontWeight: '800', color: '#fde047', fontFamily: 'var(--font-mono)' }}>
+              4.5 MB/s (LockBit)
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ─── 70% / 30% Main Visualization Split Layout ─── */}
       <div style={{
         display: 'grid',
@@ -393,14 +522,82 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
           />
         </div>
 
-        {/* RIGHT COLUMN: ~30% Geospatial Intelligence Panel */}
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <CountryIntelligencePanel
-            selectedCountry={selectedCountry}
-            selectedEvent={selectedEvent}
-            onSelectEvent={handleEventSelect}
-            allEvents={threatEvents}
-          />
+        {/* RIGHT COLUMN: ~30% Dual-Mode Panel (Data Transfer vs Country Intel) */}
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '10px' }}>
+          {/* Sub-tab switcher */}
+          <div style={{
+            display: 'flex',
+            background: 'rgba(0, 0, 0, 0.4)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            padding: '4px',
+            gap: '4px'
+          }}>
+            <button
+              type="button"
+              onClick={() => setActiveRightTab('data_transfer')}
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '7px 10px',
+                borderRadius: '7px',
+                border: 'none',
+                background: activeRightTab === 'data_transfer' ? 'rgba(0, 229, 255, 0.16)' : 'transparent',
+                color: activeRightTab === 'data_transfer' ? '#00e5ff' : 'var(--text-secondary)',
+                fontSize: '11.5px',
+                fontWeight: activeRightTab === 'data_transfer' ? '700' : '500',
+                cursor: 'pointer',
+                outline: activeRightTab === 'data_transfer' ? '1px solid rgba(0, 229, 255, 0.4)' : 'none'
+              }}
+            >
+              <Zap size={13} color={activeRightTab === 'data_transfer' ? '#00e5ff' : 'currentColor'} />
+              <span>Data Transfers ({threatEvents.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveRightTab('country_intel')}
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '7px 10px',
+                borderRadius: '7px',
+                border: 'none',
+                background: activeRightTab === 'country_intel' ? 'rgba(0, 229, 255, 0.16)' : 'transparent',
+                color: activeRightTab === 'country_intel' ? '#00e5ff' : 'var(--text-secondary)',
+                fontSize: '11.5px',
+                fontWeight: activeRightTab === 'country_intel' ? '700' : '500',
+                cursor: 'pointer',
+                outline: activeRightTab === 'country_intel' ? '1px solid rgba(0, 229, 255, 0.4)' : 'none'
+              }}
+            >
+              <Globe size={13} color={activeRightTab === 'country_intel' ? '#00e5ff' : 'currentColor'} />
+              <span>Country Intel</span>
+            </button>
+          </div>
+
+          <div style={{ flex: 1, minHeight: 0 }}>
+            {activeRightTab === 'data_transfer' ? (
+              <DataTransferPanel
+                events={threatEvents}
+                selectedEvent={selectedEvent}
+                onSelectRoute={handleTraceRoute}
+              />
+            ) : (
+              <CountryIntelligencePanel
+                selectedCountry={selectedCountry}
+                selectedEvent={selectedEvent}
+                onSelectEvent={handleEventSelect}
+                allEvents={threatEvents}
+              />
+            )}
+          </div>
         </div>
       </div>
 

@@ -11,7 +11,8 @@ import {
   Terminal,
   Globe,
   FileText,
-  Plus
+  Plus,
+  Radio
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
@@ -242,6 +243,29 @@ export default function DashboardView({
             <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
             <span>API status <strong style={{ color: 'var(--text-primary)' }}>Online</strong></span>
           </div>
+
+          <button
+            type="button"
+            onClick={() => onNavigateTab && onNavigateTab('threat-map')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              background: 'rgba(0, 229, 255, 0.12)',
+              border: '1px solid rgba(0, 229, 255, 0.35)',
+              color: '#00e5ff',
+              borderRadius: '8px',
+              padding: '9px 16px',
+              fontSize: '13px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              boxShadow: '0 0 16px rgba(0, 229, 255, 0.2)',
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0, 229, 255, 0.2)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0, 229, 255, 0.12)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+          >
+            <Radio size={15} strokeWidth={2.4} color="#00e5ff" />
+            <span>Global Threat & Data Map</span>
+          </button>
 
           <button
             onClick={onOpenNewAnalysis}

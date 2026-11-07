@@ -501,37 +501,49 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
             const coords = feature.geometry?.coordinates;
             if (!coords || coords.length < 2) return;
 
-            // Loop duration (seconds for full trajectory from source to target)
-            const cycleDuration = 3.2;
-            const phaseOffset = (idx * 0.38) % 1.0;
-            const progress = ((elapsed / cycleDuration) + phaseOffset) % 1.0;
-
-            const totalPoints = coords.length - 1;
-            const exactIndex = progress * totalPoints;
-            const baseIndex = Math.floor(exactIndex);
-            const nextIndex = Math.min(baseIndex + 1, totalPoints);
-            const subProgress = exactIndex - baseIndex;
-
-            const p1 = coords[baseIndex];
-            const p2 = coords[nextIndex];
-            const lng = p1[0] + (p2[0] - p1[0]) * subProgress;
-            const lat = p1[1] + (p2[1] - p1[1]) * subProgress;
-
+            let dt = feature.properties?.data_transfer || feature.properties?.dataTransfer;
+            if (typeof dt === 'string') {
+              try { dt = JSON.parse(dt); } catch (e) { dt = null; }
+            }
+            const isExfil = (dt?.flow_type || dt?.flowType) === 'exfiltration';
+            const isBlocked = (dt?.flow_type || dt?.flowType) === 'ddos_flood';
             const sev = (feature.properties?.severity || 'critical').toLowerCase();
-            const color = SEVERITY_COLORS[sev] || '#f43f5e';
+            const color = isExfil ? '#f43f5e' : (isBlocked ? '#a855f7' : (sev === 'critical' ? '#ff3366' : (SEVERITY_COLORS[sev] || '#00e5ff')));
 
-            beaconFeatures.push({
-              type: 'Feature',
-              geometry: {
-                type: 'Point',
-                coordinates: [lng, lat]
-              },
-              properties: {
-                id: `beacon-${feature.id || idx}`,
-                color,
-                severity: sev
-              }
-            });
+            // Loop duration (seconds for full trajectory from source to target)
+            const cycleDuration = 3.8;
+            const phaseOffset = (idx * 0.35) % 1.0;
+            const numPackets = 3; // 3 streaming data packets per route
+
+            for (let pIdx = 0; pIdx < numPackets; pIdx++) {
+              const offset = pIdx / numPackets;
+              const progress = ((elapsed / cycleDuration) + phaseOffset + offset) % 1.0;
+
+              const totalPoints = coords.length - 1;
+              const exactIndex = progress * totalPoints;
+              const baseIndex = Math.floor(exactIndex);
+              const nextIndex = Math.min(baseIndex + 1, totalPoints);
+              const subProgress = exactIndex - baseIndex;
+
+              const p1 = coords[baseIndex];
+              const p2 = coords[nextIndex];
+              const lng = p1[0] + (p2[0] - p1[0]) * subProgress;
+              const lat = p1[1] + (p2[1] - p1[1]) * subProgress;
+
+              beaconFeatures.push({
+                type: 'Feature',
+                geometry: {
+                  type: 'Point',
+                  coordinates: [lng, lat]
+                },
+                properties: {
+                  id: `beacon-${feature.id || idx}-${pIdx}`,
+                  color,
+                  severity: sev,
+                  isExfil
+                }
+              });
+            }
           });
         }
 
@@ -679,52 +691,82 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
       map.on('click', 'threat-origin-center', handleNodeClick);
       map.on('click', 'threat-target-center', handleNodeClick);
 
-      // D. Attack Route Click: Show vector intelligence popup
+      // D. Attack Route Click: Show vector and data transfer telemetry popup
       map.on('click', 'attack-routes-glow', (e) => {
         if (!e.features || e.features.length === 0) return;
         const p = e.features[0].properties;
         const sev = (p.severity || 'critical').toLowerCase();
         const sevColor = SEVERITY_COLORS[sev] || '#f43f5e';
 
+        let dt = p.data_transfer || p.dataTransfer;
+        if (typeof dt === 'string') {
+          try { dt = JSON.parse(dt); } catch (err) { dt = null; }
+        }
+
+        const isExfil = (dt?.flow_type || dt?.flowType) === 'exfiltration';
+        const isBlocked = (dt?.flow_type || dt?.flowType) === 'ddos_flood';
+        const transferBadge = isExfil ? '🔴 Active Data Exfiltration' : (isBlocked ? '🟢 Mitigated & Filtered' : '🟡 C2 Command Tunnel');
+
         const popupContent = `
           <div style="font-family: system-ui, -apple-system, sans-serif; font-size: 11px; color: #f8fafc; line-height: 1.45; padding: 4px;">
             <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 6px; margin-bottom: 8px;">
-              <span style="font-weight: 800; font-size: 12px; color: #00e5ff;">
-                ⚡ Active Attack Vector Route
+              <span style="font-weight: 800; font-size: 12px; color: #00e5ff; display: flex; align-items: center; gap: 4px;">
+                📡 Global Data Transfer Flow
               </span>
               <span style="background: ${sevColor}26; color: ${sevColor}; border: 1px solid ${sevColor}55; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-size: 9.5px; text-transform: uppercase;">
                 ${sev}
               </span>
             </div>
 
+            <div style="margin-bottom: 6px; background: rgba(0, 229, 255, 0.08); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 6px; padding: 6px 8px;">
+              <div style="font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">Data Transfer Channel</div>
+              <div style="color: #38bdf8; font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: space-between;">
+                <span>${p.sourceCity || 'Origin'} (${p.sourceCountry || ''})</span>
+                <span style="color: #f43f5e; margin: 0 4px;">➔</span>
+                <span>${p.destCity || 'Target'} (${p.destCountry || ''})</span>
+              </div>
+            </div>
+
+            ${dt ? `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+              <div style="background: rgba(0,0,0,0.3); padding: 5px 7px; border-radius: 4px;">
+                <div style="font-size: 9.5px; color: #94a3b8;">Data Transferred</div>
+                <div style="font-size: 12px; font-weight: 800; color: #f43f5e; font-family: monospace;">
+                  ${dt.bytes_transferred || dt.bytesTransferred || 'Live Stream'}
+                </div>
+              </div>
+              <div style="background: rgba(0,0,0,0.3); padding: 5px 7px; border-radius: 4px;">
+                <div style="font-size: 9.5px; color: #94a3b8;">Transfer Rate</div>
+                <div style="font-size: 12px; font-weight: 800; color: #38bdf8; font-family: monospace;">
+                  ${dt.transfer_rate || dt.transferRate || 'Continuous'}
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 5px; font-size: 10.5px;">
+              <strong style="color: #94a3b8;">Status:</strong>
+              <span style="color: ${isExfil ? '#fca5a5' : '#86efac'}; font-weight: 700; margin-left: 4px;">${transferBadge}</span>
+            </div>
+
+            <div style="margin-bottom: 5px; font-size: 10.5px;">
+              <strong style="color: #94a3b8;">Protocol:</strong>
+              <code style="background: rgba(0,0,0,0.4); padding: 1px 5px; border-radius: 3px; color: #00e5ff; font-weight: 700; margin-left: 4px;">${dt.protocol || 'TCP 443'}</code>
+            </div>
+
+            <div style="margin-bottom: 5px; font-size: 10.5px;">
+              <strong style="color: #94a3b8;">Intercepted Payload:</strong>
+              <div style="color: #fde047; font-size: 10px; margin-top: 2px;">${dt.payload_type || dt.payloadType || 'Adversary telemetry'}</div>
+            </div>
+            ` : ''}
+
             <div style="margin-bottom: 5px;">
-              <strong style="color: #94a3b8;">Vector:</strong>
-              <span style="color: #f8fafc; font-weight: 700;">${p.attackCategory || p.name || 'Adversary Command & Control'}</span>
+              <strong style="color: #94a3b8;">Attributed Actor:</strong>
+              <span style="color: #fca5a5; font-weight: 700; margin-left: 4px;">${p.threat_actor || p.threatActor || 'Advanced Threat'}</span>
             </div>
 
-            <div style="margin-bottom: 4px; font-size: 10.5px;">
-              <span style="color: #f43f5e; font-weight: 700;">Origin:</span> ${p.sourceCity || p.source_city || 'Origin'}, ${p.sourceCountry || p.source_country || ''}
-              <code style="background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 3px; color: #fda4af;">(${p.sourceIp || p.source_ip || 'N/A'})</code>
-            </div>
-
-            <div style="margin-bottom: 4px; font-size: 10.5px;">
-              <span style="color: #00e5ff; font-weight: 700;">Target:</span> ${p.destCity || p.dest_city || 'Target'}, ${p.destCountry || p.dest_country || ''}
-              <code style="background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 3px; color: #a5f3fc;">(${p.destIp || p.dest_ip || 'N/A'})</code>
-            </div>
-
-            ${p.protocol ? `
-            <div style="margin-bottom: 4px;">
-              <strong style="color: #94a3b8;">Protocol & Port:</strong>
-              <span style="color: #cbd5e1;">${p.protocol} / Port ${p.port || 443}</span>
-            </div>` : ''}
-
-            ${p.evidence ? `
-            <div style="margin-top: 6px; padding: 5px; background: rgba(0,0,0,0.3); border-radius: 4px; border-left: 2px solid #f43f5e; font-size: 10px; color: #cbd5e1;">
-              <strong>Evidence:</strong> ${p.evidence}
-            </div>` : ''}
-
-            <div style="margin-top: 6px; font-size: 9.5px; color: #94a3b8;">
-              <span>Timestamp: ${p.timestamp || 'Real-time telemetry'}</span>
+            <div style="margin-top: 6px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 9.5px; color: #94a3b8; display: flex; justify-content: space-between;">
+              <span>Source IP: <code style="color: #fda4af;">${p.source_ip || p.sourceIp || 'N/A'}</code></span>
+              <span>Target IP: <code style="color: #a5f3fc;">${p.dest_ip || p.destIp || 'N/A'}</code></span>
             </div>
           </div>
         `;

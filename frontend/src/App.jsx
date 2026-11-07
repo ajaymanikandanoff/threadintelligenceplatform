@@ -14,6 +14,7 @@ import DomainIntelligenceView from './views/DomainIntelligenceView';
 import UrlAnalysisView from './views/UrlAnalysisView';
 import PdfResearchView from './views/PdfResearchView';
 import ThreatGraphView from './views/ThreatGraphView';
+import ThreatMapView from './views/ThreatMapView';
 
 import DefenseCenter from './components/DefenseCenter';
 import ThreatCopilot from './components/ThreatCopilot';
@@ -35,7 +36,8 @@ import {
   Activity,
   Link2,
   FileSearch,
-  Share2
+  Share2,
+  Radio
 } from 'lucide-react';
 
 export default function App() {
@@ -394,6 +396,7 @@ export default function App() {
             </div>
 
             {[
+              { id: 'threat-map', label: 'Global Threat Map', icon: Radio },
               { id: 'intelligence', label: 'Threat Intelligence', icon: Globe },
               { id: 'attack-mapping', label: 'ATT&CK Matrix', icon: Crosshair },
             ].map(item => {
@@ -629,6 +632,12 @@ export default function App() {
               {/* Module 5: Threat Intelligence Graph */}
               {activeTab === 'threat-graph' && (
                 <ThreatGraphView
+                  onNavigateTab={handleNavigateTab}
+                />
+              )}
+
+              {activeTab === 'threat-map' && (
+                <ThreatMapView
                   onNavigateTab={handleNavigateTab}
                 />
               )}
