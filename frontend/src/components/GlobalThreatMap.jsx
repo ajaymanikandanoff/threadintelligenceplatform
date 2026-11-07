@@ -16,8 +16,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import MapLibreContainer from './threat-map/MapLibreContainer';
-import ThreatMapLegend from './threat-map/ThreatMapLegend';
-import ThreatMapControls from './threat-map/ThreatMapControls';
+import ThreatMapBottomToolbar from './threat-map/ThreatMapBottomToolbar';
 import CountryIntelligencePanel from './threat-map/CountryIntelligencePanel';
 import ThreatOriginRanking from './threat-map/ThreatOriginRanking';
 import DataTransferPanel from './threat-map/DataTransferPanel';
@@ -509,8 +508,25 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
           height: '100%',
           minHeight: 0
         }}>
-          {/* Map Controls (Zoom In/Out, Reset, Fullscreen, Layers, Time Range) */}
-          <ThreatMapControls
+          {/* Main Map Container (100% Unobstructed Full View) */}
+          <div style={{ flex: 1, minHeight: 0, position: 'relative', width: '100%', height: '100%' }}>
+            <MapLibreContainer
+              ref={mapRef}
+              selectedCountry={selectedCountry}
+              onSelectCountry={handleCountrySelect}
+              selectedEvent={selectedEvent}
+              onSelectEvent={handleEventSelect}
+              activeSeverity={activeSeverity}
+              visibleLayers={visibleLayers}
+              events={threatEvents}
+              nodesGeoJson={nodesGeoJson}
+              routesGeoJson={routesGeoJson}
+              densityGeoJson={densityGeoJson}
+            />
+          </div>
+
+          {/* Docked Options Toolbar - Placed Below the Map (Keela) */}
+          <ThreatMapBottomToolbar
             onZoomIn={() => mapRef.current?.zoomIn()}
             onZoomOut={() => mapRef.current?.zoomOut()}
             onResetView={() => mapRef.current?.resetView()}
@@ -520,25 +536,6 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
             onChangeTimeRange={setTimeRange}
             visibleLayers={visibleLayers}
             onToggleLayer={handleToggleLayer}
-          />
-
-          {/* Main Map Container */}
-          <MapLibreContainer
-            ref={mapRef}
-            selectedCountry={selectedCountry}
-            onSelectCountry={handleCountrySelect}
-            selectedEvent={selectedEvent}
-            onSelectEvent={handleEventSelect}
-            activeSeverity={activeSeverity}
-            visibleLayers={visibleLayers}
-            events={threatEvents}
-            nodesGeoJson={nodesGeoJson}
-            routesGeoJson={routesGeoJson}
-            densityGeoJson={densityGeoJson}
-          />
-
-          {/* On-Map Severity & Marker Legend */}
-          <ThreatMapLegend
             activeSeverity={activeSeverity}
             onSelectSeverity={setActiveSeverity}
           />
