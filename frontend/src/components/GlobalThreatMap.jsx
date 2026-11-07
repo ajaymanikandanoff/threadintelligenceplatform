@@ -291,7 +291,7 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
                 gap: '5px'
               }}>
                 <Flame size={12} />
-                MAPLIBRE GL SOC MAP
+                LIVE CYBER ATTACK MAP
               </span>
 
               {isBackendLive ? (
