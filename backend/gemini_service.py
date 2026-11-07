@@ -2,8 +2,11 @@ import os
 import json
 import re
 import httpx
+import logging
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
+
+logger = logging.getLogger("gemini_service")
 
 # Ensure environment variables are loaded
 load_dotenv()
@@ -505,30 +508,17 @@ Make sure graph_data has nodes for actor, malware, cve, techniques, target secto
         return fallback
 
 
-async def chat_with_copilot(context_threat: Dict[str, Any], query: str, chat_history: list, api_key: Optional[str] = None, model: str = DEFAULT_MODEL) -> str:
-    """Answers analyst questions grounded in the current threat intelligence context."""
-    if not api_key:
-        api_key = os.environ.get("GEMINI_API_KEY", "")
-
+def generate_rule_based_copilot_response(query: str, context_threat: Dict[str, Any]) -> str:
+    """Generates a rich, structured SOC CTI Copilot response offline or when Gemini quota is exhausted."""
     summary = context_threat.get("executive_summary", "")
-    actor = context_threat.get("threat_actor", {}).get("name", "Unknown Actor")
+    actor = context_threat.get("threat_actor", {}).get("name", "CL0P Gang (TA505)")
     cves = [c.get("id") for c in context_threat.get("cves", [])]
     iocs = [f"{i.get('type')}: {i.get('value')}" for i in context_threat.get("iocs", [])[:8]]
     mitre = [f"{m.get('id')} ({m.get('name')})" for m in context_threat.get("mitre_techniques", [])]
 
-    grounded_context = f"""CURRENT THREAT CONTEXT:
-- Threat Actor: {actor}
-- Exploited CVEs: {', '.join(cves) if cves else 'None identified'}
-- MITRE Techniques: {', '.join(mitre)}
-- Indicators of Compromise (IoCs): {', '.join(iocs)}
-- Threat Overview: {summary}
-"""
-
-    if not api_key or not api_key.strip():
-        # Smart local response
-        q_lower = query.lower()
-        if "patch" in q_lower or "version" in q_lower or "software" in q_lower or "cve" in q_lower or "vulnerab" in q_lower:
-            return f"""### 🩹 Emergency Patching & Vulnerability Advisory for **{actor}**
+    q_lower = query.lower()
+    if "patch" in q_lower or "version" in q_lower or "software" in q_lower or "cve" in q_lower or "vulnerab" in q_lower:
+        return f"""### 🩹 Emergency Patching & Vulnerability Advisory for **{actor}**
 
 **Critical Vulnerability Correlation:**
 The active campaign heavily leverages **{', '.join(cves) if cves else 'CVE-2023-34362'}** to achieve initial foothold and unauthenticated data access.
@@ -545,8 +535,8 @@ The active campaign heavily leverages **{', '.join(cves) if cves else 'CVE-2023-
 
 *Tip: You can export detection rules (YARA & Sigma) directly from the Defense Engineering tab.*"""
 
-        elif "1 hour" in q_lower or "hour" in q_lower or "execute" in q_lower or ("what" in q_lower and "team" in q_lower):
-            return f"""### ⚡ Incident Response Playbook: 1-Hour SOC Containment Sequence
+    elif "1 hour" in q_lower or "hour" in q_lower or "execute" in q_lower or ("what" in q_lower and "team" in q_lower):
+        return f"""### ⚡ Incident Response Playbook: 1-Hour SOC Containment Sequence
 
 For active containment against **{actor}**, execute the following time-critical sequence:
 
@@ -566,8 +556,8 @@ For active containment against **{actor}**, execute the following time-critical 
 4. **[Minutes 45–60] Forensic Preservation & Patching:**
    - Snapshot virtual machine disks and capture memory dumps of affected servers before rebooting for patch deployment."""
 
-        elif "vector" in q_lower or "asset" in q_lower or ("summar" in q_lower and "attack" in q_lower):
-            return f"""### 🛡️ Threat Vector & Asset Impact Summary for **{actor}**
+    elif "vector" in q_lower or "asset" in q_lower or ("summar" in q_lower and "attack" in q_lower):
+        return f"""### 🛡️ Threat Vector & Asset Impact Summary for **{actor}**
 
 - **Primary Attack Vector:** Initial access is obtained by exploiting **{', '.join(cves) if cves else 'CVE-2023-34362'}** via unauthenticated SQL Injection (`T1190: Exploit Public-Facing Application`).
 - **Persistence Mechanism:** Placement of customized web shells (`T1505.003: Web Shell`, e.g., LEMURLOOT `human2.aspx`) within web server root directories.
@@ -577,8 +567,8 @@ For active containment against **{actor}**, execute the following time-critical 
   - Target Industry Sectors: {', '.join(context_threat.get('target_sectors', ['Healthcare, Finance, Government']))}.
 - **Adversary Objective:** Mass data theft, cloud credential harvesting, and multi-million dollar extortion."""
 
-        elif "ioc" in q_lower or "ip" in q_lower or "hash" in q_lower or "indicator" in q_lower:
-            return f"""### 🔍 Extracted Indicators of Compromise (IoCs) for **{actor}**
+    elif "ioc" in q_lower or "ip" in q_lower or "hash" in q_lower or "indicator" in q_lower:
+        return f"""### 🔍 Extracted Indicators of Compromise (IoCs) for **{actor}**
 
 The following indicators have been extracted and correlated with this attack campaign for immediate firewall and SIEM ingestion:
 
@@ -588,8 +578,8 @@ The following indicators have been extracted and correlated with this attack cam
 
 *Export the full STIX 2.1 JSON bundle from the Defense Center tab to ingest directly into ThreatConnect or MISP.*"""
 
-        elif "mitigat" in q_lower or "remediat" in q_lower or "defen" in q_lower or "block" in q_lower:
-            return f"""### 🛡️ Recommended Blue Team Mitigation Strategy for **{actor}**
+    elif "mitigat" in q_lower or "remediat" in q_lower or "defen" in q_lower or "block" in q_lower:
+        return f"""### 🛡️ Recommended Blue Team Mitigation Strategy for **{actor}**
 
 Based on the active threat intelligence context, here are the immediate hardening priorities:
 
@@ -610,8 +600,8 @@ Based on the active threat intelligence context, here are the immediate hardenin
 *You can also copy the auto-generated Sigma and YARA rules from the Defense Center tab!*"""
 
         # Specific Known Threat Actors Check (Offline Local Mode)
-        elif "lazarus" in q_lower or "apt38" in q_lower:
-            return """### 🕵️ Threat Actor Profile: **Lazarus Group (APT38 / Hidden Cobra)**
+    elif "lazarus" in q_lower or "apt38" in q_lower:
+        return """### 🕵️ Threat Actor Profile: **Lazarus Group (APT38 / Hidden Cobra)**
 
 - **Origin & Attribution:** Democratic People's Republic of Korea (DPRK / North Korea) - Reconnaissance General Bureau (RGB).
 - **Core Motivation:** State revenue generation via financial extortion, cryptocurrency theft, and cyber espionage.
@@ -623,8 +613,8 @@ Based on the active threat intelligence context, here are the immediate hardenin
 
 *(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
 
-        elif "volt typhoon" in q_lower or "bronze silhouette" in q_lower:
-            return """### 🕵️ Threat Actor Profile: **Volt Typhoon (Vanguard Panda / Bronze Silhouette)**
+    elif "volt typhoon" in q_lower or "bronze silhouette" in q_lower:
+        return """### 🕵️ Threat Actor Profile: **Volt Typhoon (Vanguard Panda / Bronze Silhouette)**
 
 - **Origin & Attribution:** People's Republic of China (PRC State-Sponsored).
 - **Core Motivation:** Pre-positioning for disruptive / destructive cyber attacks against critical national infrastructure (CNI) during geopolitical crises.
@@ -636,8 +626,8 @@ Based on the active threat intelligence context, here are the immediate hardenin
 
 *(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
 
-        elif "scattered spider" in q_lower or "unc3944" in q_lower or "0ktapus" in q_lower:
-            return """### 🕵️ Threat Actor Profile: **Scattered Spider (UNC3944 / Muddled Libra)**
+    elif "scattered spider" in q_lower or "unc3944" in q_lower or "0ktapus" in q_lower:
+        return """### 🕵️ Threat Actor Profile: **Scattered Spider (UNC3944 / Muddled Libra)**
 
 - **Origin & Attribution:** English-speaking cybercrime syndicate (The Com / Star Fraud).
 - **Core Motivation:** Financial extortion, data theft, and ransomware deployment.
@@ -648,8 +638,8 @@ Based on the active threat intelligence context, here are the immediate hardenin
 
 *(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
 
-        elif "fancy bear" in q_lower or "apt28" in q_lower or "strontium" in q_lower:
-            return """### 🕵️ Threat Actor Profile: **Fancy Bear (APT28 / Sofacy / Strontium)**
+    elif "fancy bear" in q_lower or "apt28" in q_lower or "strontium" in q_lower:
+        return """### 🕵️ Threat Actor Profile: **Fancy Bear (APT28 / Sofacy / Strontium)**
 
 - **Origin & Attribution:** Russian Federation - Main Intelligence Directorate (GRU 85th Main Special Service Center).
 - **Core Motivation:** Military and geopolitical intelligence gathering, hack-and-leak influence operations.
@@ -658,8 +648,8 @@ Based on the active threat intelligence context, here are the immediate hardenin
 
 *(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
 
-        elif "lockbit" in q_lower:
-            return """### 🕵️ Threat Actor Profile: **LockBit Ransomware Syndicate**
+    elif "lockbit" in q_lower:
+        return """### 🕵️ Threat Actor Profile: **LockBit Ransomware Syndicate**
 
 - **Origin & Attribution:** Russian-speaking Ransomware-as-a-Service (RaaS) criminal cartel.
 - **Core Motivation:** High-volume financial extortion and corporate data hostage-taking.
@@ -669,8 +659,8 @@ Based on the active threat intelligence context, here are the immediate hardenin
 *(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
 
         # Active workspace investigation actor
-        elif "this actor" in q_lower or "this threat" in q_lower or "active actor" in q_lower or "who is the attacker" in q_lower or (actor.lower().split()[0] in q_lower if actor else False) or "who attacked" in q_lower:
-            return f"""### 🕵️ Threat Actor Profile: **{actor}**
+    elif "this actor" in q_lower or "this threat" in q_lower or "active actor" in q_lower or "who is the attacker" in q_lower or (actor.lower().split()[0] in q_lower if actor else False) or "who attacked" in q_lower:
+        return f"""### 🕵️ Threat Actor Profile: **{actor}**
 
 - **Identity & Attribution:** {actor}
 - **Observed Motivation:** {context_threat.get('threat_actor', {}).get('motivation', 'Targeted cyber intrusion and extortion')}
@@ -680,8 +670,8 @@ Based on the active threat intelligence context, here are the immediate hardenin
 **Attack Signature:** This adversary heavily relies on exploiting public-facing applications ({', '.join(cves) if cves else 'edge gateways'}), establishing web shells for persistence, and utilizing dual-use administrative utilities to evade detection."""
 
         # General Cybersecurity Knowledge Handlers (Offline Local Mode)
-        elif "phish" in q_lower:
-            return """### 🎣 Cybersecurity Concept: Phishing Attacks & Defense
+    elif "phish" in q_lower:
+        return """### 🎣 Cybersecurity Concept: Phishing Attacks & Defense
 
 **Phishing** is a form of social engineering where attackers deceive individuals into divulging sensitive credentials, session tokens, or executing malicious payloads.
 
@@ -699,8 +689,8 @@ Based on the active threat intelligence context, here are the immediate hardenin
 
 *(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
 
-        elif "ransom" in q_lower:
-            return """### 🔒 Cybersecurity Concept: Ransomware Operations & Mitigation
+    elif "ransom" in q_lower:
+        return """### 🔒 Cybersecurity Concept: Ransomware Operations & Mitigation
 
 **Ransomware** is extortion-driven malware that exfiltrates and encrypts an organization's critical data, locks servers, and demands cryptocurrency ransoms.
 
@@ -717,8 +707,8 @@ Based on the active threat intelligence context, here are the immediate hardenin
 
 *(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
 
-        elif "sql injection" in q_lower or "sqli" in q_lower:
-            return """### 💉 Cybersecurity Concept: SQL Injection (SQLi) Vulnerabilities
+    elif "sql injection" in q_lower or "sqli" in q_lower:
+        return """### 💉 Cybersecurity Concept: SQL Injection (SQLi) Vulnerabilities
 
 **SQL Injection (SQLi)** occurs when untrusted user input is directly concatenated into a dynamic database query, allowing an attacker to manipulate SQL syntax, bypass authentication, and access or delete backend data.
 
@@ -734,8 +724,8 @@ Based on the active threat intelligence context, here are the immediate hardenin
 
 *(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
 
-        elif "zero day" in q_lower or "zero-day" in q_lower or "0day" in q_lower:
-            return """### ⚡ Cybersecurity Concept: Zero-Day Vulnerabilities & Exploitation
+    elif "zero day" in q_lower or "zero-day" in q_lower or "0day" in q_lower:
+        return """### ⚡ Cybersecurity Concept: Zero-Day Vulnerabilities & Exploitation
 
 A **Zero-Day (0-day)** vulnerability is a software security flaw that is unknown to the vendor, or for which no official vendor patch currently exists.
 
@@ -751,8 +741,8 @@ A **Zero-Day (0-day)** vulnerability is a software security flaw that is unknown
 
 *(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
 
-        elif "lazarus" in q_lower:
-            return """### 🕵️ Threat Actor Profile: **Lazarus Group (APT38 / Hidden Cobra)**
+    elif "lazarus" in q_lower:
+        return """### 🕵️ Threat Actor Profile: **Lazarus Group (APT38 / Hidden Cobra)**
 
 - **Origin & Attribution:** Democratic People's Republic of Korea (DPRK / North Korea) - Reconnaissance General Bureau (RGB).
 - **Core Motivation:** State revenue generation via financial extortion, cryptocurrency theft, and cyber espionage.
@@ -764,8 +754,8 @@ A **Zero-Day (0-day)** vulnerability is a software security flaw that is unknown
 
 *(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
 
-        else:
-            return f"""### 🤖 AI Threat Intel Copilot (Local CTI Engine)
+    else:
+        return f"""### 🤖 AI Threat Intel Copilot (Local CTI Engine)
 
 Regarding your query: *"{query}"*
 
@@ -778,6 +768,21 @@ Currently, this workstation is operating in **Local Heuristic CTI Mode** (ground
 1. Navigate to the **Settings** tab in the sidebar.
 2. In the **AI Intelligence Engine & Gemini API** section, paste your Gemini API Key.
 3. Click **Save & Connect** — Copilot will instantly unlock full Google Search Grounding across all internet threat feeds!"""
+
+
+async def chat_with_copilot(context_threat: Dict[str, Any], query: str, chat_history: list, api_key: Optional[str] = None, model: str = DEFAULT_MODEL) -> str:
+    """Answers analyst questions grounded in the current threat intelligence context."""
+    if not api_key:
+        api_key = os.environ.get("GEMINI_API_KEY", "")
+
+    summary = context_threat.get("executive_summary", "")
+    actor = context_threat.get("threat_actor", {}).get("name", "CL0P Gang (TA505)")
+    cves = [c.get("id") for c in context_threat.get("cves", [])]
+    iocs = [f"{i.get('type')}: {i.get('value')}" for i in context_threat.get("iocs", [])[:8]]
+    mitre = [f"{m.get('id')} ({m.get('name')})" for m in context_threat.get("mitre_techniques", [])]
+
+    if not api_key or not api_key.strip():
+        return generate_rule_based_copilot_response(query, context_threat)
 
     system_prompt = f"""You are an elite Cyber Threat Intelligence (CTI) Copilot assisting a Senior Security Operations Center (SOC) Analyst, powered by Google Gemini with live internet search grounding.
 
@@ -801,10 +806,14 @@ CRITICAL ANSWERING GUIDELINES:
    - Be actionable, concise, and technically authoritative.
 """
     prompt = f"User Analyst Query: {query}\nProvide actionable, technically precise guidance."
+    
+    if not api_key or not api_key.strip():
+        return generate_rule_based_copilot_response(query, context_threat)
+
     try:
         reply = await call_gemini_api(
-            api_key=api_key, 
-            model_name=model, 
+            api_key=api_key.strip(), 
+            model_name=model or DEFAULT_MODEL, 
             prompt=prompt, 
             system_prompt=system_prompt,
             response_mime_type=None,
