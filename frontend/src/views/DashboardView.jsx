@@ -14,6 +14,7 @@ import {
   Plus,
   Radio
 } from 'lucide-react';
+import { getStoredInvestigations } from '../services/clientScannerService';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
@@ -32,45 +33,56 @@ export default function DashboardView({
 
   useEffect(() => {
     const fetchRecent = async () => {
+      let rawItems = [];
       try {
-        const resp = await fetch(`${API_BASE}/api/investigations?limit=50`);
-        const data = await resp.json();
-        if (resp.ok && Array.isArray(data.investigations)) {
-          const mapped = data.investigations.map(item => {
-            const score = item.risk_score ?? 0;
-            let sev = 'safe';
-            if (score >= 85) sev = 'critical';
-            else if (score >= 70) sev = 'high';
-            else if (score >= 40) sev = 'medium';
-
-            const createdDate = item.created_at ? new Date(item.created_at) : new Date();
-            const now = new Date();
-            const diffMin = Math.round((now - createdDate) / (1000 * 60));
-            let detectedStr = 'Recent';
-            if (diffMin < 2) detectedStr = 'Just now';
-            else if (diffMin < 60) detectedStr = `${diffMin} min ago`;
-            else if (diffMin < 1440) detectedStr = `${Math.round(diffMin / 60)} h ago`;
-            else detectedStr = createdDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-
-            return {
-              id: item.id,
-              indicator: item.indicator,
-              threatType: item.classification || (score >= 70 ? 'High-Risk Campaign' : 'Clean / Legitimate'),
-              riskScore: score,
-              severity: sev,
-              detected: detectedStr,
-              status: score >= 80 ? 'Blocked' : score >= 40 ? 'Investigating' : 'Verified Safe',
-              type: (item.type || 'Indicator').toUpperCase().includes('IP') ? 'IP' : (item.type || '').toUpperCase().includes('URL') ? 'URL' : (item.type || '').toUpperCase().includes('DOMAIN') ? 'Domain' : 'PDF',
-              raw: item
-            };
-          });
-          setInvestigations(mapped);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2800);
+        const resp = await fetch(`${API_BASE}/api/investigations?limit=50`, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (Array.isArray(data.investigations) && data.investigations.length > 0) {
+            rawItems = data.investigations;
+          }
         }
-      } catch (err) {
-        console.error('Failed to load dashboard investigations:', err);
-      } finally {
-        setIsLoading(false);
+      } catch {
+        // Backend offline or unreachable
       }
+
+      if (rawItems.length === 0) {
+        rawItems = getStoredInvestigations();
+      }
+
+      const mapped = rawItems.map(item => {
+        const score = item.risk_score ?? 0;
+        let sev = 'safe';
+        if (score >= 85) sev = 'critical';
+        else if (score >= 70) sev = 'high';
+        else if (score >= 40) sev = 'medium';
+
+        const createdDate = item.created_at ? new Date(item.created_at) : new Date();
+        const now = new Date();
+        const diffMin = Math.round((now - createdDate) / (1000 * 60));
+        let detectedStr = 'Recent';
+        if (diffMin < 2) detectedStr = 'Just now';
+        else if (diffMin < 60) detectedStr = `${diffMin} min ago`;
+        else if (diffMin < 1440) detectedStr = `${Math.round(diffMin / 60)} h ago`;
+        else detectedStr = createdDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+
+        return {
+          id: item.id,
+          indicator: item.indicator,
+          threatType: item.classification || (score >= 70 ? 'High-Risk Campaign' : 'Clean / Legitimate'),
+          riskScore: score,
+          severity: sev,
+          detected: detectedStr,
+          status: score >= 80 ? 'Blocked' : score >= 40 ? 'Investigating' : 'Verified Safe',
+          type: (item.type || 'Indicator').toUpperCase().includes('IP') ? 'IP' : (item.type || '').toUpperCase().includes('URL') ? 'URL' : (item.type || '').toUpperCase().includes('DOMAIN') ? 'Domain' : 'PDF',
+          raw: item
+        };
+      });
+      setInvestigations(mapped);
+      setIsLoading(false);
     };
     fetchRecent();
   }, []);

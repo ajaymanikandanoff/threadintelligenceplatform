@@ -14,6 +14,7 @@ import {
   Trash2
 } from 'lucide-react';
 import ScanDetailsModal from '../components/ScanDetailsModal';
+import { getStoredInvestigations, deleteStoredInvestigation } from '../services/clientScannerService';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
@@ -72,19 +73,25 @@ export default function InvestigationHistoryView({ onOpenInvestigation }) {
 
   const fetchInvestigations = async () => {
     setIsLoading(true);
+    let items = [];
     try {
-      const resp = await fetch(`${API_BASE}/api/investigations?limit=100`);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 2500);
+      const resp = await fetch(`${API_BASE}/api/investigations?limit=100`, { signal: controller.signal });
+      clearTimeout(timeout);
       const data = await resp.json();
       if (resp.ok && data.investigations && data.investigations.length > 0) {
-        setInvestigations(data.investigations);
-      } else {
-        setInvestigations(FALLBACK_HISTORY);
+        items = data.investigations;
       }
     } catch {
-      setInvestigations(FALLBACK_HISTORY);
-    } finally {
-      setIsLoading(false);
+      // Backend offline
     }
+
+    if (items.length === 0) {
+      items = getStoredInvestigations();
+    }
+    setInvestigations(items.length > 0 ? items : FALLBACK_HISTORY);
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -97,16 +104,12 @@ export default function InvestigationHistoryView({ onOpenInvestigation }) {
       return;
     }
     try {
-      const resp = await fetch(`${API_BASE}/api/investigations/${id}`, { method: 'DELETE' });
-      if (resp.ok) {
-        setInvestigations(prev => prev.filter(item => item.id !== id));
-      } else {
-        alert('Could not delete record from server.');
-      }
-    } catch (err) {
-      // In case of local fallback
-      setInvestigations(prev => prev.filter(item => item.id !== id));
+      await fetch(`${API_BASE}/api/investigations/${id}`, { method: 'DELETE' });
+    } catch {
+      // offline delete
     }
+    deleteStoredInvestigation(id);
+    setInvestigations(prev => prev.filter(item => item.id !== id));
   };
 
   const handleClearAll = async () => {

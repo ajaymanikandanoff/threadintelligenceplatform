@@ -15,6 +15,7 @@ import {
   Server,
   RotateCcw
 } from 'lucide-react';
+import { clientScanUrl } from '../services/clientScannerService';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
@@ -40,20 +41,32 @@ export default function UrlAnalysisView({ onSelectIndicator }) {
     setScanError(null);
     setScanResult(null);
 
+    let data = null;
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3500);
       const resp = await fetch(`${API_BASE}/api/scan/url`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: urlToScan })
+        body: JSON.stringify({ url: urlToScan }),
+        signal: controller.signal
       });
-      const data = await resp.json();
-      if (!resp.ok) {
-        throw new Error(data.detail || 'URL analysis request failed');
+      clearTimeout(timeout);
+      if (resp.ok) {
+        data = await resp.json();
+      }
+    } catch {
+      // Backend offline or unreachable on hosted link
+    }
+
+    try {
+      if (!data) {
+        data = await clientScanUrl(urlToScan);
       }
       setScanResult(data);
       setUrlInput(urlToScan);
     } catch (err) {
-      setScanError(err.message);
+      setScanError(err.message || 'URL threat analysis failed.');
     } finally {
       setIsLoading(false);
     }

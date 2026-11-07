@@ -17,6 +17,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import KnowledgeGraph from '../components/KnowledgeGraph';
+import { clientScanDomain, clientScanIp, clientScanUrl } from '../services/clientScannerService';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
@@ -84,15 +85,33 @@ export default function ThreatAnalyzerView({ onSelectIndicator, initialIndicator
       body = { domain: raw };
     }
 
+    let data = null;
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3500);
       const resp = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
+        signal: controller.signal
       });
-      const data = await resp.json();
-      if (!resp.ok) {
-        throw new Error(data.detail || 'Analysis failed');
+      clearTimeout(timeout);
+      if (resp.ok) {
+        data = await resp.json();
+      }
+    } catch {
+      // Backend offline or unreachable on hosted link
+    }
+
+    try {
+      if (!data) {
+        if (detectedType === 'IP address' || detectedType === 'IP') {
+          data = await clientScanIp(raw);
+        } else if (detectedType === 'Domain') {
+          data = await clientScanDomain(raw);
+        } else {
+          data = await clientScanUrl(raw);
+        }
       }
 
       const score = data.risk_score !== undefined ? data.risk_score : data.abuse_score || 0;
@@ -123,7 +142,7 @@ export default function ThreatAnalyzerView({ onSelectIndicator, initialIndicator
         technical: data
       });
     } catch (err) {
-      setScanError(err.message);
+      setScanError(err.message || 'Indicator analysis failed.');
     } finally {
       setIsAnalyzing(false);
     }

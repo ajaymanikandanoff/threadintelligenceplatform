@@ -13,6 +13,7 @@ import {
   Share2
 } from 'lucide-react';
 import KnowledgeGraph from '../components/KnowledgeGraph';
+import { getStoredInvestigations } from '../services/clientScannerService';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
@@ -30,44 +31,50 @@ export default function ThreatIntelligenceView({
 
   const fetchScannedIndicators = async () => {
     setIsLoading(true);
+    let rawList = [];
     try {
-      const resp = await fetch(`${API_BASE}/api/investigations?limit=100`);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 2800);
+      const resp = await fetch(`${API_BASE}/api/investigations?limit=100`, { signal: controller.signal });
+      clearTimeout(timeout);
       const data = await resp.json();
-      if (resp.ok && Array.isArray(data.investigations)) {
-        const mapped = data.investigations.map(item => {
-          const typeStr = (item.type || 'Indicator').toUpperCase();
-          const score = item.risk_score ?? 0;
-          let sev = 'safe';
-          if (score >= 85) sev = 'critical';
-          else if (score >= 70) sev = 'high';
-          else if (score >= 40) sev = 'medium';
-
-          return {
-            id: item.id,
-            indicator: item.indicator,
-            type: typeStr.includes('IP') ? 'IP' : typeStr.includes('URL') ? 'URL' : typeStr.includes('DOMAIN') ? 'Domain' : 'PDF',
-            category: item.classification || item.details?.classification || 'Analyzed Target',
-            severity: sev,
-            score: score,
-            firstSeen: item.created_at ? new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent Scan',
-            detections: item.details?.detections || (item.details?.risk_factors?.length ? `${item.details.risk_factors.length} flagged checks` : 'Telemetry Verified'),
-            source: item.analyst || 'Analyst Scan',
-            raw: item
-          };
-        });
-        setInvestigations(mapped);
-        if (mapped.length > 0 && !selectedId) {
-          setSelectedId(mapped[0].id);
-        }
-      } else {
-        setInvestigations([]);
+      if (resp.ok && Array.isArray(data.investigations) && data.investigations.length > 0) {
+        rawList = data.investigations;
       }
-    } catch (err) {
-      console.error('Error fetching investigations:', err);
-      setInvestigations([]);
-    } finally {
-      setIsLoading(false);
+    } catch {
+      // Backend offline
     }
+
+    if (rawList.length === 0) {
+      rawList = getStoredInvestigations();
+    }
+
+    const mapped = rawList.map(item => {
+      const typeStr = (item.type || 'Indicator').toUpperCase();
+      const score = item.risk_score ?? 0;
+      let sev = 'safe';
+      if (score >= 85) sev = 'critical';
+      else if (score >= 70) sev = 'high';
+      else if (score >= 40) sev = 'medium';
+
+      return {
+        id: item.id,
+        indicator: item.indicator,
+        type: typeStr.includes('IP') ? 'IP' : typeStr.includes('URL') ? 'URL' : typeStr.includes('DOMAIN') ? 'Domain' : 'PDF',
+        category: item.classification || item.details?.classification || 'Analyzed Target',
+        severity: sev,
+        score: score,
+        firstSeen: item.created_at ? new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent Scan',
+        detections: item.details?.detections || (item.details?.risk_factors?.length ? `${item.details.risk_factors.length} flagged checks` : 'Telemetry Verified'),
+        source: item.analyst || 'Analyst Scan',
+        raw: item
+      };
+    });
+    setInvestigations(mapped);
+    if (mapped.length > 0 && !selectedId) {
+      setSelectedId(mapped[0].id);
+    }
+    setIsLoading(false);
   };
 
   useEffect(() => {

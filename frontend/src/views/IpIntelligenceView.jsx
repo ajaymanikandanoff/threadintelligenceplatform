@@ -16,6 +16,7 @@ import {
   Radio,
   RotateCcw
 } from 'lucide-react';
+import { clientScanIp } from '../services/clientScannerService';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
@@ -41,20 +42,32 @@ export default function IpIntelligenceView({ onSelectIndicator }) {
     setScanError(null);
     setScanResult(null);
 
+    let data = null;
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3500);
       const resp = await fetch(`${API_BASE}/api/scan/ip`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ip: ipToScan })
+        body: JSON.stringify({ ip: ipToScan }),
+        signal: controller.signal
       });
-      const data = await resp.json();
-      if (!resp.ok) {
-        throw new Error(data.detail || 'IP scan request failed');
+      clearTimeout(timeout);
+      if (resp.ok) {
+        data = await resp.json();
+      }
+    } catch {
+      // Backend offline or unreachable on hosted link
+    }
+
+    try {
+      if (!data) {
+        data = await clientScanIp(ipToScan);
       }
       setScanResult(data);
       setIpInput(ipToScan);
     } catch (err) {
-      setScanError(err.message);
+      setScanError(err.message || 'IP scan request failed.');
     } finally {
       setIsLoading(false);
     }

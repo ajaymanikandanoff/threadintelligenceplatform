@@ -22,6 +22,7 @@ import {
   Trash2,
   Clock
 } from 'lucide-react';
+import { clientResearchPdf } from '../services/clientScannerService';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
@@ -155,19 +156,31 @@ export default function PdfResearchView({ onSelectIndicator }) {
     fd.append('file', file);
     fd.append('user_email', 'analyst@threatlens.io');
 
+    let data = null;
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4000);
       const resp = await fetch(`${API_BASE}/api/research/pdf`, {
         method: 'POST',
-        body: fd
+        body: fd,
+        signal: controller.signal
       });
-      const data = await resp.json();
-      if (!resp.ok) {
-        throw new Error(data.detail || 'PDF processing failed');
+      clearTimeout(timeout);
+      if (resp.ok) {
+        data = await resp.json();
+      }
+    } catch {
+      // Backend offline or unreachable on hosted link
+    }
+
+    try {
+      if (!data) {
+        data = await clientResearchPdf(file);
       }
       setResearchResult(data);
       saveReportToHistory(data);
     } catch (err) {
-      setErrorMsg(err.message);
+      setErrorMsg(err.message || 'PDF analysis failed.');
     } finally {
       setIsLoading(false);
     }
@@ -179,17 +192,23 @@ export default function PdfResearchView({ onSelectIndicator }) {
     setResearchResult(null);
 
     try {
-      // In sample data endpoint, sample report content is available
-      const resp = await fetch(`${API_BASE}/api/sample-reports`);
-      const data = await resp.json();
-      const match = data.reports?.find(r => r.title.toLowerCase().includes(sampleName.toLowerCase().split('_')[0])) || data.reports?.[0];
-      
-      // Convert to dummy blob if needed, or directly analyze
-      if (match) {
-        const textBlob = new Blob([match.content], { type: 'application/pdf' });
-        const dummyFile = new File([textBlob], sampleName, { type: 'application/pdf' });
-        await handleFileUpload(dummyFile);
+      let dummyFile = null;
+      try {
+        const resp = await fetch(`${API_BASE}/api/sample-reports`);
+        const data = await resp.json();
+        const match = data.reports?.find(r => r.title.toLowerCase().includes(sampleName.toLowerCase().split('_')[0])) || data.reports?.[0];
+        if (match) {
+          const textBlob = new Blob([match.content], { type: 'application/pdf' });
+          dummyFile = new File([textBlob], sampleName, { type: 'application/pdf' });
+        }
+      } catch {
+        // Fallback
       }
+      if (!dummyFile) {
+        const textBlob = new Blob([`Cyber Threat Research Advisory: ${sampleName}`], { type: 'application/pdf' });
+        dummyFile = new File([textBlob], sampleName, { type: 'application/pdf' });
+      }
+      await handleFileUpload(dummyFile);
     } catch (err) {
       setErrorMsg(`Failed to load sample: ${err.message}`);
       setIsLoading(false);
