@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, ExternalLink, Check, AlertCircle, ShieldCheck, Cpu } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+
 export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, selectedModel, setSelectedModel, onSave }) {
   const [tempKey, setTempKey] = useState(apiKey || '');
   const [tempModel, setTempModel] = useState(selectedModel || 'gemini-2.5-flash');
@@ -17,7 +19,7 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, sele
     setTesting(true);
     setTestResult(null);
     try {
-      const r = await fetch('http://localhost:8000/api/test-key', {
+      const r = await fetch(`${API_BASE}/api/test-key`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ api_key: tempKey.trim(), model: tempModel })
@@ -25,7 +27,7 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, sele
       const d = await r.json();
       setTestResult({ ok: d.success, msg: d.success ? 'Gemini API key verified successfully!' : (d.error || 'Validation failed.') });
     } catch {
-      setTestResult({ ok: false, msg: 'Cannot reach backend on port 8000.' });
+      setTestResult({ ok: false, msg: `Cannot reach backend at ${API_BASE}.` });
     } finally {
       setTesting(false);
     }

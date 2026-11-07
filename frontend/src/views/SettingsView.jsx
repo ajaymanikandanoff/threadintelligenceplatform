@@ -18,6 +18,8 @@ import {
   Moon
 } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+
 export default function SettingsView({
   currentUser,
   onUpdateUser,
@@ -80,7 +82,7 @@ export default function SettingsView({
     }
     try {
       localStorage.setItem('user_session', JSON.stringify(updated));
-      await fetch('http://localhost:8000/api/auth/profile', {
+      await fetch(`${API_BASE}/api/auth/profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: currentUser?.email || email, name: displayName, avatar })
@@ -104,7 +106,7 @@ export default function SettingsView({
 
     setIsPwLoading(true);
     try {
-      const resp = await fetch('http://localhost:8000/api/auth/change-password', {
+      const resp = await fetch(`${API_BASE}/api/auth/change-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

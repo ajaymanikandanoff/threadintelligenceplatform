@@ -15,7 +15,7 @@ import {
 import { auth, googleProvider, signInWithPopup } from '../utils/firebase';
 import ForgotPasswordModal from '../components/ForgotPasswordModal';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 // Web Crypto SHA-256 + Salt hashing (matching aifactchecker)

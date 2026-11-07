@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import KnowledgeGraph from '../components/KnowledgeGraph';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
 export default function ThreatAnalyzerView({ onSelectIndicator, initialIndicator }) {
   const [activeTypeTab, setActiveTypeTab] = useState('URL');

@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import ScanDetailsModal from '../components/ScanDetailsModal';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
 const FALLBACK_HISTORY = [
   {

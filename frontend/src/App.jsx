@@ -41,6 +41,8 @@ import {
   LogOut
 } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [threatData, setThreatData] = useState(null);
@@ -94,7 +96,7 @@ export default function App() {
     setIsAnalyzing(true);
     if (reportId) setActiveReportId(reportId);
     try {
-      const r = await fetch('http://localhost:8000/api/analyze', {
+      const r = await fetch(`${API_BASE}/api/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, title, api_key: apiKey || null, model: selectedModel })
@@ -118,9 +120,9 @@ export default function App() {
     (async () => {
       try {
         const [rr, mr, hr] = await Promise.all([
-          fetch('http://localhost:8000/api/sample-reports'),
-          fetch('http://localhost:8000/api/mitre-matrix'),
-          fetch('http://localhost:8000/api/health')
+          fetch(`${API_BASE}/api/sample-reports`),
+          fetch(`${API_BASE}/api/mitre-matrix`),
+          fetch(`${API_BASE}/api/health`)
         ]);
         const rd = await rr.json(), md = await mr.json(), hd = await hr.json();
         setSampleReports(rd.reports || []);
@@ -151,7 +153,7 @@ export default function App() {
       fd.append('file', file);
       if (apiKey) fd.append('api_key', apiKey);
       if (selectedModel) fd.append('model', selectedModel);
-      const r = await fetch('http://localhost:8000/api/upload-pdf', { method: 'POST', body: fd });
+      const r = await fetch(`${API_BASE}/api/upload-pdf`, { method: 'POST', body: fd });
       if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Upload failed'); }
       const d = await r.json();
       setThreatData(d);
@@ -172,7 +174,7 @@ export default function App() {
     setCopilotMessages(msgs);
     setIsCopilotLoading(true);
     try {
-      const r = await fetch('http://localhost:8000/api/copilot', {
+      const r = await fetch(`${API_BASE}/api/copilot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: q, context_threat: threatData || {}, chat_history: msgs.slice(-6), api_key: apiKey || null, model: selectedModel })
