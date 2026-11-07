@@ -15,10 +15,13 @@ from datetime import datetime
 import database
 
 def _load_investigations() -> List[Dict[str, Any]]:
-    return database.load_investigations()
+    if hasattr(database, "load_investigations"):
+        return database.load_investigations()
+    return []
 
 def _save_investigations(items: List[Dict[str, Any]]) -> None:
-    database.save_investigations(items)
+    if hasattr(database, "save_investigations"):
+        database.save_investigations(items)
 
 def save_investigation_record(
     indicator: str,
@@ -74,7 +77,8 @@ def save_investigation_record(
     }
 
     # Insert directly to database (MongoDB Atlas or JSON fallback)
-    database.insert_investigation(record)
+    if hasattr(database, "insert_investigation"):
+        database.insert_investigation(record)
     return record
 
 def get_all_investigations(

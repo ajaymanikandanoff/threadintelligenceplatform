@@ -717,7 +717,7 @@ pre, code { font-family: var(--font-mono); }
 
 .app-main-canvas {
   flex: 1;
-  padding: 24px 32px;
+  padding: 16px 22px;
   overflow-y: auto;
   max-height: calc(100vh - 48px);
   -webkit-overflow-scrolling: touch;
@@ -747,6 +747,48 @@ pre, code { font-family: var(--font-mono); }
   padding: 5px 10px;
   width: 240px;
   transition: width 0.2s ease;
+}
+
+/* Dashboard Desktop & Laptop Responsive Grid System */
+.dashboard-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+.dashboard-middle-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1.2fr;
+  gap: 14px;
+}
+
+.dashboard-lower-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 14px;
+}
+
+.dashboard-quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dashboard-kpi-card {
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dashboard-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hover) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 /* Tablet & Mobile Breakpoints (<= 960px) */

@@ -220,14 +220,14 @@ export default function DashboardView({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
       {/* ─── Top Header Row ─── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
             Threat Intelligence Overview
           </h1>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
             Monitor global attack activity, analyze indicators, and investigate emerging cyber threats.
           </p>
         </div>
@@ -237,13 +237,13 @@ export default function DashboardView({
             type="button"
             onClick={() => onNavigateTab && onNavigateTab('threat-map')}
             style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
+              display: 'flex', alignItems: 'center', gap: '7px',
               background: 'var(--bg-elevated)',
               border: '1px solid var(--border)',
               color: 'var(--accent)',
               borderRadius: '6px',
-              padding: '8px 14px',
-              fontSize: '12.5px',
+              padding: '6px 12px',
+              fontSize: '12px',
               fontWeight: '600',
               cursor: 'pointer',
               transition: 'background 0.12s ease'
@@ -251,20 +251,20 @@ export default function DashboardView({
             onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
             onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elevated)'}
           >
-            <Radio size={14} strokeWidth={2.2} color="var(--accent)" />
+            <Radio size={13} strokeWidth={2.2} color="var(--accent)" />
             <span>Global Threat & Data Map</span>
           </button>
 
           <button
             onClick={onOpenNewAnalysis}
             style={{
-              display: 'flex', alignItems: 'center', gap: '7px',
+              display: 'flex', alignItems: 'center', gap: '6px',
               background: 'var(--accent)',
               color: '#ffffff',
               border: 'none',
               borderRadius: '6px',
-              padding: '8px 16px',
-              fontSize: '12.5px',
+              padding: '6px 14px',
+              fontSize: '12px',
               fontWeight: '600',
               cursor: 'pointer',
               transition: 'opacity 0.12s ease'
@@ -272,7 +272,7 @@ export default function DashboardView({
             onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
             onMouseLeave={e => e.currentTarget.style.opacity = '1'}
           >
-            <Plus size={15} strokeWidth={2.4} />
+            <Plus size={14} strokeWidth={2.4} />
             <span>New analysis</span>
           </button>
         </div>
@@ -281,137 +281,137 @@ export default function DashboardView({
       {/* ─── 5 KPI Metric Cards ─── */}
       <div className="dashboard-kpi-grid">
         {/* Total Analyzed */}
-        <div style={{
+        <div className="dashboard-kpi-card" style={{
           background: 'var(--bg-elevated)',
           border: '1px solid var(--border)',
           borderRadius: '6px',
-          padding: '14px 16px',
-          display: 'flex', flexDirection: 'column', gap: '8px',
+          padding: '11px 13px',
+          display: 'flex', flexDirection: 'column', gap: '6px',
           position: 'relative'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>Total analyzed</span>
+            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>Total analyzed</span>
             <div style={{
-              width: '28px', height: '28px', borderRadius: '5px',
+              width: '24px', height: '24px', borderRadius: '5px',
               background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-              <ShieldAlert size={14} color="#38bdf8" />
+              <ShieldAlert size={13} color="#38bdf8" />
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: '21px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
               {totalAnalyzedCount}
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Verified analyst targets</div>
+            <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Verified targets</div>
           </div>
         </div>
 
         {/* Critical Threats */}
-        <div style={{
+        <div className="dashboard-kpi-card" style={{
           background: 'var(--bg-elevated)',
           border: '1px solid var(--border)',
           borderRadius: '6px',
-          padding: '14px 16px',
-          display: 'flex', flexDirection: 'column', gap: '8px',
+          padding: '11px 13px',
+          display: 'flex', flexDirection: 'column', gap: '6px',
           position: 'relative'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>Critical threats</span>
+            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>Critical threats</span>
             <div style={{
-              width: '28px', height: '28px', borderRadius: '5px',
+              width: '24px', height: '24px', borderRadius: '5px',
               background: 'rgba(248, 81, 73, 0.1)', border: '1px solid rgba(248, 81, 73, 0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-              <AlertTriangle size={14} color="#f85149" />
+              <AlertTriangle size={13} color="#f85149" />
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: '21px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
               {criticalThreatsCount}
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Score 85 and above</div>
+            <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Score 85+</div>
           </div>
         </div>
 
         {/* High Risk */}
-        <div style={{
+        <div className="dashboard-kpi-card" style={{
           background: 'var(--bg-elevated)',
           border: '1px solid var(--border)',
           borderRadius: '6px',
-          padding: '14px 16px',
-          display: 'flex', flexDirection: 'column', gap: '8px',
+          padding: '11px 13px',
+          display: 'flex', flexDirection: 'column', gap: '6px',
           position: 'relative'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>High-risk</span>
+            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>High-risk</span>
             <div style={{
-              width: '28px', height: '28px', borderRadius: '5px',
+              width: '24px', height: '24px', borderRadius: '5px',
               background: 'rgba(227, 179, 65, 0.1)', border: '1px solid rgba(227, 179, 65, 0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-              <Zap size={14} color="#e3b341" />
+              <Zap size={13} color="#e3b341" />
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: '21px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
               {highRiskCount}
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Score 70 to 84</div>
+            <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Score 70 to 84</div>
           </div>
         </div>
 
         {/* Safe Results */}
-        <div style={{
+        <div className="dashboard-kpi-card" style={{
           background: 'var(--bg-elevated)',
           border: '1px solid var(--border)',
           borderRadius: '6px',
-          padding: '14px 16px',
-          display: 'flex', flexDirection: 'column', gap: '8px',
+          padding: '11px 13px',
+          display: 'flex', flexDirection: 'column', gap: '6px',
           position: 'relative'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>Safe results</span>
+            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>Safe results</span>
             <div style={{
-              width: '28px', height: '28px', borderRadius: '5px',
+              width: '24px', height: '24px', borderRadius: '5px',
               background: 'rgba(63, 185, 80, 0.1)', border: '1px solid rgba(63, 185, 80, 0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-              <ShieldCheck size={14} color="#3fb950" />
+              <ShieldCheck size={13} color="#3fb950" />
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: '21px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
               {safeCount}
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Verified low/no threat</div>
+            <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Verified low/no threat</div>
           </div>
         </div>
 
         {/* Recent Investigations */}
-        <div style={{
+        <div className="dashboard-kpi-card" style={{
           background: 'var(--bg-elevated)',
           border: '1px solid var(--border)',
           borderRadius: '6px',
-          padding: '14px 16px',
-          display: 'flex', flexDirection: 'column', gap: '8px',
+          padding: '11px 13px',
+          display: 'flex', flexDirection: 'column', gap: '6px',
           position: 'relative'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>Active investigations</span>
+            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>Active investigations</span>
             <div style={{
-              width: '28px', height: '28px', borderRadius: '5px',
+              width: '24px', height: '24px', borderRadius: '5px',
               background: 'rgba(137, 87, 229, 0.1)', border: '1px solid rgba(137, 87, 229, 0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-              <Clock size={14} color="#8957e5" />
+              <Clock size={13} color="#8957e5" />
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: '21px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
               {investigations.length}
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Logged in platform</div>
+            <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Logged in platform</div>
           </div>
         </div>
       </div>
@@ -423,13 +423,13 @@ export default function DashboardView({
           background: 'var(--bg-elevated)',
           border: '1px solid var(--border)',
           borderRadius: '6px',
-          padding: '16px 20px',
-          display: 'flex', flexDirection: 'column', gap: '14px'
+          padding: '13px 16px',
+          display: 'flex', flexDirection: 'column', gap: '10px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>Threat activity</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>Analyses per day, last 7 days</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Threat activity</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>Analyses per day, last 7 days</div>
             </div>
 
             <div style={{ display: 'flex', background: 'var(--bg-overlay)', borderRadius: '6px', padding: '3px', border: '1px solid var(--border)' }}>
@@ -438,7 +438,7 @@ export default function DashboardView({
                   key={r}
                   onClick={() => setTimeRange(r)}
                   style={{
-                    padding: '4px 10px',
+                    padding: '3px 9px',
                     borderRadius: '4px',
                     fontSize: '11px',
                     fontWeight: '600',
@@ -457,7 +457,7 @@ export default function DashboardView({
           </div>
 
           {/* SVG Wave Chart */}
-          <div style={{ width: '100%', height: '190px', position: 'relative' }}>
+          <div style={{ width: '100%', height: '148px', position: 'relative' }}>
             <svg viewBox="0 0 600 190" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
               <defs>
                 <linearGradient id="purpleWaveGrad" x1="0" y1="0" x2="0" y2="1">
@@ -566,16 +566,16 @@ export default function DashboardView({
           background: 'var(--bg-elevated)',
           border: '1px solid var(--border)',
           borderRadius: '6px',
-          padding: '16px 20px',
-          display: 'flex', flexDirection: 'column', gap: '14px'
+          padding: '13px 16px',
+          display: 'flex', flexDirection: 'column', gap: '10px'
         }}>
           <div>
-            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>Severity distribution</div>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>Share of all analyzed indicators</div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Severity distribution</div>
+            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>Share of all analyzed indicators</div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '170px', position: 'relative' }}>
-            <svg viewBox="0 0 160 160" width="160" height="160">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '138px', position: 'relative' }}>
+            <svg viewBox="0 0 160 160" width="135" height="135">
               <circle cx="80" cy="80" r="62" fill="none" stroke="rgba(255, 255, 255, 0.04)" strokeWidth="15" />
               {/* Safe */}
               {severityStats.lenSafe > 0 && (
@@ -624,10 +624,10 @@ export default function DashboardView({
               position: 'absolute',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
             }}>
-              <span style={{ fontSize: '24px', fontWeight: '900', color: 'var(--text-primary)', lineHeight: 1 }}>
+              <span style={{ fontSize: '20px', fontWeight: '900', color: 'var(--text-primary)', lineHeight: 1 }}>
                 {severityStats.dominantPct}%
               </span>
-              <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 {severityStats.dominantLabel}
               </span>
             </div>
@@ -662,25 +662,25 @@ export default function DashboardView({
           background: 'var(--bg-elevated)',
           border: '1px solid var(--border)',
           borderRadius: '6px',
-          padding: '16px 20px',
-          display: 'flex', flexDirection: 'column', gap: '14px'
+          padding: '13px 16px',
+          display: 'flex', flexDirection: 'column', gap: '10px'
         }}>
           <div>
-            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>Top threat categories</div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Top threat categories</div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
             {categoryStats.map(cat => (
-              <div key={cat.label} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div key={cat.label} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '12.5px', color: 'var(--text-primary)', fontWeight: '500' }}>{cat.label}</span>
-                  <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>{cat.count}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: '500' }}>{cat.label}</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>{cat.count}</span>
                 </div>
-                <div style={{ width: '100%', height: '5px', borderRadius: '3px', background: 'rgba(255, 255, 255, 0.05)', overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: '4px', borderRadius: '2px', background: 'rgba(255, 255, 255, 0.05)', overflow: 'hidden' }}>
                   <div style={{
                     width: `${cat.pct}%`,
                     height: '100%',
-                    borderRadius: '3px',
+                    borderRadius: '2px',
                     background: cat.color
                   }} />
                 </div>
@@ -694,11 +694,11 @@ export default function DashboardView({
           background: 'var(--bg-elevated)',
           border: '1px solid var(--border)',
           borderRadius: '6px',
-          padding: '16px 20px',
-          display: 'flex', flexDirection: 'column', gap: '14px'
+          padding: '13px 16px',
+          display: 'flex', flexDirection: 'column', gap: '10px'
         }}>
           <div>
-            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>Quick actions</div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Quick actions</div>
           </div>
 
           <div className="dashboard-quick-actions-grid" style={{ flex: 1 }}>
@@ -709,9 +709,9 @@ export default function DashboardView({
                 background: 'var(--bg-overlay)',
                 border: '1px solid var(--border)',
                 borderRadius: '6px',
-                padding: '14px',
+                padding: '10px 12px',
                 textAlign: 'left',
-                display: 'flex', flexDirection: 'column', gap: '8px',
+                display: 'flex', flexDirection: 'column', gap: '6px',
                 cursor: 'pointer',
                 transition: 'all 0.12s ease'
               }}
@@ -719,15 +719,15 @@ export default function DashboardView({
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}
             >
               <div style={{
-                width: '28px', height: '28px', borderRadius: '5px',
+                width: '24px', height: '24px', borderRadius: '5px',
                 background: 'rgba(129, 140, 248, 0.12)', border: '1px solid rgba(129, 140, 248, 0.2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>
-                <Link2 size={14} color="#818cf8" />
+                <Link2 size={13} color="#818cf8" />
               </div>
               <div>
-                <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Analyze a URL</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>SSRF protection & redirect tracer</div>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>Analyze a URL</div>
+                <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', marginTop: '1px' }}>SSRF protection & redirect tracer</div>
               </div>
             </button>
 
@@ -738,9 +738,9 @@ export default function DashboardView({
                 background: 'var(--bg-overlay)',
                 border: '1px solid var(--border)',
                 borderRadius: '6px',
-                padding: '14px',
+                padding: '10px 12px',
                 textAlign: 'left',
-                display: 'flex', flexDirection: 'column', gap: '8px',
+                display: 'flex', flexDirection: 'column', gap: '6px',
                 cursor: 'pointer',
                 transition: 'all 0.12s ease'
               }}
@@ -748,15 +748,15 @@ export default function DashboardView({
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}
             >
               <div style={{
-                width: '28px', height: '28px', borderRadius: '5px',
+                width: '24px', height: '24px', borderRadius: '5px',
                 background: 'rgba(56, 189, 248, 0.12)', border: '1px solid rgba(56, 189, 248, 0.2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>
-                <Terminal size={14} color="var(--accent)" />
+                <Terminal size={13} color="var(--accent)" />
               </div>
               <div>
-                <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Investigate an IP</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>GeoIP, ASN, DNSBL & Port probe</div>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>Investigate an IP</div>
+                <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', marginTop: '1px' }}>GeoIP, ASN, DNSBL & Port probe</div>
               </div>
             </button>
 
@@ -767,9 +767,9 @@ export default function DashboardView({
                 background: 'var(--bg-overlay)',
                 border: '1px solid var(--border)',
                 borderRadius: '6px',
-                padding: '14px',
+                padding: '10px 12px',
                 textAlign: 'left',
-                display: 'flex', flexDirection: 'column', gap: '8px',
+                display: 'flex', flexDirection: 'column', gap: '6px',
                 cursor: 'pointer',
                 transition: 'all 0.12s ease'
               }}
@@ -777,15 +777,15 @@ export default function DashboardView({
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}
             >
               <div style={{
-                width: '28px', height: '28px', borderRadius: '5px',
+                width: '24px', height: '24px', borderRadius: '5px',
                 background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>
-                <Globe size={14} color="#10b981" />
+                <Globe size={13} color="#10b981" />
               </div>
               <div>
-                <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Check a domain</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>DNS records, RDAP, SSL & DGA</div>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>Check a domain</div>
+                <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', marginTop: '1px' }}>DNS records, RDAP, SSL & DGA</div>
               </div>
             </button>
 
@@ -796,9 +796,9 @@ export default function DashboardView({
                 background: 'var(--bg-overlay)',
                 border: '1px solid var(--border)',
                 borderRadius: '6px',
-                padding: '14px',
+                padding: '10px 12px',
                 textAlign: 'left',
-                display: 'flex', flexDirection: 'column', gap: '8px',
+                display: 'flex', flexDirection: 'column', gap: '6px',
                 cursor: 'pointer',
                 transition: 'all 0.12s ease'
               }}
@@ -806,15 +806,15 @@ export default function DashboardView({
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}
             >
               <div style={{
-                width: '28px', height: '28px', borderRadius: '5px',
+                width: '24px', height: '24px', borderRadius: '5px',
                 background: 'rgba(234, 179, 8, 0.12)', border: '1px solid rgba(234, 179, 8, 0.2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>
-                <FileText size={14} color="#eab308" />
+                <FileText size={13} color="#eab308" />
               </div>
               <div>
-                <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>PDF Threat Research</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>TTPMapper MITRE & IOC extractor</div>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>PDF Threat Research</div>
+                <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', marginTop: '1px' }}>TTPMapper MITRE & IOC extractor</div>
               </div>
             </button>
           </div>
@@ -826,21 +826,21 @@ export default function DashboardView({
         background: 'var(--bg-elevated)',
         border: '1px solid var(--border)',
         borderRadius: '6px',
-        padding: '16px 20px',
-        display: 'flex', flexDirection: 'column', gap: '14px'
+        padding: '13px 16px',
+        display: 'flex', flexDirection: 'column', gap: '10px'
       }}>
         {/* Table Header & Filters */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
-          <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>Recent threats</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Recent threats</div>
 
-          <div className="dashboard-table-filters" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <div className="dashboard-table-filters" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             {/* Search Input */}
             <div style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
+              display: 'flex', alignItems: 'center', gap: '7px',
               background: 'var(--bg-input)', border: '1px solid var(--border)',
-              borderRadius: '8px', padding: '6px 12px', width: '220px'
+              borderRadius: '6px', padding: '5px 10px', width: '210px'
             }}>
-              <Search size={14} color="var(--text-tertiary)" />
+              <Search size={13} color="var(--text-tertiary)" />
               <input
                 type="text"
                 placeholder="Search indicator or type"
@@ -848,7 +848,7 @@ export default function DashboardView({
                 onChange={e => setSearchQuery(e.target.value)}
                 style={{
                   background: 'transparent', border: 'none', outline: 'none',
-                  color: 'var(--text-primary)', fontSize: '12px', width: '100%'
+                  color: 'var(--text-primary)', fontSize: '11.5px', width: '100%'
                 }}
               />
             </div>
@@ -860,7 +860,7 @@ export default function DashboardView({
                   key={s}
                   onClick={() => setFilterSeverity(s)}
                   style={{
-                    padding: '4px 10px',
+                    padding: '3px 9px',
                     borderRadius: '4px',
                     fontSize: '11px',
                     fontWeight: '600',
@@ -883,14 +883,14 @@ export default function DashboardView({
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '820px' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-tertiary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                <th style={{ padding: '12px 14px' }}>Indicator</th>
-                <th style={{ padding: '12px 14px' }}>Threat Type</th>
-                <th style={{ padding: '12px 14px' }}>Risk Score</th>
-                <th style={{ padding: '12px 14px' }}>Severity</th>
-                <th style={{ padding: '12px 14px' }}>Detected</th>
-                <th style={{ padding: '12px 14px' }}>Status</th>
-                <th style={{ padding: '12px 14px', textAlign: 'right' }}>Action</th>
+              <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-tertiary)', fontSize: '10.5px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <th style={{ padding: '8px 12px' }}>Indicator</th>
+                <th style={{ padding: '8px 12px' }}>Threat Type</th>
+                <th style={{ padding: '8px 12px' }}>Risk Score</th>
+                <th style={{ padding: '8px 12px' }}>Severity</th>
+                <th style={{ padding: '8px 12px' }}>Detected</th>
+                <th style={{ padding: '8px 12px' }}>Status</th>
+                <th style={{ padding: '8px 12px', textAlign: 'right' }}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -904,40 +904,40 @@ export default function DashboardView({
                       key={t.id}
                       style={{
                         borderBottom: '1px solid var(--border)',
-                        fontSize: '12.5px',
+                        fontSize: '12px',
                         transition: 'background 0.12s ease'
                       }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
                       {/* Indicator */}
-                      <td style={{ padding: '14px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontWeight: '500' }}>
+                      <td style={{ padding: '8px 12px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontWeight: '500' }}>
                         {t.indicator}
                       </td>
 
                       {/* Threat Type */}
-                      <td style={{ padding: '14px', color: 'var(--text-secondary)' }}>
+                      <td style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>
                         {t.threatType}
                       </td>
 
                       {/* Risk Score */}
-                      <td style={{ padding: '14px' }}>
+                      <td style={{ padding: '8px 12px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: scoreColor, width: '22px' }}>
                             {t.riskScore}
                           </span>
-                          <div style={{ width: '60px', height: '4px', borderRadius: '2px', background: 'rgba(255, 255, 255, 0.08)' }}>
+                          <div style={{ width: '50px', height: '3.5px', borderRadius: '2px', background: 'rgba(255, 255, 255, 0.08)' }}>
                             <div style={{ width: `${Math.min(100, Math.max(0, t.riskScore))}%`, height: '100%', borderRadius: '2px', background: scoreColor }} />
                           </div>
                         </div>
                       </td>
 
                       {/* Severity Pill */}
-                      <td style={{ padding: '14px' }}>
+                      <td style={{ padding: '8px 12px' }}>
                         <span style={{
                           display: 'inline-flex', alignItems: 'center', gap: '5px',
                           background: sevStyle.bg, border: sevStyle.border, color: sevStyle.color,
-                          padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '600'
+                          padding: '2px 7px', borderRadius: '10px', fontSize: '10.5px', fontWeight: '600'
                         }}>
                           <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: sevStyle.dot }} />
                           {t.severity}
@@ -945,22 +945,22 @@ export default function DashboardView({
                       </td>
 
                       {/* Detected */}
-                      <td style={{ padding: '14px', color: 'var(--text-tertiary)', fontSize: '12px' }}>
+                      <td style={{ padding: '8px 12px', color: 'var(--text-tertiary)', fontSize: '11.5px' }}>
                         {t.detected}
                       </td>
 
                       {/* Status */}
-                      <td style={{ padding: '14px' }}>
+                      <td style={{ padding: '8px 12px' }}>
                         <span style={{
                           color: t.status === 'Blocked' ? '#f43f5e' : t.status === 'Verified Safe' ? '#10b981' : 'var(--text-primary)',
-                          fontWeight: '500', fontSize: '12px'
+                          fontWeight: '500', fontSize: '11.5px'
                         }}>
                           {t.status}
                         </span>
                       </td>
 
                       {/* Action */}
-                      <td style={{ padding: '14px', textAlign: 'right' }}>
+                      <td style={{ padding: '8px 12px', textAlign: 'right' }}>
                         <button
                           onClick={() => {
                             if (onSelectIndicator) onSelectIndicator(t);
@@ -970,13 +970,13 @@ export default function DashboardView({
                             background: 'transparent',
                             border: 'none',
                             color: 'var(--accent)',
-                            fontSize: '12px',
+                            fontSize: '11.5px',
                             fontWeight: '600',
                             cursor: 'pointer',
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '4px',
-                            padding: '4px 6px',
+                            padding: '3px 6px',
                             borderRadius: '4px',
                             transition: 'all 0.12s ease'
                           }}
@@ -984,7 +984,7 @@ export default function DashboardView({
                           onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
                         >
                           <span>View details</span>
-                          <ArrowRight size={12} />
+                          <ArrowRight size={11} />
                         </button>
                       </td>
                     </tr>
