@@ -5,9 +5,7 @@ import secrets
 import hashlib
 from typing import Dict, Any, Optional
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-USERS_FILE = os.path.join(DATA_DIR, "users.json")
-os.makedirs(DATA_DIR, exist_ok=True)
+import database
 
 # In-memory OTP storage: email -> { "otp": "123456", "expires_at": timestamp }
 otp_storage: Dict[str, Dict[str, Any]] = {}
@@ -20,21 +18,10 @@ def _hash_password(password: str, salt: str) -> str:
     return hashlib.sha256(data).hexdigest()
 
 def _load_users() -> Dict[str, Dict[str, Any]]:
-    if not os.path.exists(USERS_FILE):
-        initial_users = {}
-        with open(USERS_FILE, "w", encoding="utf-8") as f:
-            json.dump(initial_users, f, indent=2)
-        return initial_users
-    
-    try:
-        with open(USERS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
+    return database.load_users()
 
 def _save_users(users: Dict[str, Dict[str, Any]]):
-    with open(USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(users, f, indent=2)
+    database.save_users(users)
 
 def register_user(name: str, email: str, password: str) -> Dict[str, Any]:
     if not name or len(name.strip()) < 2:

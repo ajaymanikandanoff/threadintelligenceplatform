@@ -12,25 +12,13 @@ import uuid
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-INVESTIGATIONS_FILE = os.path.join(DATA_DIR, "investigations.json")
-os.makedirs(DATA_DIR, exist_ok=True)
+import database
 
 def _load_investigations() -> List[Dict[str, Any]]:
-    if not os.path.exists(INVESTIGATIONS_FILE):
-        return []
-    try:
-        with open(INVESTIGATIONS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return []
+    return database.load_investigations()
 
 def _save_investigations(items: List[Dict[str, Any]]) -> None:
-    try:
-        with open(INVESTIGATIONS_FILE, "w", encoding="utf-8") as f:
-            json.dump(items, f, indent=2, ensure_ascii=False)
-    except Exception as e:
-        print(f"Error saving investigations: {e}")
+    database.save_investigations(items)
 
 def save_investigation_record(
     indicator: str,
@@ -85,13 +73,8 @@ def save_investigation_record(
         "details": details
     }
 
-    # Prepend to top of list
-    investigations.insert(0, record)
-    # Keep last 500 investigations
-    if len(investigations) > 500:
-        investigations = investigations[:500]
-
-    _save_investigations(investigations)
+    # Insert directly to database (MongoDB Atlas or JSON fallback)
+    database.insert_investigation(record)
     return record
 
 def get_all_investigations(
@@ -127,18 +110,9 @@ def get_investigation_by_id(inv_id: str) -> Optional[Dict[str, Any]]:
 
 def delete_investigation(inv_id: str) -> bool:
     """Removes an investigation record."""
-    items = _load_investigations()
-    initial_len = len(items)
-    items = [i for i in items if i.get("id") != inv_id]
-    if len(items) != initial_len:
-        _save_investigations(items)
-        return True
-    return False
+    return database.delete_investigation(inv_id)
 
 def clear_all_investigations() -> int:
     """Removes all investigation records from the persistent store."""
-    items = _load_investigations()
-    count = len(items)
-    _save_investigations([])
-    return count
+    return database.clear_all_investigations()
 

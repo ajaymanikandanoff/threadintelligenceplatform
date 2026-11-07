@@ -16,6 +16,7 @@ import threat_correlation_service
 import threat_graph_service
 import pdf_report_generator
 import threat_map_service
+import database
 
 load_dotenv()
 
@@ -141,7 +142,8 @@ def health_check():
         "status": "healthy",
         "service": "AI Threat Intelligence Knowledge Engine",
         "has_env_gemini_key": bool(key),
-        "default_model": os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
+        "default_model": os.environ.get("GEMINI_MODEL", "gemini-3.5-flash"),
+        "database": database.get_db_status()
     }
 
 @app.get("/api/sample-reports")
