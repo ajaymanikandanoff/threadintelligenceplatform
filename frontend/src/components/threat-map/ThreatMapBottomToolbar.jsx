@@ -35,8 +35,8 @@ export default function ThreatMapBottomToolbar({
 
   return (
     <div style={{
-      background: '#0d1117',
-      borderTop: '1px solid #21262d',
+      background: 'var(--bg-elevated)',
+      borderTop: '1px solid var(--border)',
       padding: '8px 14px',
       display: 'flex',
       alignItems: 'center',

@@ -45,27 +45,27 @@ export default function ThreatCopilot({
       {/* Copilot Header */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 16px', background: '#161b22', borderRadius: '6px',
-        border: '1px solid #21262d'
+        padding: '12px 16px', background: 'var(--bg-elevated)', borderRadius: '6px',
+        border: '1px solid var(--border)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
             width: '30px', height: '30px', borderRadius: '5px',
-            background: 'rgba(0, 229, 255, 0.08)',
-            border: '1px solid rgba(0, 229, 255, 0.25)',
+            background: 'var(--accent-dim)',
+            border: '1px solid var(--border)',
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
             <Bot size={16} color="var(--accent)" />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '14px', fontWeight: '700', color: '#e6edf3' }}>
+              <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
                 AI Threat Intelligence Copilot
               </span>
               {threatActor && (
                 <span style={{
                   background: 'rgba(248, 81, 73, 0.1)',
-                  color: '#f85149',
+                  color: 'var(--red)',
                   border: '1px solid rgba(248, 81, 73, 0.25)',
                   padding: '1px 7px',
                   borderRadius: '4px',
@@ -76,7 +76,7 @@ export default function ThreatCopilot({
                 </span>
               )}
             </div>
-            <div style={{ fontSize: '11px', color: '#8b949e', marginTop: '1px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '1px' }}>
               Context-grounded autonomous security assistant · Enterprise SOC Engine
             </div>
           </div>
@@ -86,7 +86,7 @@ export default function ThreatCopilot({
       {/* Messages Canvas */}
       <div style={{
         flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px',
-        background: '#161b22', borderRadius: '6px', border: '1px solid #21262d',
+        background: 'var(--bg-elevated)', borderRadius: '6px', border: '1px solid var(--border)',
         padding: '16px'
       }}>
         {messages.map((msg, i) => {
@@ -104,23 +104,23 @@ export default function ThreatCopilot({
               {/* Avatar */}
               <div style={{
                 width: '28px', height: '28px', borderRadius: '5px', flexShrink: 0,
-                background: isUser ? '#1f242c' : '#0d1117',
-                border: `1px solid ${isUser ? '#30363d' : '#21262d'}`,
+                background: isUser ? 'var(--bg-raised)' : 'var(--bg-overlay)',
+                border: `1px solid ${isUser ? 'var(--border-strong)' : 'var(--border)'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>
-                {isUser ? <User size={14} color="#8b949e" /> : <Bot size={14} color="#00e5ff" />}
+                {isUser ? <User size={14} color="var(--text-secondary)" /> : <Bot size={14} color="var(--accent)" />}
               </div>
 
               {/* Message Bubble */}
               <div style={{
                 maxWidth: '78%',
-                background: isUser ? '#1f242c' : '#0d1117',
-                border: `1px solid ${isUser ? '#30363d' : '#21262d'}`,
+                background: isUser ? 'var(--bg-raised)' : 'var(--bg-overlay)',
+                border: `1px solid ${isUser ? 'var(--border-strong)' : 'var(--border)'}`,
                 borderRadius: '6px',
                 padding: '10px 14px',
                 fontSize: '13px',
                 lineHeight: '1.6',
-                color: '#e6edf3',
+                color: 'var(--text-primary)',
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word'
               }}>
@@ -134,18 +134,18 @@ export default function ThreatCopilot({
           <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
             <div style={{
               width: '28px', height: '28px', borderRadius: '5px',
-              background: '#0d1117', border: '1px solid #21262d',
+              background: 'var(--bg-overlay)', border: '1px solid var(--border)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
             }}>
-              <Loader size={14} color="#00e5ff" className="spin" />
+              <Loader size={14} color="var(--accent)" className="spin" />
             </div>
             <div style={{
-              background: '#0d1117', border: '1px solid #21262d',
+              background: 'var(--bg-overlay)', border: '1px solid var(--border)',
               borderRadius: '6px', padding: '10px 14px',
-              fontSize: '12px', color: '#8b949e', display: 'flex', alignItems: 'center', gap: '8px'
+              fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px'
             }}>
               <span>Correlating threat advisory telemetry</span>
-              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#00e5ff' }} />
+              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--accent)' }} />
             </div>
           </div>
         )}
@@ -161,20 +161,20 @@ export default function ThreatCopilot({
             style={{
               display: 'inline-flex', alignItems: 'center', gap: '6px',
               padding: '5px 10px', borderRadius: '5px', fontSize: '11px',
-              background: '#161b22', border: '1px solid #21262d',
-              color: '#8b949e', cursor: 'pointer',
+              background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+              color: 'var(--text-secondary)', cursor: 'pointer',
               transition: 'all 0.12s ease', fontFamily: 'var(--font-sans)',
               fontWeight: '500'
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.borderColor = '#00e5ff';
-              e.currentTarget.style.color = '#e6edf3';
-              e.currentTarget.style.background = '#21262d';
+              e.currentTarget.style.borderColor = 'var(--accent)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+              e.currentTarget.style.background = 'var(--bg-hover)';
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.borderColor = '#21262d';
-              e.currentTarget.style.color = '#8b949e';
-              e.currentTarget.style.background = '#161b22';
+              e.currentTarget.style.borderColor = 'var(--border)';
+              e.currentTarget.style.color = 'var(--text-secondary)';
+              e.currentTarget.style.background = 'var(--bg-elevated)';
             }}
           >
             <span>{p.icon}</span>
@@ -195,9 +195,9 @@ export default function ThreatCopilot({
               padding: '10px 14px',
               fontSize: '12.5px',
               borderRadius: '6px',
-              background: '#0d1117',
-              border: '1px solid #21262d',
-              color: '#e6edf3',
+              background: 'var(--bg-input)',
+              border: '1px solid var(--border)',
+              color: 'var(--text-primary)',
               width: '100%'
             }}
           />
@@ -210,8 +210,8 @@ export default function ThreatCopilot({
             borderRadius: '6px',
             height: '38px',
             flexShrink: 0,
-            background: '#0284c7',
-            border: '1px solid #0369a1',
+            background: 'var(--accent)',
+            border: 'none',
             color: '#ffffff',
             fontSize: '12.5px',
             fontWeight: '600',
@@ -220,10 +220,10 @@ export default function ThreatCopilot({
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            transition: 'background 0.12s ease'
+            transition: 'opacity 0.12s ease'
           }}
-          onMouseEnter={e => { if (!isLoading && input.trim()) e.currentTarget.style.background = '#0ea5e9'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = '#0284c7'; }}
+          onMouseEnter={e => { if (!isLoading && input.trim()) e.currentTarget.style.opacity = '0.9'; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
         >
           <Send size={14} />
           <span>Send</span>

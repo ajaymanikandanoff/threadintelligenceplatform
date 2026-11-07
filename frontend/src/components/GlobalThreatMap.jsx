@@ -250,8 +250,8 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
     <div
       ref={containerWrapperRef}
       style={{
-        background: '#161b22',
-        border: '1px solid #21262d',
+        background: 'var(--bg-elevated)',
+        border: '1px solid var(--border)',
         borderRadius: '6px',
         padding: isFullscreen ? '20px' : '18px',
         display: 'flex',
@@ -342,8 +342,8 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              background: '#0d1117',
-              border: '1px solid #21262d',
+              background: 'var(--bg-overlay)',
+              border: '1px solid var(--border)',
               borderRadius: '5px',
               padding: '5px 12px',
               fontSize: '11px',
@@ -358,7 +358,7 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
 
           <div style={{
             display: 'flex', alignItems: 'center', gap: '8px',
-            background: '#0d1117', border: '1px solid #21262d',
+            background: 'var(--bg-overlay)', border: '1px solid var(--border)',
             borderRadius: '5px', padding: '5px 12px', fontSize: '11.5px', color: 'var(--text-secondary)'
           }}>
             <span style={{
@@ -380,8 +380,8 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
         gap: '12px'
       }}>
         <div style={{
-          background: '#0d1117',
-          border: '1px solid #21262d',
+          background: 'var(--bg-overlay)',
+          border: '1px solid var(--border)',
           borderRadius: '6px',
           padding: '10px 14px',
           display: 'flex',
@@ -406,8 +406,8 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
         </div>
 
         <div style={{
-          background: '#0d1117',
-          border: '1px solid #21262d',
+          background: 'var(--bg-overlay)',
+          border: '1px solid var(--border)',
           borderRadius: '6px',
           padding: '10px 14px',
           display: 'flex',
@@ -432,8 +432,8 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
         </div>
 
         <div style={{
-          background: '#0d1117',
-          border: '1px solid #21262d',
+          background: 'var(--bg-overlay)',
+          border: '1px solid var(--border)',
           borderRadius: '6px',
           padding: '10px 14px',
           display: 'flex',
@@ -458,8 +458,8 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
         </div>
 
         <div style={{
-          background: '#0d1117',
-          border: '1px solid #21262d',
+          background: 'var(--bg-overlay)',
+          border: '1px solid var(--border)',
           borderRadius: '6px',
           padding: '10px 14px',
           display: 'flex',

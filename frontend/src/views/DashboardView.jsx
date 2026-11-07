@@ -238,9 +238,9 @@ export default function DashboardView({
             onClick={() => onNavigateTab && onNavigateTab('threat-map')}
             style={{
               display: 'flex', alignItems: 'center', gap: '8px',
-              background: '#161b22',
-              border: '1px solid #30363d',
-              color: '#00e5ff',
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border)',
+              color: 'var(--accent)',
               borderRadius: '6px',
               padding: '8px 14px',
               fontSize: '12.5px',
@@ -248,10 +248,10 @@ export default function DashboardView({
               cursor: 'pointer',
               transition: 'background 0.12s ease'
             }}
-            onMouseEnter={e => e.currentTarget.style.background = '#21262d'}
-            onMouseLeave={e => e.currentTarget.style.background = '#161b22'}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elevated)'}
           >
-            <Radio size={14} strokeWidth={2.2} color="#00e5ff" />
+            <Radio size={14} strokeWidth={2.2} color="var(--accent)" />
             <span>Global Threat & Data Map</span>
           </button>
 
@@ -259,18 +259,18 @@ export default function DashboardView({
             onClick={onOpenNewAnalysis}
             style={{
               display: 'flex', alignItems: 'center', gap: '7px',
-              background: '#0284c7',
+              background: 'var(--accent)',
               color: '#ffffff',
-              border: '1px solid #0369a1',
+              border: 'none',
               borderRadius: '6px',
               padding: '8px 16px',
               fontSize: '12.5px',
               fontWeight: '600',
               cursor: 'pointer',
-              transition: 'background 0.12s ease'
+              transition: 'opacity 0.12s ease'
             }}
-            onMouseEnter={e => e.currentTarget.style.background = '#0ea5e9'}
-            onMouseLeave={e => e.currentTarget.style.background = '#0284c7'}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
           >
             <Plus size={15} strokeWidth={2.4} />
             <span>New analysis</span>
@@ -286,8 +286,8 @@ export default function DashboardView({
       }}>
         {/* Total Analyzed */}
         <div style={{
-          background: '#161b22',
-          border: '1px solid #21262d',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border)',
           borderRadius: '6px',
           padding: '14px 16px',
           display: 'flex', flexDirection: 'column', gap: '8px',
@@ -313,8 +313,8 @@ export default function DashboardView({
 
         {/* Critical Threats */}
         <div style={{
-          background: '#161b22',
-          border: '1px solid #21262d',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border)',
           borderRadius: '6px',
           padding: '14px 16px',
           display: 'flex', flexDirection: 'column', gap: '8px',
@@ -340,8 +340,8 @@ export default function DashboardView({
 
         {/* High Risk */}
         <div style={{
-          background: '#161b22',
-          border: '1px solid #21262d',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border)',
           borderRadius: '6px',
           padding: '14px 16px',
           display: 'flex', flexDirection: 'column', gap: '8px',
@@ -367,8 +367,8 @@ export default function DashboardView({
 
         {/* Safe Results */}
         <div style={{
-          background: '#161b22',
-          border: '1px solid #21262d',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border)',
           borderRadius: '6px',
           padding: '14px 16px',
           display: 'flex', flexDirection: 'column', gap: '8px',
@@ -394,8 +394,8 @@ export default function DashboardView({
 
         {/* Recent Investigations */}
         <div style={{
-          background: '#161b22',
-          border: '1px solid #21262d',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border)',
           borderRadius: '6px',
           padding: '14px 16px',
           display: 'flex', flexDirection: 'column', gap: '8px',
@@ -428,8 +428,8 @@ export default function DashboardView({
       }}>
         {/* Threat Activity Dual-Wave Chart */}
         <div style={{
-          background: '#161b22',
-          border: '1px solid #21262d',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border)',
           borderRadius: '6px',
           padding: '16px 20px',
           display: 'flex', flexDirection: 'column', gap: '14px'
@@ -571,8 +571,8 @@ export default function DashboardView({
 
         {/* Severity Distribution Donut Chart */}
         <div style={{
-          background: '#161b22',
-          border: '1px solid #21262d',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border)',
           borderRadius: '6px',
           padding: '16px 20px',
           display: 'flex', flexDirection: 'column', gap: '14px'
@@ -671,8 +671,8 @@ export default function DashboardView({
       }}>
         {/* Top Threat Categories */}
         <div style={{
-          background: '#161b22',
-          border: '1px solid #21262d',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border)',
           borderRadius: '6px',
           padding: '16px 20px',
           display: 'flex', flexDirection: 'column', gap: '14px'
@@ -703,8 +703,8 @@ export default function DashboardView({
 
         {/* Quick Actions (2x2 Grid) */}
         <div style={{
-          background: '#161b22',
-          border: '1px solid #21262d',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border)',
           borderRadius: '6px',
           padding: '16px 20px',
           display: 'flex', flexDirection: 'column', gap: '14px'
@@ -718,8 +718,8 @@ export default function DashboardView({
             <button
               onClick={() => onNavigateTab('url-scanner')}
               style={{
-                background: '#0d1117',
-                border: '1px solid #21262d',
+                background: 'var(--bg-overlay)',
+                border: '1px solid var(--border)',
                 borderRadius: '6px',
                 padding: '14px',
                 textAlign: 'left',
@@ -727,8 +727,8 @@ export default function DashboardView({
                 cursor: 'pointer',
                 transition: 'all 0.12s ease'
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#38bdf8'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#21262d'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}
             >
               <div style={{
                 width: '28px', height: '28px', borderRadius: '5px',
@@ -747,8 +747,8 @@ export default function DashboardView({
             <button
               onClick={() => onNavigateTab('ip-scanner')}
               style={{
-                background: '#0d1117',
-                border: '1px solid #21262d',
+                background: 'var(--bg-overlay)',
+                border: '1px solid var(--border)',
                 borderRadius: '6px',
                 padding: '14px',
                 textAlign: 'left',
@@ -756,8 +756,8 @@ export default function DashboardView({
                 cursor: 'pointer',
                 transition: 'all 0.12s ease'
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#38bdf8'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#21262d'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}
             >
               <div style={{
                 width: '28px', height: '28px', borderRadius: '5px',
@@ -776,8 +776,8 @@ export default function DashboardView({
             <button
               onClick={() => onNavigateTab('domain-scanner')}
               style={{
-                background: '#0d1117',
-                border: '1px solid #21262d',
+                background: 'var(--bg-overlay)',
+                border: '1px solid var(--border)',
                 borderRadius: '6px',
                 padding: '14px',
                 textAlign: 'left',
@@ -785,8 +785,8 @@ export default function DashboardView({
                 cursor: 'pointer',
                 transition: 'all 0.12s ease'
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#38bdf8'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#21262d'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}
             >
               <div style={{
                 width: '28px', height: '28px', borderRadius: '5px',
@@ -805,8 +805,8 @@ export default function DashboardView({
             <button
               onClick={() => onNavigateTab('pdf-research')}
               style={{
-                background: '#0d1117',
-                border: '1px solid #21262d',
+                background: 'var(--bg-overlay)',
+                border: '1px solid var(--border)',
                 borderRadius: '6px',
                 padding: '14px',
                 textAlign: 'left',
@@ -814,8 +814,8 @@ export default function DashboardView({
                 cursor: 'pointer',
                 transition: 'all 0.12s ease'
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#38bdf8'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#21262d'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}
             >
               <div style={{
                 width: '28px', height: '28px', borderRadius: '5px',
@@ -835,8 +835,8 @@ export default function DashboardView({
 
       {/* ─── Bottom Full-Width Card: Recent Threats ─── */}
       <div style={{
-        background: '#161b22',
-        border: '1px solid #21262d',
+        background: 'var(--bg-elevated)',
+        border: '1px solid var(--border)',
         borderRadius: '6px',
         padding: '16px 20px',
         display: 'flex', flexDirection: 'column', gap: '14px'

@@ -238,8 +238,8 @@ export default function App() {
         <aside style={{
           width: '220px',
           flexShrink: 0,
-          borderRight: '1px solid #21262d',
-          background: '#161b22',
+          borderRight: '1px solid var(--border)',
+          background: 'var(--bg-elevated)',
           padding: '12px 10px',
           display: 'flex',
           flexDirection: 'column',
@@ -302,8 +302,7 @@ export default function App() {
                       width: '3.5px',
                       height: '24px',
                       borderRadius: '0 4px 4px 0',
-                      background: 'var(--accent)',
-                      boxShadow: '0 0 10px var(--accent)'
+                      background: 'var(--accent)'
                     }} />
                   )}
                   <Icon size={16} style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }} />
@@ -371,8 +370,7 @@ export default function App() {
                       width: '3.5px',
                       height: '24px',
                       borderRadius: '0 4px 4px 0',
-                      background: 'var(--accent)',
-                      boxShadow: '0 0 10px var(--accent)'
+                      background: 'var(--accent)'
                     }} />
                   )}
                   <Icon size={16} style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }} />
@@ -438,8 +436,7 @@ export default function App() {
                       width: '3.5px',
                       height: '24px',
                       borderRadius: '0 4px 4px 0',
-                      background: 'var(--accent)',
-                      boxShadow: '0 0 10px var(--accent)'
+                      background: 'var(--accent)'
                     }} />
                   )}
                   <Icon size={16} style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }} />
@@ -503,8 +500,7 @@ export default function App() {
                       width: '3.5px',
                       height: '24px',
                       borderRadius: '0 4px 4px 0',
-                      background: 'var(--accent)',
-                      boxShadow: '0 0 10px var(--accent)'
+                      background: 'var(--accent)'
                     }} />
                   )}
                   <Icon size={16} style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }} />
@@ -708,6 +704,8 @@ export default function App() {
                   onSignOut={handleSignOut}
                   cyberAccent={cyberAccent}
                   onChangeCyberAccent={setCyberAccent}
+                  theme={theme}
+                  onToggleTheme={() => setTheme(p => p === 'dark' ? 'light' : 'dark')}
                 />
               )}
 

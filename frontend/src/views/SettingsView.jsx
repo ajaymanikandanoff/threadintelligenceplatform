@@ -13,7 +13,9 @@ import {
   Upload,
   Trash2,
   Camera,
-  Lock
+  Lock,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 export default function SettingsView({
@@ -21,7 +23,9 @@ export default function SettingsView({
   onUpdateUser,
   onSignOut,
   cyberAccent = 'cyan',
-  onChangeCyberAccent
+  onChangeCyberAccent,
+  theme = 'dark',
+  onToggleTheme
 }) {
   const fileInputRef = useRef(null);
   const [displayName, setDisplayName] = useState(currentUser?.name || 'Ajay M.');
@@ -436,6 +440,71 @@ export default function SettingsView({
         display: 'flex', flexDirection: 'column', gap: '20px'
       }}>
         <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>Preferences</div>
+
+        {/* Dark / Light Appearance Mode Selector */}
+        <div style={{
+          background: 'var(--bg-overlay)',
+          border: '1px solid var(--border)',
+          borderRadius: '12px',
+          padding: '16px 18px',
+          display: 'flex', flexDirection: 'column', gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {theme === 'dark' ? <Moon size={16} color="var(--accent)" /> : <Sun size={16} color="var(--accent)" />}
+            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Appearance Mode</div>
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            Switch between CrowdStrike Enterprise Dark SOC mode and Clean High-Contrast Light mode.
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+            <button
+              type="button"
+              onClick={() => { if (theme !== 'dark') onToggleTheme?.(); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '12px',
+                padding: '10px 14px', borderRadius: '10px',
+                background: theme === 'dark' ? 'var(--accent-dim)' : 'var(--bg-elevated)',
+                border: theme === 'dark' ? '2px solid var(--accent)' : '1px solid var(--border)',
+                cursor: 'pointer', textAlign: 'left',
+                transition: 'all 0.12s ease'
+              }}
+            >
+              <Moon size={16} color={theme === 'dark' ? 'var(--accent)' : 'var(--text-secondary)'} />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '12.5px', fontWeight: '700', color: theme === 'dark' ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                  Dark SOC Mode
+                </span>
+                <span style={{ fontSize: '10.5px', color: 'var(--text-tertiary)' }}>
+                  CrowdStrike / Splunk Obsidian Dark
+                </span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { if (theme !== 'light') onToggleTheme?.(); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '12px',
+                padding: '10px 14px', borderRadius: '10px',
+                background: theme === 'light' ? 'var(--accent-dim)' : 'var(--bg-elevated)',
+                border: theme === 'light' ? '2px solid var(--accent)' : '1px solid var(--border)',
+                cursor: 'pointer', textAlign: 'left',
+                transition: 'all 0.12s ease'
+              }}
+            >
+              <Sun size={16} color={theme === 'light' ? 'var(--accent)' : 'var(--text-secondary)'} />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '12.5px', fontWeight: '700', color: theme === 'light' ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                  Light Corporate Mode
+                </span>
+                <span style={{ fontSize: '10.5px', color: 'var(--text-tertiary)' }}>
+                  Clean High-Contrast White & Gray
+                </span>
+              </div>
+            </button>
+          </div>
+        </div>
 
         {/* Cybersecurity Theme Selector */}
         <div style={{
