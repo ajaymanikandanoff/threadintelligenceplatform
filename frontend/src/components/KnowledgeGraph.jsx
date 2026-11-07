@@ -38,11 +38,11 @@ const NODE_TYPES = {
   default:     { label: 'Entity',         color: '#94a3b8', bg: 'rgba(148,163,184,0.18)', ring: '#94a3b8', defaultR: 15 }
 };
 
-export default function KnowledgeGraph({ graphData, onAskCopilot }) {
+export default function KnowledgeGraph({ graphData, onAskCopilot, compact = false, height = null }) {
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [layoutMode, setLayoutMode] = useState('pipeline'); // 'pipeline' | 'force' | 'radial'
+  const [layoutMode, setLayoutMode] = useState(compact ? 'radial' : 'pipeline'); // 'pipeline' | 'force' | 'radial'
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 50, y: 50 });
   const [dragging, setDragging] = useState(null);
@@ -56,9 +56,71 @@ export default function KnowledgeGraph({ graphData, onAskCopilot }) {
 
   const getTypeMeta = (type) => NODE_TYPES[type] || NODE_TYPES.default;
 
+  const fitView = useCallback((placedNodes, svgWidth, svgHeight) => {
+    if (!placedNodes || placedNodes.length === 0) return;
+    const padding = compact ? 20 : 50;
+    const minX = Math.min(...placedNodes.map(n => n.x - (n.r || 20)));
+    const maxX = Math.max(...placedNodes.map(n => n.x + (n.r || 20)));
+    const minY = Math.min(...placedNodes.map(n => n.y - (n.r || 20)));
+    const maxY = Math.max(...placedNodes.map(n => n.y + (n.r || 20)));
+
+    const contentW = Math.max(maxX - minX, 100);
+    const contentH = Math.max(maxY - minY, 100);
+
+    const availW = Math.max(svgWidth - padding * 2, 100);
+    const availH = Math.max(svgHeight - padding * 2, 100);
+
+    const targetZoom = Math.min(1.2, Math.max(compact ? 0.6 : 0.45, Math.min(availW / contentW, availH / contentH)));
+    const midX = (minX + maxX) / 2;
+    const midY = (minY + maxY) / 2;
+
+    const panX = (svgWidth / 2) - (midX * targetZoom);
+    const panY = (svgHeight / 2) - (midY * targetZoom);
+
+    setZoom(Number(targetZoom.toFixed(2)));
+    setPan({ x: Math.round(panX), y: Math.round(panY) });
+  }, [compact]);
+
   // ─── HIGH-PRECISION GRAPH LAYOUT ALGORITHMS ───
   const computeLayout = useCallback((rawNodes, rawEdges, mode = 'pipeline') => {
     if (!rawNodes || rawNodes.length === 0) return [];
+
+    const isSingleEntity = !rawNodes.some(n => ['actor', 'pdf', 'malware', 'technique'].includes(n.type));
+
+    if (compact || isSingleEntity || mode === 'radial') {
+      const cx = compact ? 180 : 420;
+      const cy = compact ? 120 : 260;
+
+      let rootNode = rawNodes.find(n => ['pdf', 'domain', 'ip', 'url', 'actor'].includes(n.type)) || rawNodes[0];
+      const satellites = rawNodes.filter(n => n.id !== rootNode.id);
+
+      if (satellites.length === 0) {
+        return [{ ...rootNode, x: cx, y: cy, r: getTypeMeta(rootNode.type).defaultR }];
+      }
+
+      const radius = compact
+        ? Math.min(85, Math.max(55, 160 / Math.sqrt(satellites.length)))
+        : Math.min(220, Math.max(120, 360 / Math.sqrt(satellites.length)));
+
+      const placedRoot = {
+        ...rootNode,
+        x: cx,
+        y: cy,
+        r: (getTypeMeta(rootNode.type).defaultR || 18) * (compact ? 1.05 : 1.2)
+      };
+
+      const placedSatellites = satellites.map((n, idx) => {
+        const angle = (idx / satellites.length) * 2 * Math.PI - Math.PI / 2;
+        return {
+          ...n,
+          x: Math.round(cx + radius * Math.cos(angle)),
+          y: Math.round(cy + radius * Math.sin(angle)),
+          r: getTypeMeta(n.type).defaultR || 16
+        };
+      });
+
+      return [placedRoot, ...placedSatellites];
+    }
 
     // Helper map of node degree and connected parents
     const adjacency = {};
@@ -251,12 +313,20 @@ export default function KnowledgeGraph({ graphData, onAskCopilot }) {
 
   // Update layout when graphData or layoutMode changes
   useEffect(() => {
-    if (!graphData?.nodes || graphData.nodes.length === 0) return;
+    if (!graphData?.nodes || graphData.nodes.length === 0) {
+      setNodes([]);
+      setEdges([]);
+      return;
+    }
     const placed = computeLayout(graphData.nodes, graphData.edges || [], layoutMode);
     setNodes(placed);
     setEdges(graphData.edges || []);
     setSelected(placed.find(n => n.type === 'actor') || placed[0] || null);
-  }, [graphData, layoutMode, computeLayout]);
+
+    const w = compact ? 380 : 880;
+    const h = compact ? 240 : 540;
+    fitView(placed, w, h);
+  }, [graphData, layoutMode, computeLayout, compact, fitView]);
 
   const onNodeMouseDown = (e, id) => {
     e.stopPropagation();
@@ -313,7 +383,156 @@ export default function KnowledgeGraph({ graphData, onAskCopilot }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const graphHeight = isFullscreen ? 'calc(100vh - 120px)' : '580px';
+  const graphHeight = isFullscreen ? 'calc(100vh - 120px)' : (height || '580px');
+
+  if (compact) {
+    const activeMeta = selected ? getTypeMeta(selected.type) : null;
+    return (
+      <div style={{ position: 'relative', width: '100%', height: height || '240px', background: '#050811', borderRadius: '10px', overflow: 'hidden' }}>
+        {/* Floating Mini Controls */}
+        <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', gap: '4px', zIndex: 10 }}>
+          <button
+            type="button"
+            onClick={() => setZoom(z => Math.min(2.5, Number((z + 0.2).toFixed(2))))}
+            style={{ padding: '4px 6px', background: 'rgba(15, 23, 42, 0.85)', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--text-secondary)', cursor: 'pointer' }}
+            title="Zoom In"
+          >
+            <ZoomIn size={12} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setZoom(z => Math.max(0.4, Number((z - 0.2).toFixed(2))))}
+            style={{ padding: '4px 6px', background: 'rgba(15, 23, 42, 0.85)', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--text-secondary)', cursor: 'pointer' }}
+            title="Zoom Out"
+          >
+            <ZoomOut size={12} />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (svgRef.current) {
+                const rect = svgRef.current.getBoundingClientRect();
+                fitView(nodes, rect.width || 380, rect.height || 240);
+              }
+            }}
+            style={{ padding: '4px 6px', background: 'rgba(15, 23, 42, 0.85)', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--text-secondary)', cursor: 'pointer' }}
+            title="Reset & Center"
+          >
+            <RotateCcw size={12} />
+          </button>
+        </div>
+
+        {/* Floating Node Info Bar on Click */}
+        {selected && (
+          <div style={{
+            position: 'absolute', bottom: '8px', left: '8px', right: '8px',
+            background: 'rgba(10, 15, 29, 0.94)', backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(56, 189, 248, 0.35)', borderRadius: '8px',
+            padding: '6px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            zIndex: 10, fontSize: '11.5px', gap: '10px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: activeMeta?.color || '#38bdf8', flexShrink: 0 }} />
+              <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {selected.label || selected.id}
+              </span>
+              <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', background: 'var(--bg-overlay)', padding: '1px 6px', borderRadius: '4px', flexShrink: 0 }}>
+                {selected.type}
+              </span>
+            </div>
+            {selected.details && (
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '150px' }}>
+                {selected.details}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* SVG Viewport */}
+        <div
+          style={{ width: '100%', height: '100%', cursor: panning ? 'grabbing' : 'grab' }}
+          onMouseDown={onBgDown}
+          onMouseMove={onMove}
+          onMouseUp={onUp}
+          onMouseLeave={onUp}
+        >
+          <svg ref={svgRef} width="100%" height="100%" style={{ display: 'block' }}>
+            <defs>
+              <pattern id="compact-grid" width="24" height="24" patternUnits="userSpaceOnUse">
+                <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.06)" />
+              </pattern>
+              <marker id="compact-arrow" viewBox="0 0 10 10" refX="20" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(56, 189, 248, 0.6)" />
+              </marker>
+            </defs>
+            <rect data-bg="true" width="100%" height="100%" fill="url(#compact-grid)" />
+
+            <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
+              {edges.map((e, i) => {
+                const s = nodes.find(n => n.id === e.source);
+                const t = nodes.find(n => n.id === e.target);
+                if (!s || !t) return null;
+                const isSel = selected && (selected.id === s.id || selected.id === t.id);
+                return (
+                  <g key={`compact-edge-${i}`}>
+                    <line
+                      x1={s.x} y1={s.y} x2={t.x} y2={t.y}
+                      stroke={isSel ? '#38bdf8' : 'rgba(148, 163, 184, 0.25)'}
+                      strokeWidth={isSel ? 2 : 1.2}
+                      markerEnd="url(#compact-arrow)"
+                    />
+                    {e.label && (
+                      <text
+                        x={(s.x + t.x) / 2}
+                        y={(s.y + t.y) / 2 - 3}
+                        fill={isSel ? '#38bdf8' : 'var(--text-tertiary)'}
+                        fontSize="8.5"
+                        fontFamily="var(--font-mono)"
+                        textAnchor="middle"
+                      >
+                        {e.label}
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
+
+              {nodes.map(n => {
+                const meta = getTypeMeta(n.type);
+                const isSel = selected?.id === n.id;
+                return (
+                  <g
+                    key={n.id}
+                    transform={`translate(${n.x},${n.y})`}
+                    style={{ cursor: 'pointer' }}
+                    onMouseDown={e => onNodeMouseDown(e, n.id)}
+                    onClick={e => { e.stopPropagation(); setSelected(n); }}
+                  >
+                    {isSel && (
+                      <circle r={n.r + 6} fill="none" stroke={meta.color} strokeWidth="2" strokeDasharray="3 2" opacity="0.9" />
+                    )}
+                    <circle r={n.r} fill={meta.bg} stroke={meta.color} strokeWidth={isSel ? 2.2 : 1.4} />
+                    <circle r={n.r * 0.4} fill={meta.color} />
+                    <text
+                      y={n.r + 11}
+                      fill="var(--text-primary)"
+                      fontSize="9"
+                      fontFamily="var(--font-mono)"
+                      fontWeight={isSel ? '700' : '500'}
+                      textAnchor="middle"
+                      style={{ pointerEvents: 'none' }}
+                    >
+                      {n.label.length > 14 ? `${n.label.slice(0, 12)}…` : n.label}
+                    </text>
+                  </g>
+                );
+              })}
+            </g>
+          </svg>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', position: 'relative' }}>

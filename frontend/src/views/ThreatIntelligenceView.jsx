@@ -516,7 +516,7 @@ export default function ThreatIntelligenceView({
                 </div>
 
                 <div style={{
-                  height: '240px',
+                  height: '250px',
                   borderRadius: '10px',
                   overflow: 'hidden',
                   border: '1px solid var(--border)',
@@ -524,7 +524,7 @@ export default function ThreatIntelligenceView({
                   position: 'relative'
                 }}>
                   {activeItemGraph && activeItemGraph.nodes?.length > 0 ? (
-                    <KnowledgeGraph graphData={activeItemGraph} />
+                    <KnowledgeGraph graphData={activeItemGraph} compact={true} height="250px" />
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: '12px' }}>
                       Synthesizing entity relationship graph...
