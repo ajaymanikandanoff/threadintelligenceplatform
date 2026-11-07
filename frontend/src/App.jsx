@@ -69,7 +69,7 @@ export default function App() {
   const [theme, setTheme] = useState(localStorage.getItem('CYBER_THEME') || 'dark');
   const [cyberAccent, setCyberAccent] = useState(localStorage.getItem('CYBER_ACCENT') || 'cyan');
   const [apiKey, setApiKey] = useState(localStorage.getItem('GEMINI_API_KEY') || '');
-  const [selectedModel, setSelectedModel] = useState(localStorage.getItem('GEMINI_MODEL') || 'gemini-2.5-flash');
+  const [selectedModel, setSelectedModel] = useState(localStorage.getItem('GEMINI_MODEL') || 'gemini-3.5-flash');
 
   // Loading States
   const [isAnalyzing, setIsAnalyzing] = useState(false);

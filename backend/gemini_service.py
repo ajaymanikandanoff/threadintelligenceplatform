@@ -12,7 +12,13 @@ logger = logging.getLogger("gemini_service")
 load_dotenv()
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
-DEFAULT_MODEL = "gemini-3-flash-preview"
+DEFAULT_MODEL = "gemini-3.5-flash"
+ACTIVE_FALLBACK_MODELS = [
+    "gemini-3.5-flash",
+    "gemini-3.1-flash-lite",
+    "gemini-flash-latest",
+    "gemini-3.8-flash"
+]
 
 SYSTEM_INSTRUCTION = """You are an elite Cyber Threat Intelligence (CTI) analyst and Knowledge Graph Engineer.
 Analyze the provided threat intelligence report, advisory, or incident log.
@@ -341,14 +347,18 @@ async def call_gemini_api(
     response_mime_type: Optional[str] = "application/json",
     enable_grounding: bool = False
 ) -> str:
-    """Calls the official Google Gemini REST API using httpx."""
-    clean_model = model_name.strip()
-    if any(m in clean_model for m in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]):
-        clean_model = "gemini-3-flash-preview"
-    if not clean_model.startswith("models/"):
-        clean_model = f"models/{clean_model}"
+    """Calls the official Google Gemini REST API using httpx with automatic model cascade."""
+    clean_model = (model_name or DEFAULT_MODEL).strip()
+    if any(m in clean_model for m in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-3-flash-preview", "gemini-3-flash"]):
+        clean_model = "gemini-3.5-flash"
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/{clean_model}:generateContent"
+    clean_base = clean_model.replace("models/", "")
+    models_to_try = [clean_base] + [m for m in ACTIVE_FALLBACK_MODELS if m != clean_base]
+    
+    headers = {
+        "Content-Type": "application/json",
+        "x-goog-api-key": api_key.strip()
+    }
     
     gen_config: Dict[str, Any] = {
         "temperature": 0.2
@@ -356,64 +366,67 @@ async def call_gemini_api(
     if response_mime_type:
         gen_config["responseMimeType"] = response_mime_type
 
-    payload: Dict[str, Any] = {
-        "systemInstruction": {
-            "parts": [{"text": system_prompt}]
-        },
-        "contents": [
-            {
-                "parts": [{"text": prompt}]
-            }
-        ],
-        "generationConfig": gen_config
-    }
-    
-    if enable_grounding:
-        payload["tools"] = [{"googleSearch": {}}]
-    
-    headers = {
-        "Content-Type": "application/json",
-        "x-goog-api-key": api_key.strip()
-    }
-    
+    last_error = None
     async with httpx.AsyncClient(timeout=45.0) as client:
-        response = await client.post(url, json=payload, headers=headers)
-        
-        # If googleSearch is rejected by model/tier, retry cleanly without tools
-        if response.status_code != 200 and enable_grounding:
-            payload.pop("tools", None)
-            response = await client.post(url, json=payload, headers=headers)
+        for m in models_to_try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent"
+            payload: Dict[str, Any] = {
+                "systemInstruction": {
+                    "parts": [{"text": system_prompt}]
+                },
+                "contents": [
+                    {
+                        "parts": [{"text": prompt}]
+                    }
+                ],
+                "generationConfig": gen_config
+            }
+            
+            if enable_grounding:
+                payload["tools"] = [{"googleSearch": {}}]
 
-        if response.status_code != 200:
-            raise Exception(f"Gemini API returned status {response.status_code}: {response.text}")
-            
-        data = response.json()
-        candidates = data.get("candidates", [])
-        if not candidates:
-            raise Exception("No response candidates returned by Gemini.")
-            
-        parts = candidates[0].get("content", {}).get("parts", [{}])
-        text_content = "".join([p.get("text", "") for p in parts if "text" in p])
-        
-        # Check if grounding metadata exists (search citations/sources)
-        grounding_meta = candidates[0].get("groundingMetadata", {})
-        search_queries = grounding_meta.get("webSearchQueries", [])
-        grounding_chunks = grounding_meta.get("groundingChunks", [])
-        
-        citations = []
-        for chunk in grounding_chunks[:4]:
-            web = chunk.get("web", {})
-            uri = web.get("uri")
-            title = web.get("title") or uri
-            if uri:
-                citations.append(f"[{title}]({uri})")
+            try:
+                response = await client.post(url, json=payload, headers=headers)
                 
-        if citations and not response_mime_type:
-            text_content += "\n\n---\n**🌐 Live Internet Sources:**\n" + "\n".join([f"- {c}" for c in citations])
-        elif search_queries and not response_mime_type:
-            text_content += f"\n\n*(Verified via live Google Search: {', '.join(search_queries[:3])})*"
+                # If Google Search Grounding is rejected by model/tier/quota (429 or 400), retry immediately without tools
+                if response.status_code != 200 and enable_grounding:
+                    payload.pop("tools", None)
+                    response = await client.post(url, json=payload, headers=headers)
 
-        return text_content
+                if response.status_code == 200:
+                    data = response.json()
+                    candidates = data.get("candidates", [])
+                    if candidates:
+                        parts = candidates[0].get("content", {}).get("parts", [{}])
+                        text_content = "".join([p.get("text", "") for p in parts if "text" in p])
+                        
+                        # Grounding metadata (if citations present)
+                        grounding_meta = candidates[0].get("groundingMetadata", {})
+                        search_queries = grounding_meta.get("webSearchQueries", [])
+                        grounding_chunks = grounding_meta.get("groundingChunks", [])
+                        
+                        citations = []
+                        for chunk in grounding_chunks[:4]:
+                            web = chunk.get("web", {})
+                            uri = web.get("uri")
+                            title = web.get("title") or uri
+                            if uri:
+                                citations.append(f"[{title}]({uri})")
+                                
+                        if citations and not response_mime_type:
+                            text_content += "\n\n---\n**🌐 Live Internet Sources:**\n" + "\n".join([f"- {c}" for c in citations])
+                        elif search_queries and not response_mime_type:
+                            text_content += f"\n\n*(Verified via live Google Search: {', '.join(search_queries[:3])})*"
+
+                        return text_content
+                else:
+                    last_error = f"Model {m} returned {response.status_code}: {response.text[:200]}"
+                    logger.warning(f"Gemini API attempt on {m} failed: {last_error}. Cascading to next model...")
+            except Exception as e:
+                last_error = f"Model {m} request failed: {e}"
+                logger.warning(last_error)
+
+    raise Exception(f"All Gemini models exhausted. Last error: {last_error}")
 
 
 async def analyze_threat_text(text: str, api_key: Optional[str] = None, model: str = DEFAULT_MODEL) -> Dict[str, Any]:

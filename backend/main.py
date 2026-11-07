@@ -44,18 +44,18 @@ class AnalyzeRequest(BaseModel):
     text: str
     title: Optional[str] = "Threat Advisory"
     api_key: Optional[str] = None
-    model: Optional[str] = "gemini-2.5-flash"
+    model: Optional[str] = "gemini-3.5-flash"
 
 class CopilotRequest(BaseModel):
     query: str
     context_threat: Dict[str, Any]
     chat_history: Optional[List[Dict[str, str]]] = []
     api_key: Optional[str] = None
-    model: Optional[str] = "gemini-3-flash-preview"
+    model: Optional[str] = "gemini-3.5-flash"
 
 class KeyTestRequest(BaseModel):
     api_key: str
-    model: Optional[str] = "gemini-3-flash-preview"
+    model: Optional[str] = "gemini-3.5-flash"
 
 class CustomDefenseRequest(BaseModel):
     threat_actor: str
@@ -136,7 +136,7 @@ def health_check():
         "status": "healthy",
         "service": "AI Threat Intelligence Knowledge Engine",
         "has_env_gemini_key": bool(key),
-        "default_model": os.environ.get("GEMINI_MODEL", "gemini-3-flash-preview")
+        "default_model": os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
     }
 
 @app.get("/api/sample-reports")
@@ -214,7 +214,7 @@ async def copilot_chat(payload: CopilotRequest):
         query=payload.query,
         chat_history=payload.chat_history or [],
         api_key=effective_key,
-        model=payload.model or "gemini-3-flash-preview"
+        model=payload.model or "gemini-3.5-flash"
     )
     return {"reply": reply}
 
@@ -224,7 +224,7 @@ async def test_key(payload: KeyTestRequest):
         raise HTTPException(status_code=400, detail="API Key cannot be empty.")
     try:
         test_prompt = "Respond with JSON: {\"status\": \"ok\", \"verified\": true}"
-        resp = await call_gemini_api(payload.api_key, payload.model or "gemini-3-flash-preview", test_prompt)
+        resp = await call_gemini_api(payload.api_key, payload.model or "gemini-3.5-flash", test_prompt)
         return {"success": True, "message": "Gemini API Key verified successfully!", "raw": resp}
     except Exception as e:
         return {"success": False, "error": str(e)}

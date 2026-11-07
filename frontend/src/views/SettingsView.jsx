@@ -406,7 +406,7 @@ export default function SettingsView({
               Active AI Model
             </div>
             <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '4px' }}>
-              Google Gemini 3 Flash
+              Google Gemini 3.5 Flash (Active)
             </div>
           </div>
 

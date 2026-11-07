@@ -120,9 +120,9 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, sele
                 cursor: 'pointer'
               }}
             >
-              <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended — Fastest & High Precision)</option>
-              <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Multimodal Reasoning)</option>
-              <option value="gemini-1.5-flash">Gemini 1.5 Flash (High Throughput & Low Latency)</option>
+              <option value="gemini-3.5-flash">Gemini 3.5 Flash (Recommended — Fastest & Active Quota)</option>
+              <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite (High Throughput & Low Latency)</option>
+              <option value="gemini-3.8-flash">Gemini 3.8 Flash (Deep Multimodal Reasoning)</option>
             </select>
           </div>
 
