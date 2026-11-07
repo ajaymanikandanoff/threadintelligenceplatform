@@ -35,8 +35,8 @@ export default function ThreatMapBottomToolbar({
 
   return (
     <div style={{
-      background: 'rgba(8, 14, 28, 0.98)',
-      borderTop: '1px solid rgba(0, 229, 255, 0.22)',
+      background: '#0d1117',
+      borderTop: '1px solid #21262d',
       padding: '8px 14px',
       display: 'flex',
       alignItems: 'center',
@@ -288,3 +288,4 @@ export default function ThreatMapBottomToolbar({
     </div>
   );
 }
+

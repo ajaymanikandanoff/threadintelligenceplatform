@@ -24,17 +24,16 @@ export default function ThreatMapView({ onNavigateTab }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '12px',
-            background: 'rgba(0, 229, 255, 0.12)',
-            border: '1px solid rgba(0, 229, 255, 0.35)',
+            width: '36px',
+            height: '36px',
+            borderRadius: '6px',
+            background: 'rgba(0, 229, 255, 0.08)',
+            border: '1px solid rgba(0, 229, 255, 0.25)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 0 20px rgba(0, 229, 255, 0.2)'
+            justifyContent: 'center'
           }}>
-            <Radio size={22} color="var(--accent)" />
+            <Radio size={18} color="var(--accent)" />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

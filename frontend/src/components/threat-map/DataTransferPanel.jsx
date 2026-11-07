@@ -34,22 +34,21 @@ export default function DataTransferPanel({
 
   return (
     <div style={{
-      background: 'rgba(10, 15, 29, 0.95)',
-      border: '1px solid rgba(0, 229, 255, 0.25)',
-      borderRadius: '14px',
+      background: '#161b22',
+      border: '1px solid #21262d',
+      borderRadius: '6px',
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
       flex: 1,
       minHeight: 0,
-      overflow: 'hidden',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)'
+      overflow: 'hidden'
     }}>
       {/* Panel Header */}
       <div style={{
-        padding: '14px 16px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        background: 'linear-gradient(180deg, rgba(0, 229, 255, 0.08) 0%, transparent 100%)'
+        padding: '12px 14px',
+        borderBottom: '1px solid #21262d',
+        background: '#161b22'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

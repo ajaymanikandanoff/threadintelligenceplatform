@@ -1,20 +1,7 @@
 import React, { useState } from 'react';
-import {
-  Search,
-  Bell,
-  Sun,
-  Moon
-} from 'lucide-react';
+import { Search, Bell, Sun, Moon } from 'lucide-react';
 
-export default function Header({
-  activeTab,
-  currentUser,
-  theme,
-  onToggleTheme,
-  onSearchGlobal,
-  onOpenAuth,
-  onSignOut
-}) {
+export default function Header({ activeTab, currentUser, theme, onToggleTheme, onSearchGlobal, onSignOut }) {
   const [searchValue, setSearchValue] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -26,59 +13,62 @@ export default function Header({
 
   return (
     <header style={{
-      height: '56px',
-      background: 'var(--bg-glass)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      borderBottom: '1px solid var(--border)',
+      height: '48px',
+      background: '#161b22',
+      borderBottom: '1px solid #21262d',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '0 24px',
+      padding: '0 20px',
       position: 'sticky',
       top: 0,
       zIndex: 100,
       flexShrink: 0
     }}>
-      {/* ─── Left: Platform Title & Brand Logo ─── */}
+      {/* Left: Brand */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <img
           src="/logo.png"
-          alt="AI ThreatLens Logo"
-          style={{
-            height: '34px',
-            width: 'auto',
-            objectFit: 'contain',
-            flexShrink: 0,
-            filter: 'drop-shadow(0 0 10px rgba(0, 229, 255, 0.45))'
-          }}
+          alt="AI ThreatLens"
+          style={{ height: '28px', width: 'auto', objectFit: 'contain', flexShrink: 0 }}
         />
-        <h1 style={{
-          fontSize: '18px',
-          fontWeight: '800',
-          color: 'var(--text-primary)',
-          letterSpacing: '-0.02em',
-          margin: 0,
+        <span style={{
+          fontSize: '15px',
+          fontWeight: '700',
+          color: '#e6edf3',
+          letterSpacing: '-0.01em',
           userSelect: 'none'
         }}>
           AI ThreatLens
-        </h1>
+        </span>
+        <span style={{
+          fontSize: '10px',
+          fontWeight: '600',
+          color: '#6e7681',
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase',
+          borderLeft: '1px solid #21262d',
+          paddingLeft: '10px',
+          marginLeft: '2px'
+        }}>
+          SOC Platform
+        </span>
       </div>
 
-      {/* ─── Right: Global Search & Operational Status Bar ─── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        {/* Global Search Bar */}
+      {/* Right: Search + Status + Controls */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Search */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          background: 'var(--bg-input)',
-          border: '1px solid var(--border)',
-          borderRadius: '8px',
-          padding: '6px 12px',
-          width: '260px'
+          gap: '7px',
+          background: '#0d1117',
+          border: '1px solid #21262d',
+          borderRadius: '6px',
+          padding: '5px 10px',
+          width: '240px'
         }}>
-          <Search size={14} color="var(--text-tertiary)" />
+          <Search size={13} color="#6e7681" />
           <input
             type="text"
             placeholder="Search IPs, domains, URLs"
@@ -89,121 +79,81 @@ export default function Header({
               background: 'transparent',
               border: 'none',
               outline: 'none',
-              color: 'var(--text-primary)',
+              color: '#e6edf3',
               fontSize: '12px',
-              width: '100%'
+              width: '100%',
+              fontFamily: 'inherit'
             }}
           />
           <kbd style={{
-            background: 'var(--bg-overlay)',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-            padding: '1px 5px',
-            fontSize: '10px',
+            background: '#1c2128',
+            border: '1px solid #30363d',
+            borderRadius: '3px',
+            padding: '0 4px',
+            fontSize: '9px',
             fontFamily: 'var(--font-mono)',
-            color: 'var(--text-tertiary)'
-          }}>
-            /
-          </kbd>
+            color: '#6e7681',
+            lineHeight: '16px'
+          }}>/</kbd>
         </div>
 
-        {/* Operational Status Pill */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '7px',
-          background: 'rgba(16, 185, 129, 0.08)',
-          border: '1px solid rgba(16, 185, 129, 0.25)',
-          padding: '5px 12px',
-          borderRadius: '20px',
-          fontSize: '12px',
-          color: '#10b981',
-          fontWeight: '600'
-        }}>
-          <span style={{
-            width: '6px',
-            height: '6px',
-            borderRadius: '50%',
-            background: '#10b981',
-            boxShadow: '0 0 6px #10b981'
-          }} />
-          <span>All systems operational</span>
-        </div>
-
-        {/* Notification Bell */}
+        {/* Bell */}
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => setShowNotifications(p => !p)}
             style={{
               background: 'transparent',
-              border: '1px solid var(--border)',
-              borderRadius: '8px',
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              border: '1px solid #21262d',
+              borderRadius: '6px',
+              width: '30px', height: '30px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
-              color: 'var(--text-secondary)',
-              position: 'relative'
+              color: '#8b949e'
             }}
             title="Notifications"
           >
-            <Bell size={15} />
+            <Bell size={14} />
             <span style={{
-              position: 'absolute',
-              top: '6px',
-              right: '6px',
-              width: '6px',
-              height: '6px',
-              borderRadius: '50%',
-              background: '#f43f5e',
-              boxShadow: '0 0 6px #f43f5e'
+              position: 'absolute', top: '7px', right: '7px',
+              width: '5px', height: '5px',
+              borderRadius: '50%', background: '#f85149'
             }} />
           </button>
 
           {showNotifications && (
             <div style={{
-              position: 'absolute',
-              top: '40px',
-              right: 0,
-              width: '280px',
-              background: 'var(--bg-glass-card)',
-              border: '1px solid var(--border)',
-              borderRadius: '12px',
-              padding: '14px',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
+              position: 'absolute', top: '36px', right: 0,
+              width: '260px',
+              background: '#161b22',
+              border: '1px solid #21262d',
+              borderRadius: '8px',
+              padding: '12px',
+              boxShadow: '0 8px 32px rgba(1,4,9,0.8)',
               zIndex: 200
             }}>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>System Notifications</div>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                FastAPI threat engine connected on <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent)' }}>:8000</code>. Ready for automated indicator triage.
+              <div style={{ fontSize: '11px', fontWeight: '700', color: '#e6edf3', marginBottom: '8px' }}>Notifications</div>
+              <div style={{ fontSize: '11px', color: '#8b949e', lineHeight: '1.5' }}>
+                FastAPI engine connected on <code style={{ fontFamily: 'var(--font-mono)', color: '#00e5ff' }}>:8000</code>. Ready for indicator triage.
               </div>
             </div>
           )}
         </div>
 
-        {/* Theme Toggle Button */}
+        {/* Theme toggle */}
         <button
           onClick={onToggleTheme}
           style={{
             background: 'transparent',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            width: '32px',
-            height: '32px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            border: '1px solid #21262d',
+            borderRadius: '6px',
+            width: '30px', height: '30px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer',
-            color: 'var(--text-secondary)'
+            color: '#8b949e'
           }}
-          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
         >
-          {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+          {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
         </button>
       </div>
     </header>

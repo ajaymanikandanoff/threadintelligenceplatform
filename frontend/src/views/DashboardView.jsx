@@ -232,60 +232,47 @@ export default function DashboardView({
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '7px',
-            background: 'rgba(16, 185, 129, 0.08)',
-            border: '1px solid rgba(16, 185, 129, 0.25)',
-            padding: '7px 14px', borderRadius: '20px',
-            fontSize: '12px', color: '#10b981', fontWeight: '600'
-          }}>
-            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
-            <span>API status <strong style={{ color: 'var(--text-primary)' }}>Online</strong></span>
-          </div>
-
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button
             type="button"
             onClick={() => onNavigateTab && onNavigateTab('threat-map')}
             style={{
               display: 'flex', alignItems: 'center', gap: '8px',
-              background: 'rgba(0, 229, 255, 0.12)',
-              border: '1px solid rgba(0, 229, 255, 0.35)',
+              background: '#161b22',
+              border: '1px solid #30363d',
               color: '#00e5ff',
-              borderRadius: '8px',
-              padding: '9px 16px',
-              fontSize: '13px',
-              fontWeight: '700',
+              borderRadius: '6px',
+              padding: '8px 14px',
+              fontSize: '12.5px',
+              fontWeight: '600',
               cursor: 'pointer',
-              boxShadow: '0 0 16px rgba(0, 229, 255, 0.2)',
-              transition: 'all 0.15s ease'
+              transition: 'background 0.12s ease'
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0, 229, 255, 0.2)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0, 229, 255, 0.12)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+            onMouseEnter={e => e.currentTarget.style.background = '#21262d'}
+            onMouseLeave={e => e.currentTarget.style.background = '#161b22'}
           >
-            <Radio size={15} strokeWidth={2.4} color="#00e5ff" />
+            <Radio size={14} strokeWidth={2.2} color="#00e5ff" />
             <span>Global Threat & Data Map</span>
           </button>
 
           <button
             onClick={onOpenNewAnalysis}
             style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              background: 'linear-gradient(135deg, #0284c7 0%, #06b6d4 100%)',
+              display: 'flex', alignItems: 'center', gap: '7px',
+              background: '#0284c7',
               color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '9px 18px',
-              fontSize: '13px',
-              fontWeight: '700',
+              border: '1px solid #0369a1',
+              borderRadius: '6px',
+              padding: '8px 16px',
+              fontSize: '12.5px',
+              fontWeight: '600',
               cursor: 'pointer',
-              boxShadow: '0 0 20px rgba(6, 182, 212, 0.35)',
-              transition: 'all 0.15s ease'
+              transition: 'background 0.12s ease'
             }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 0 24px rgba(6, 182, 212, 0.5)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(6, 182, 212, 0.35)'; }}
+            onMouseEnter={e => e.currentTarget.style.background = '#0ea5e9'}
+            onMouseLeave={e => e.currentTarget.style.background = '#0284c7'}
           >
-            <Plus size={16} strokeWidth={2.6} />
+            <Plus size={15} strokeWidth={2.4} />
             <span>New analysis</span>
           </button>
         </div>
@@ -295,29 +282,29 @@ export default function DashboardView({
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '14px'
+        gap: '12px'
       }}>
         {/* Total Analyzed */}
         <div style={{
-          background: 'var(--bg-glass-card)',
-          border: '1px solid var(--border)',
-          borderRadius: '14px',
-          padding: '18px 20px',
-          display: 'flex', flexDirection: 'column', gap: '10px',
-          position: 'relative', overflow: 'hidden'
+          background: '#161b22',
+          border: '1px solid #21262d',
+          borderRadius: '6px',
+          padding: '14px 16px',
+          display: 'flex', flexDirection: 'column', gap: '8px',
+          position: 'relative'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>Total analyzed</span>
             <div style={{
-              width: '32px', height: '32px', borderRadius: '8px',
-              background: 'rgba(56, 189, 248, 0.12)', border: '1px solid rgba(56, 189, 248, 0.25)',
+              width: '28px', height: '28px', borderRadius: '5px',
+              background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-              <ShieldAlert size={16} color="var(--accent)" />
+              <ShieldAlert size={14} color="#38bdf8" />
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+            <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
               {totalAnalyzedCount}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Verified analyst targets</div>
@@ -326,25 +313,25 @@ export default function DashboardView({
 
         {/* Critical Threats */}
         <div style={{
-          background: 'linear-gradient(180deg, rgba(244, 63, 94, 0.05) 0%, var(--bg-glass-card) 100%)',
-          border: '1px solid rgba(244, 63, 94, 0.18)',
-          borderRadius: '14px',
-          padding: '18px 20px',
-          display: 'flex', flexDirection: 'column', gap: '10px',
-          position: 'relative', overflow: 'hidden'
+          background: '#161b22',
+          border: '1px solid #21262d',
+          borderRadius: '6px',
+          padding: '14px 16px',
+          display: 'flex', flexDirection: 'column', gap: '8px',
+          position: 'relative'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>Critical threats</span>
             <div style={{
-              width: '32px', height: '32px', borderRadius: '8px',
-              background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.3)',
+              width: '28px', height: '28px', borderRadius: '5px',
+              background: 'rgba(248, 81, 73, 0.1)', border: '1px solid rgba(248, 81, 73, 0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-              <AlertTriangle size={16} color="#f43f5e" />
+              <AlertTriangle size={14} color="#f85149" />
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+            <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
               {criticalThreatsCount}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Score 85 and above</div>
@@ -353,25 +340,25 @@ export default function DashboardView({
 
         {/* High Risk */}
         <div style={{
-          background: 'linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, var(--bg-glass-card) 100%)',
-          border: '1px solid rgba(245, 158, 11, 0.18)',
-          borderRadius: '14px',
-          padding: '18px 20px',
-          display: 'flex', flexDirection: 'column', gap: '10px',
-          position: 'relative', overflow: 'hidden'
+          background: '#161b22',
+          border: '1px solid #21262d',
+          borderRadius: '6px',
+          padding: '14px 16px',
+          display: 'flex', flexDirection: 'column', gap: '8px',
+          position: 'relative'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>High-risk</span>
             <div style={{
-              width: '32px', height: '32px', borderRadius: '8px',
-              background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)',
+              width: '28px', height: '28px', borderRadius: '5px',
+              background: 'rgba(227, 179, 65, 0.1)', border: '1px solid rgba(227, 179, 65, 0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-              <Zap size={16} color="#f59e0b" />
+              <Zap size={14} color="#e3b341" />
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+            <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
               {highRiskCount}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Score 70 to 84</div>
@@ -380,25 +367,25 @@ export default function DashboardView({
 
         {/* Safe Results */}
         <div style={{
-          background: 'linear-gradient(180deg, rgba(16, 185, 129, 0.05) 0%, var(--bg-glass-card) 100%)',
-          border: '1px solid rgba(16, 185, 129, 0.18)',
-          borderRadius: '14px',
-          padding: '18px 20px',
-          display: 'flex', flexDirection: 'column', gap: '10px',
-          position: 'relative', overflow: 'hidden'
+          background: '#161b22',
+          border: '1px solid #21262d',
+          borderRadius: '6px',
+          padding: '14px 16px',
+          display: 'flex', flexDirection: 'column', gap: '8px',
+          position: 'relative'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>Safe results</span>
             <div style={{
-              width: '32px', height: '32px', borderRadius: '8px',
-              background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)',
+              width: '28px', height: '28px', borderRadius: '5px',
+              background: 'rgba(63, 185, 80, 0.1)', border: '1px solid rgba(63, 185, 80, 0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-              <ShieldCheck size={16} color="#10b981" />
+              <ShieldCheck size={14} color="#3fb950" />
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+            <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
               {safeCount}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Verified low/no threat</div>
@@ -407,25 +394,25 @@ export default function DashboardView({
 
         {/* Recent Investigations */}
         <div style={{
-          background: 'linear-gradient(180deg, rgba(129, 140, 248, 0.05) 0%, var(--bg-glass-card) 100%)',
-          border: '1px solid rgba(129, 140, 248, 0.18)',
-          borderRadius: '14px',
-          padding: '18px 20px',
-          display: 'flex', flexDirection: 'column', gap: '10px',
-          position: 'relative', overflow: 'hidden'
+          background: '#161b22',
+          border: '1px solid #21262d',
+          borderRadius: '6px',
+          padding: '14px 16px',
+          display: 'flex', flexDirection: 'column', gap: '8px',
+          position: 'relative'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>Active investigations</span>
             <div style={{
-              width: '32px', height: '32px', borderRadius: '8px',
-              background: 'rgba(129, 140, 248, 0.15)', border: '1px solid rgba(129, 140, 248, 0.3)',
+              width: '28px', height: '28px', borderRadius: '5px',
+              background: 'rgba(137, 87, 229, 0.1)', border: '1px solid rgba(137, 87, 229, 0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-              <Clock size={16} color="#818cf8" />
+              <Clock size={14} color="#8957e5" />
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+            <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
               {investigations.length}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Logged in platform</div>
@@ -441,11 +428,11 @@ export default function DashboardView({
       }}>
         {/* Threat Activity Dual-Wave Chart */}
         <div style={{
-          background: 'var(--bg-glass-card)',
-          border: '1px solid var(--border)',
-          borderRadius: '14px',
-          padding: '22px 24px',
-          display: 'flex', flexDirection: 'column', gap: '16px'
+          background: '#161b22',
+          border: '1px solid #21262d',
+          borderRadius: '6px',
+          padding: '16px 20px',
+          display: 'flex', flexDirection: 'column', gap: '14px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
@@ -584,11 +571,11 @@ export default function DashboardView({
 
         {/* Severity Distribution Donut Chart */}
         <div style={{
-          background: 'var(--bg-glass-card)',
-          border: '1px solid var(--border)',
-          borderRadius: '14px',
-          padding: '22px 24px',
-          display: 'flex', flexDirection: 'column', gap: '16px'
+          background: '#161b22',
+          border: '1px solid #21262d',
+          borderRadius: '6px',
+          padding: '16px 20px',
+          display: 'flex', flexDirection: 'column', gap: '14px'
         }}>
           <div>
             <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>Severity distribution</div>
@@ -684,11 +671,11 @@ export default function DashboardView({
       }}>
         {/* Top Threat Categories */}
         <div style={{
-          background: 'var(--bg-glass-card)',
-          border: '1px solid var(--border)',
-          borderRadius: '14px',
-          padding: '22px 24px',
-          display: 'flex', flexDirection: 'column', gap: '16px'
+          background: '#161b22',
+          border: '1px solid #21262d',
+          borderRadius: '6px',
+          padding: '16px 20px',
+          display: 'flex', flexDirection: 'column', gap: '14px'
         }}>
           <div>
             <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>Top threat categories</div>
@@ -716,42 +703,42 @@ export default function DashboardView({
 
         {/* Quick Actions (2x2 Grid) */}
         <div style={{
-          background: 'var(--bg-glass-card)',
-          border: '1px solid var(--border)',
-          borderRadius: '14px',
-          padding: '22px 24px',
-          display: 'flex', flexDirection: 'column', gap: '16px'
+          background: '#161b22',
+          border: '1px solid #21262d',
+          borderRadius: '6px',
+          padding: '16px 20px',
+          display: 'flex', flexDirection: 'column', gap: '14px'
         }}>
           <div>
             <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>Quick actions</div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', flex: 1 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', flex: 1 }}>
             {/* Analyze URL */}
             <button
               onClick={() => onNavigateTab('url-scanner')}
               style={{
-                background: 'var(--bg-elevated)',
-                border: '1px solid var(--border)',
-                borderRadius: '12px',
-                padding: '16px',
+                background: '#0d1117',
+                border: '1px solid #21262d',
+                borderRadius: '6px',
+                padding: '14px',
                 textAlign: 'left',
-                display: 'flex', flexDirection: 'column', gap: '10px',
+                display: 'flex', flexDirection: 'column', gap: '8px',
                 cursor: 'pointer',
-                transition: 'all 0.15s ease'
+                transition: 'all 0.12s ease'
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.4)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#38bdf8'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#21262d'; }}
             >
               <div style={{
-                width: '32px', height: '32px', borderRadius: '8px',
-                background: 'rgba(129, 140, 248, 0.15)', border: '1px solid rgba(129, 140, 248, 0.25)',
+                width: '28px', height: '28px', borderRadius: '5px',
+                background: 'rgba(129, 140, 248, 0.12)', border: '1px solid rgba(129, 140, 248, 0.2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>
-                <Link2 size={16} color="#818cf8" />
+                <Link2 size={14} color="#818cf8" />
               </div>
               <div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Analyze a URL</div>
+                <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Analyze a URL</div>
                 <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>SSRF protection & redirect tracer</div>
               </div>
             </button>
@@ -760,27 +747,27 @@ export default function DashboardView({
             <button
               onClick={() => onNavigateTab('ip-scanner')}
               style={{
-                background: 'var(--bg-elevated)',
-                border: '1px solid var(--border)',
-                borderRadius: '12px',
-                padding: '16px',
+                background: '#0d1117',
+                border: '1px solid #21262d',
+                borderRadius: '6px',
+                padding: '14px',
                 textAlign: 'left',
-                display: 'flex', flexDirection: 'column', gap: '10px',
+                display: 'flex', flexDirection: 'column', gap: '8px',
                 cursor: 'pointer',
-                transition: 'all 0.15s ease'
+                transition: 'all 0.12s ease'
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.4)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#38bdf8'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#21262d'; }}
             >
               <div style={{
-                width: '32px', height: '32px', borderRadius: '8px',
-                background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.25)',
+                width: '28px', height: '28px', borderRadius: '5px',
+                background: 'rgba(56, 189, 248, 0.12)', border: '1px solid rgba(56, 189, 248, 0.2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>
-                <Terminal size={16} color="var(--accent)" />
+                <Terminal size={14} color="var(--accent)" />
               </div>
               <div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Investigate an IP</div>
+                <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Investigate an IP</div>
                 <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>GeoIP, ASN, DNSBL & Port probe</div>
               </div>
             </button>
@@ -789,27 +776,27 @@ export default function DashboardView({
             <button
               onClick={() => onNavigateTab('domain-scanner')}
               style={{
-                background: 'var(--bg-elevated)',
-                border: '1px solid var(--border)',
-                borderRadius: '12px',
-                padding: '16px',
+                background: '#0d1117',
+                border: '1px solid #21262d',
+                borderRadius: '6px',
+                padding: '14px',
                 textAlign: 'left',
-                display: 'flex', flexDirection: 'column', gap: '10px',
+                display: 'flex', flexDirection: 'column', gap: '8px',
                 cursor: 'pointer',
-                transition: 'all 0.15s ease'
+                transition: 'all 0.12s ease'
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.4)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#38bdf8'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#21262d'; }}
             >
               <div style={{
-                width: '32px', height: '32px', borderRadius: '8px',
-                background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.25)',
+                width: '28px', height: '28px', borderRadius: '5px',
+                background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>
-                <Globe size={16} color="#10b981" />
+                <Globe size={14} color="#10b981" />
               </div>
               <div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>Check a domain</div>
+                <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>Check a domain</div>
                 <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>DNS records, RDAP, SSL & DGA</div>
               </div>
             </button>
@@ -818,27 +805,27 @@ export default function DashboardView({
             <button
               onClick={() => onNavigateTab('pdf-research')}
               style={{
-                background: 'var(--bg-elevated)',
-                border: '1px solid var(--border)',
-                borderRadius: '12px',
-                padding: '16px',
+                background: '#0d1117',
+                border: '1px solid #21262d',
+                borderRadius: '6px',
+                padding: '14px',
                 textAlign: 'left',
-                display: 'flex', flexDirection: 'column', gap: '10px',
+                display: 'flex', flexDirection: 'column', gap: '8px',
                 cursor: 'pointer',
-                transition: 'all 0.15s ease'
+                transition: 'all 0.12s ease'
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.4)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#38bdf8'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#21262d'; }}
             >
               <div style={{
-                width: '32px', height: '32px', borderRadius: '8px',
-                background: 'rgba(234, 179, 8, 0.15)', border: '1px solid rgba(234, 179, 8, 0.25)',
+                width: '28px', height: '28px', borderRadius: '5px',
+                background: 'rgba(234, 179, 8, 0.12)', border: '1px solid rgba(234, 179, 8, 0.2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>
-                <FileText size={16} color="#eab308" />
+                <FileText size={14} color="#eab308" />
               </div>
               <div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>PDF Threat Research</div>
+                <div style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)' }}>PDF Threat Research</div>
                 <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>TTPMapper MITRE & IOC extractor</div>
               </div>
             </button>
@@ -848,11 +835,11 @@ export default function DashboardView({
 
       {/* ─── Bottom Full-Width Card: Recent Threats ─── */}
       <div style={{
-        background: 'var(--bg-glass-card)',
-        border: '1px solid var(--border)',
-        borderRadius: '14px',
-        padding: '22px 24px',
-        display: 'flex', flexDirection: 'column', gap: '16px'
+        background: '#161b22',
+        border: '1px solid #21262d',
+        borderRadius: '6px',
+        padding: '16px 20px',
+        display: 'flex', flexDirection: 'column', gap: '14px'
       }}>
         {/* Table Header & Filters */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>

@@ -220,13 +220,7 @@ export default function App() {
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      background: 'var(--bg-base)',
-      backgroundImage: `
-        radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(to right, rgba(255, 255, 255, 0.01) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.01) 1px, transparent 1px)
-      `,
-      backgroundSize: '28px 28px, 56px 56px, 56px 56px'
+      background: 'var(--bg-base)'
     }}>
       {/* ─── Top Header Bar ─── */}
       <Header
@@ -242,16 +236,14 @@ export default function App() {
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* ─── Sidebar Navigation (Clean Workspace Items) ─── */}
         <aside style={{
-          width: '240px',
+          width: '220px',
           flexShrink: 0,
-          borderRight: '1px solid var(--border)',
-          background: 'var(--bg-glass)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          padding: '16px 14px',
+          borderRight: '1px solid #21262d',
+          background: '#161b22',
+          padding: '12px 10px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
+          gap: '12px',
           overflowY: 'auto'
         }}>
           {/* WORKSPACE Menu Section */}

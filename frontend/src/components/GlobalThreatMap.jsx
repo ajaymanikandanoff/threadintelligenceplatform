@@ -250,14 +250,13 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
     <div
       ref={containerWrapperRef}
       style={{
-        background: 'var(--bg-glass-card)',
-        border: '1px solid var(--border)',
-        borderRadius: '16px',
-        padding: isFullscreen ? '24px' : '22px',
+        background: '#161b22',
+        border: '1px solid #21262d',
+        borderRadius: '6px',
+        padding: isFullscreen ? '20px' : '18px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '18px',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+        gap: '16px',
         position: 'relative',
         overflow: 'hidden'
       }}
@@ -343,9 +342,9 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              background: 'var(--bg-overlay)',
-              border: '1px solid var(--border)',
-              borderRadius: '20px',
+              background: '#0d1117',
+              border: '1px solid #21262d',
+              borderRadius: '5px',
               padding: '5px 12px',
               fontSize: '11px',
               color: 'var(--text-secondary)',
@@ -359,13 +358,12 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
 
           <div style={{
             display: 'flex', alignItems: 'center', gap: '8px',
-            background: 'var(--bg-overlay)', border: '1px solid var(--border)',
-            borderRadius: '20px', padding: '5px 14px', fontSize: '11.5px', color: 'var(--text-secondary)'
+            background: '#0d1117', border: '1px solid #21262d',
+            borderRadius: '5px', padding: '5px 12px', fontSize: '11.5px', color: 'var(--text-secondary)'
           }}>
             <span style={{
-              width: '8px', height: '8px', borderRadius: '50%',
-              background: '#10b981',
-              boxShadow: '0 0 10px #10b981'
+              width: '6px', height: '6px', borderRadius: '50%',
+              background: '#10b981'
             }} />
             <span>Global Telemetry Feed:</span>
             <strong style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
@@ -382,104 +380,104 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
         gap: '12px'
       }}>
         <div style={{
-          background: 'rgba(244, 63, 94, 0.08)',
-          border: '1px solid rgba(244, 63, 94, 0.25)',
-          borderRadius: '10px',
+          background: '#0d1117',
+          border: '1px solid #21262d',
+          borderRadius: '6px',
           padding: '10px 14px',
           display: 'flex',
           alignItems: 'center',
           gap: '12px'
         }}>
           <div style={{
-            width: '34px', height: '34px', borderRadius: '8px',
-            background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.3)',
+            width: '32px', height: '32px', borderRadius: '5px',
+            background: 'rgba(244, 63, 94, 0.12)', border: '1px solid rgba(244, 63, 94, 0.25)',
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            <Database size={16} color="#f43f5e" />
+            <Database size={15} color="#f43f5e" />
           </div>
           <div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Total Exfiltrated Volume
             </div>
-            <div style={{ fontSize: '17px', fontWeight: '800', color: '#fca5a5', fontFamily: 'var(--font-mono)' }}>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: '#fca5a5', fontFamily: 'var(--font-mono)' }}>
               280.6 MB
             </div>
           </div>
         </div>
 
         <div style={{
-          background: 'rgba(0, 229, 255, 0.08)',
-          border: '1px solid rgba(0, 229, 255, 0.25)',
-          borderRadius: '10px',
+          background: '#0d1117',
+          border: '1px solid #21262d',
+          borderRadius: '6px',
           padding: '10px 14px',
           display: 'flex',
           alignItems: 'center',
           gap: '12px'
         }}>
           <div style={{
-            width: '34px', height: '34px', borderRadius: '8px',
-            background: 'rgba(0, 229, 255, 0.15)', border: '1px solid rgba(0, 229, 255, 0.3)',
+            width: '32px', height: '32px', borderRadius: '5px',
+            background: 'rgba(0, 229, 255, 0.12)', border: '1px solid rgba(0, 229, 255, 0.25)',
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            <Zap size={16} color="#00e5ff" />
+            <Zap size={15} color="#00e5ff" />
           </div>
           <div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Active Transfer Pipelines
             </div>
-            <div style={{ fontSize: '17px', fontWeight: '800', color: '#38bdf8', fontFamily: 'var(--font-mono)' }}>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: '#38bdf8', fontFamily: 'var(--font-mono)' }}>
               8 Streaming Routes
             </div>
           </div>
         </div>
 
         <div style={{
-          background: 'rgba(16, 185, 129, 0.08)',
-          border: '1px solid rgba(16, 185, 129, 0.25)',
-          borderRadius: '10px',
+          background: '#0d1117',
+          border: '1px solid #21262d',
+          borderRadius: '6px',
           padding: '10px 14px',
           display: 'flex',
           alignItems: 'center',
           gap: '12px'
         }}>
           <div style={{
-            width: '34px', height: '34px', borderRadius: '8px',
-            background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)',
+            width: '32px', height: '32px', borderRadius: '5px',
+            background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.25)',
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            <CheckCircle2 size={16} color="#10b981" />
+            <CheckCircle2 size={15} color="#10b981" />
           </div>
           <div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Defended & Sinkholed
             </div>
-            <div style={{ fontSize: '17px', fontWeight: '800', color: '#34d399', fontFamily: 'var(--font-mono)' }}>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: '#34d399', fontFamily: 'var(--font-mono)' }}>
               1 Blocked (18 Gbps)
             </div>
           </div>
         </div>
 
         <div style={{
-          background: 'rgba(234, 179, 8, 0.08)',
-          border: '1px solid rgba(234, 179, 8, 0.25)',
-          borderRadius: '10px',
+          background: '#0d1117',
+          border: '1px solid #21262d',
+          borderRadius: '6px',
           padding: '10px 14px',
           display: 'flex',
           alignItems: 'center',
           gap: '12px'
         }}>
           <div style={{
-            width: '34px', height: '34px', borderRadius: '8px',
-            background: 'rgba(234, 179, 8, 0.15)', border: '1px solid rgba(234, 179, 8, 0.3)',
+            width: '32px', height: '32px', borderRadius: '5px',
+            background: 'rgba(234, 179, 8, 0.12)', border: '1px solid rgba(234, 179, 8, 0.25)',
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            <Activity size={16} color="#eab308" />
+            <Activity size={15} color="#eab308" />
           </div>
           <div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Peak Exfiltration Speed
             </div>
-            <div style={{ fontSize: '17px', fontWeight: '800', color: '#fde047', fontFamily: 'var(--font-mono)' }}>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: '#fde047', fontFamily: 'var(--font-mono)' }}>
               4.5 MB/s (LockBit)
             </div>
           </div>
