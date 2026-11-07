@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShieldAlert,
   AlertTriangle,
@@ -14,78 +14,7 @@ import {
   Plus
 } from 'lucide-react';
 
-const INITIAL_RECENT_THREATS = [
-  {
-    id: 1,
-    indicator: 'hxxp://secure-login.example-verify.com',
-    threatType: 'Phishing',
-    riskScore: 94,
-    severity: 'critical',
-    detected: '2 min ago',
-    status: 'Blocked',
-    type: 'URL'
-  },
-  {
-    id: 2,
-    indicator: '203.0.113.42',
-    threatType: 'C2 server',
-    riskScore: 88,
-    severity: 'critical',
-    detected: '14 min ago',
-    status: 'Investigating',
-    type: 'IP'
-  },
-  {
-    id: 3,
-    indicator: 'files-share.example.co',
-    threatType: 'Malware distribution',
-    riskScore: 81,
-    severity: 'high',
-    detected: '41 min ago',
-    status: 'Open',
-    type: 'Domain'
-  },
-  {
-    id: 4,
-    indicator: 'login-update.example.net',
-    threatType: 'Credential harvesting',
-    riskScore: 76,
-    severity: 'high',
-    detected: '1 h ago',
-    status: 'Investigating',
-    type: 'URL'
-  },
-  {
-    id: 5,
-    indicator: '198.51.100.17',
-    threatType: 'Port scanning',
-    riskScore: 58,
-    severity: 'medium',
-    detected: '2 h ago',
-    status: 'Resolved',
-    type: 'IP'
-  },
-  {
-    id: 6,
-    indicator: '192.0.2.88',
-    threatType: 'Brute force',
-    riskScore: 52,
-    severity: 'medium',
-    detected: '3 h ago',
-    status: 'Open',
-    type: 'IP'
-  },
-  {
-    id: 7,
-    indicator: 'cdn.example.org',
-    threatType: 'No threat found',
-    riskScore: 6,
-    severity: 'safe',
-    detected: '5 h ago',
-    status: 'Resolved',
-    type: 'Domain'
-  }
-];
+const API_BASE = 'http://localhost:8000';
 
 export default function DashboardView({
   onNavigateTab,
@@ -97,15 +26,67 @@ export default function DashboardView({
   const [filterSeverity, setFilterSeverity] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [_page, setPage] = useState(1);
+  const [investigations, setInvestigations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Filtered threats list
-  const filteredThreats = INITIAL_RECENT_THREATS.filter(t => {
+  useEffect(() => {
+    const fetchRecent = async () => {
+      try {
+        const resp = await fetch(`${API_BASE}/api/investigations?limit=50`);
+        const data = await resp.json();
+        if (resp.ok && Array.isArray(data.investigations)) {
+          const mapped = data.investigations.map(item => {
+            const score = item.risk_score ?? 0;
+            let sev = 'safe';
+            if (score >= 85) sev = 'critical';
+            else if (score >= 70) sev = 'high';
+            else if (score >= 40) sev = 'medium';
+
+            const createdDate = item.created_at ? new Date(item.created_at) : new Date();
+            const now = new Date();
+            const diffMin = Math.round((now - createdDate) / (1000 * 60));
+            let detectedStr = 'Recent';
+            if (diffMin < 2) detectedStr = 'Just now';
+            else if (diffMin < 60) detectedStr = `${diffMin} min ago`;
+            else if (diffMin < 1440) detectedStr = `${Math.round(diffMin / 60)} h ago`;
+            else detectedStr = createdDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+
+            return {
+              id: item.id,
+              indicator: item.indicator,
+              threatType: item.classification || (score >= 70 ? 'High-Risk Campaign' : 'Clean / Legitimate'),
+              riskScore: score,
+              severity: sev,
+              detected: detectedStr,
+              status: score >= 80 ? 'Blocked' : score >= 40 ? 'Investigating' : 'Verified Safe',
+              type: (item.type || 'Indicator').toUpperCase().includes('IP') ? 'IP' : (item.type || '').toUpperCase().includes('URL') ? 'URL' : (item.type || '').toUpperCase().includes('DOMAIN') ? 'Domain' : 'PDF',
+              raw: item
+            };
+          });
+          setInvestigations(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard investigations:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRecent();
+  }, []);
+
+  // Filtered threats list from live investigations
+  const filteredThreats = investigations.filter(t => {
     const matchSev = filterSeverity === 'All' || t.severity.toLowerCase() === filterSeverity.toLowerCase();
     const matchQ = !searchQuery ||
       t.indicator.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.threatType.toLowerCase().includes(searchQuery.toLowerCase());
     return matchSev && matchQ;
   });
+
+  const totalAnalyzedCount = investigations.length;
+  const criticalThreatsCount = investigations.filter(x => x.riskScore >= 85).length;
+  const highRiskCount = investigations.filter(x => x.riskScore >= 70 && x.riskScore < 85).length;
+  const safeCount = investigations.filter(x => x.riskScore < 40).length;
 
   const getSeverityStyle = (sev) => {
     switch (sev) {
@@ -223,8 +204,10 @@ export default function DashboardView({
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>12,480</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>All indicators to date</div>
+            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+              {totalAnalyzedCount}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Verified analyst targets</div>
           </div>
         </div>
 
@@ -248,7 +231,9 @@ export default function DashboardView({
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>214</div>
+            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+              {criticalThreatsCount}
+            </div>
             <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Score 85 and above</div>
           </div>
         </div>
@@ -273,7 +258,9 @@ export default function DashboardView({
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>1,036</div>
+            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+              {highRiskCount}
+            </div>
             <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Score 70 to 84</div>
           </div>
         </div>
@@ -298,8 +285,10 @@ export default function DashboardView({
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>9,871</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>No threat indicators</div>
+            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+              {safeCount}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Verified low/no threat</div>
           </div>
         </div>
 
@@ -313,7 +302,7 @@ export default function DashboardView({
           position: 'relative', overflow: 'hidden'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>Recent investigations</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>Active investigations</span>
             <div style={{
               width: '32px', height: '32px', borderRadius: '8px',
               background: 'rgba(129, 140, 248, 0.15)', border: '1px solid rgba(129, 140, 248, 0.3)',
@@ -323,8 +312,10 @@ export default function DashboardView({
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>58</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Opened this week</div>
+            <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+              {investigations.length}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>Logged in platform</div>
           </div>
         </div>
       </div>
@@ -782,108 +773,116 @@ export default function DashboardView({
               </tr>
             </thead>
             <tbody>
-              {filteredThreats.map(t => {
-                const sevStyle = getSeverityStyle(t.severity);
-                const scoreColor = getScoreColor(t.riskScore);
+              {filteredThreats.length > 0 ? (
+                filteredThreats.map(t => {
+                  const sevStyle = getSeverityStyle(t.severity);
+                  const scoreColor = getScoreColor(t.riskScore);
 
-                return (
-                  <tr
-                    key={t.id}
-                    style={{
-                      borderBottom: '1px solid var(--border)',
-                      fontSize: '12.5px',
-                      transition: 'background 0.12s ease'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    {/* Indicator */}
-                    <td style={{ padding: '14px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontWeight: '500' }}>
-                      {t.indicator}
-                    </td>
+                  return (
+                    <tr
+                      key={t.id}
+                      style={{
+                        borderBottom: '1px solid var(--border)',
+                        fontSize: '12.5px',
+                        transition: 'background 0.12s ease'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      {/* Indicator */}
+                      <td style={{ padding: '14px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontWeight: '500' }}>
+                        {t.indicator}
+                      </td>
 
-                    {/* Threat Type */}
-                    <td style={{ padding: '14px', color: 'var(--text-secondary)' }}>
-                      {t.threatType}
-                    </td>
+                      {/* Threat Type */}
+                      <td style={{ padding: '14px', color: 'var(--text-secondary)' }}>
+                        {t.threatType}
+                      </td>
 
-                    {/* Risk Score */}
-                    <td style={{ padding: '14px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: scoreColor, width: '22px' }}>
-                          {t.riskScore}
-                        </span>
-                        <div style={{ width: '60px', height: '4px', borderRadius: '2px', background: 'rgba(255, 255, 255, 0.08)' }}>
-                          <div style={{ width: `${t.riskScore}%`, height: '100%', borderRadius: '2px', background: scoreColor }} />
+                      {/* Risk Score */}
+                      <td style={{ padding: '14px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: scoreColor, width: '22px' }}>
+                            {t.riskScore}
+                          </span>
+                          <div style={{ width: '60px', height: '4px', borderRadius: '2px', background: 'rgba(255, 255, 255, 0.08)' }}>
+                            <div style={{ width: `${Math.min(100, Math.max(0, t.riskScore))}%`, height: '100%', borderRadius: '2px', background: scoreColor }} />
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Severity Pill */}
-                    <td style={{ padding: '14px' }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '5px',
-                        background: sevStyle.bg, border: sevStyle.border, color: sevStyle.color,
-                        padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '600'
-                      }}>
-                        <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: sevStyle.dot }} />
-                        {t.severity}
-                      </span>
-                    </td>
+                      {/* Severity Pill */}
+                      <td style={{ padding: '14px' }}>
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '5px',
+                          background: sevStyle.bg, border: sevStyle.border, color: sevStyle.color,
+                          padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '600'
+                        }}>
+                          <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: sevStyle.dot }} />
+                          {t.severity}
+                        </span>
+                      </td>
 
-                    {/* Detected */}
-                    <td style={{ padding: '14px', color: 'var(--text-tertiary)', fontSize: '12px' }}>
-                      {t.detected}
-                    </td>
+                      {/* Detected */}
+                      <td style={{ padding: '14px', color: 'var(--text-tertiary)', fontSize: '12px' }}>
+                        {t.detected}
+                      </td>
 
-                    {/* Status */}
-                    <td style={{ padding: '14px' }}>
-                      <span style={{
-                        color: t.status === 'Blocked' ? '#f43f5e' : t.status === 'Resolved' ? '#10b981' : 'var(--text-primary)',
-                        fontWeight: '500', fontSize: '12px'
-                      }}>
-                        {t.status}
-                      </span>
-                    </td>
+                      {/* Status */}
+                      <td style={{ padding: '14px' }}>
+                        <span style={{
+                          color: t.status === 'Blocked' ? '#f43f5e' : t.status === 'Verified Safe' ? '#10b981' : 'var(--text-primary)',
+                          fontWeight: '500', fontSize: '12px'
+                        }}>
+                          {t.status}
+                        </span>
+                      </td>
 
-                    {/* Action */}
-                    <td style={{ padding: '14px', textAlign: 'right' }}>
-                      <button
-                        onClick={() => {
-                          if (onSelectIndicator) onSelectIndicator(t);
-                          onNavigateTab('intelligence');
-                        }}
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          color: 'var(--accent)',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          padding: '4px 6px',
-                          borderRadius: '4px',
-                          transition: 'all 0.12s ease'
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                        onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
-                      >
-                        <span>View details</span>
-                        <ArrowRight size={12} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+                      {/* Action */}
+                      <td style={{ padding: '14px', textAlign: 'right' }}>
+                        <button
+                          onClick={() => {
+                            if (onSelectIndicator) onSelectIndicator(t);
+                            onNavigateTab('intelligence');
+                          }}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--accent)',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '4px 6px',
+                            borderRadius: '4px',
+                            transition: 'all 0.12s ease'
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                          onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+                        >
+                          <span>View details</span>
+                          <ArrowRight size={12} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '36px 14px', color: 'var(--text-tertiary)', fontSize: '13px' }}>
+                    {isLoading ? 'Loading active threat investigations...' : 'No matching scanned indicators found. Run an IP, Domain, or URL scan to populate verified telemetry.'}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Table Footer */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', fontSize: '12px', color: 'var(--text-tertiary)' }}>
-          <span>Showing {filteredThreats.length} of 58 investigations</span>
+          <span>Showing {filteredThreats.length} of {investigations.length} verified investigations</span>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <button
