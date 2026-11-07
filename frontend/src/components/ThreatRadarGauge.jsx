@@ -4,19 +4,19 @@ export default function ThreatRadarGauge({ score = 0, cveCount = 0, iocCount = 0
   const s = Math.max(0, Math.min(100, score));
   const angle = -135 + (s / 100) * 270;
   const isCritical = s >= 75;
-  const isHigh     = s >= 50 && s < 75;
-  const isMedium   = s >= 25 && s < 50;
-  
-  const color      = isCritical ? 'var(--red)' : isHigh ? 'var(--amber)' : isMedium ? '#fbbf24' : 'var(--green)';
-  const label      = isCritical ? 'CRITICAL RISK' : isHigh ? 'HIGH RISK' : isMedium ? 'ELEVATED' : 'GUARDED';
-  const badgeBg    = isCritical ? 'var(--red-dim)' : isHigh ? 'var(--amber-dim)' : 'var(--green-dim)';
-  const badgeBorder= isCritical ? 'rgba(244,63,94,0.35)' : isHigh ? 'rgba(245,158,11,0.35)' : 'rgba(16,185,129,0.35)';
+  const isHigh = s >= 50 && s < 75;
+  const isMedium = s >= 25 && s < 50;
+
+  const color = isCritical ? 'var(--red)' : isHigh ? 'var(--amber)' : isMedium ? '#fbbf24' : 'var(--green)';
+  const label = isCritical ? 'CRITICAL RISK' : isHigh ? 'HIGH RISK' : isMedium ? 'ELEVATED' : 'GUARDED';
+  const badgeBg = isCritical ? 'var(--red-dim)' : isHigh ? 'var(--amber-dim)' : 'var(--green-dim)';
+  const badgeBorder = isCritical ? 'rgba(244,63,94,0.35)' : isHigh ? 'rgba(245,158,11,0.35)' : 'rgba(16,185,129,0.35)';
 
   // Build arc path for the filled portion
   const toRad = (deg) => (deg * Math.PI) / 180;
   const cx = 100, cy = 95, r = 68;
   const startAngle = -135;
-  const endAngle   = startAngle + (s / 100) * 270;
+  const endAngle = startAngle + (s / 100) * 270;
   const x1 = cx + r * Math.cos(toRad(startAngle));
   const y1 = cy + r * Math.sin(toRad(startAngle));
   const x2 = cx + r * Math.cos(toRad(endAngle));
@@ -32,8 +32,8 @@ export default function ThreatRadarGauge({ score = 0, cveCount = 0, iocCount = 0
       <svg width="200" height="135" viewBox="0 0 200 135" style={{ overflow: 'visible' }}>
         <defs>
           <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%"   stopColor="#10b981" />
-            <stop offset="45%"  stopColor="#f59e0b" />
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="45%" stopColor="#f59e0b" />
             <stop offset="100%" stopColor="#f43f5e" />
           </linearGradient>
           <filter id="needleGlow" x="-20%" y="-20%" width="140%" height="140%">

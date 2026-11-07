@@ -325,16 +325,28 @@ level: critical
     }
 
 
-async def call_gemini_api(api_key: str, model_name: str, prompt: str, system_prompt: str = SYSTEM_INSTRUCTION) -> str:
+async def call_gemini_api(
+    api_key: str, 
+    model_name: str, 
+    prompt: str, 
+    system_prompt: str = SYSTEM_INSTRUCTION,
+    response_mime_type: Optional[str] = "application/json",
+    enable_grounding: bool = False
+) -> str:
     """Calls the official Google Gemini REST API using httpx."""
-    # Format model endpoint
     clean_model = model_name.strip()
     if not clean_model.startswith("models/"):
         clean_model = f"models/{clean_model}"
     
     url = f"https://generativelanguage.googleapis.com/v1beta/{clean_model}:generateContent"
     
-    payload = {
+    gen_config: Dict[str, Any] = {
+        "temperature": 0.2
+    }
+    if response_mime_type:
+        gen_config["responseMimeType"] = response_mime_type
+
+    payload: Dict[str, Any] = {
         "systemInstruction": {
             "parts": [{"text": system_prompt}]
         },
@@ -343,11 +355,11 @@ async def call_gemini_api(api_key: str, model_name: str, prompt: str, system_pro
                 "parts": [{"text": prompt}]
             }
         ],
-        "generationConfig": {
-            "temperature": 0.2,
-            "responseMimeType": "application/json"
-        }
+        "generationConfig": gen_config
     }
+    
+    if enable_grounding:
+        payload["tools"] = [{"googleSearch": {}}]
     
     headers = {
         "Content-Type": "application/json",
@@ -356,13 +368,41 @@ async def call_gemini_api(api_key: str, model_name: str, prompt: str, system_pro
     
     async with httpx.AsyncClient(timeout=45.0) as client:
         response = await client.post(url, json=payload, headers=headers)
+        
+        # If googleSearch is rejected by model/tier, retry cleanly without tools
+        if response.status_code != 200 and enable_grounding:
+            payload.pop("tools", None)
+            response = await client.post(url, json=payload, headers=headers)
+
         if response.status_code != 200:
             raise Exception(f"Gemini API returned status {response.status_code}: {response.text}")
+            
         data = response.json()
         candidates = data.get("candidates", [])
         if not candidates:
             raise Exception("No response candidates returned by Gemini.")
-        text_content = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+            
+        parts = candidates[0].get("content", {}).get("parts", [{}])
+        text_content = "".join([p.get("text", "") for p in parts if "text" in p])
+        
+        # Check if grounding metadata exists (search citations/sources)
+        grounding_meta = candidates[0].get("groundingMetadata", {})
+        search_queries = grounding_meta.get("webSearchQueries", [])
+        grounding_chunks = grounding_meta.get("groundingChunks", [])
+        
+        citations = []
+        for chunk in grounding_chunks[:4]:
+            web = chunk.get("web", {})
+            uri = web.get("uri")
+            title = web.get("title") or uri
+            if uri:
+                citations.append(f"[{title}]({uri})")
+                
+        if citations and not response_mime_type:
+            text_content += "\n\n---\n**🌐 Live Internet Sources:**\n" + "\n".join([f"- {c}" for c in citations])
+        elif search_queries and not response_mime_type:
+            text_content += f"\n\n*(Verified via live Google Search: {', '.join(search_queries[:3])})*"
+
         return text_content
 
 
@@ -562,7 +602,67 @@ Based on the active threat intelligence context, here are the immediate hardenin
 
 *You can also copy the auto-generated Sigma and YARA rules from the Defense Center tab!*"""
 
-        elif "actor" in q_lower or "who" in q_lower or "apt" in q_lower:
+        # Specific Known Threat Actors Check (Offline Local Mode)
+        elif "lazarus" in q_lower or "apt38" in q_lower:
+            return """### 🕵️ Threat Actor Profile: **Lazarus Group (APT38 / Hidden Cobra)**
+
+- **Origin & Attribution:** Democratic People's Republic of Korea (DPRK / North Korea) - Reconnaissance General Bureau (RGB).
+- **Core Motivation:** State revenue generation via financial extortion, cryptocurrency theft, and cyber espionage.
+- **Signature Campaigns & Targets:**
+  - **Cryptocurrency & Web3:** Exploitation of DeFi bridges, cross-chain protocols, and crypto exchanges (Ronin Network $620M heist).
+  - **Targeted Software:** AppleJeus trojanized trading applications, Job Offer spearphishing targeting blockchain developers.
+  - **Ransomware / Destructive Operations:** WannaCry (2017), HermeticWiper-style attacks.
+- **Observed TTPs:** Custom malware loaders, DLL side-loading, GitHub social engineering targeting open-source contributors.
+
+*(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
+
+        elif "volt typhoon" in q_lower or "bronze silhouette" in q_lower:
+            return """### 🕵️ Threat Actor Profile: **Volt Typhoon (Vanguard Panda / Bronze Silhouette)**
+
+- **Origin & Attribution:** People's Republic of China (PRC State-Sponsored).
+- **Core Motivation:** Pre-positioning for disruptive / destructive cyber attacks against critical national infrastructure (CNI) during geopolitical crises.
+- **Targeted Sectors:** Communications, Energy, Transportation Systems, Water/Wastewater in the US and Indo-Pacific.
+- **Signature TTPs (Living-off-the-Land):**
+  - Extreme stealth: Avoids custom malware; heavily uses native Windows/Linux binaries (LotL) such as `wmic`, `powershell`, `netsh`, and `vssadmin`.
+  - Compromise of SOHO perimeter routers (Cisco, Fortinet, Netgear) into proxy botnets (KV-Botnet) to conceal traffic origin.
+  - Credential harvesting via NTDS.dit theft and valid account persistence (`T1078`).
+
+*(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
+
+        elif "scattered spider" in q_lower or "unc3944" in q_lower or "0ktapus" in q_lower:
+            return """### 🕵️ Threat Actor Profile: **Scattered Spider (UNC3944 / Muddled Libra)**
+
+- **Origin & Attribution:** English-speaking cybercrime syndicate (The Com / Star Fraud).
+- **Core Motivation:** Financial extortion, data theft, and ransomware deployment.
+- **Signature Tactics:**
+  - Aggressive social engineering: Help-desk Vishing (voice phishing) to bypass Okta / Azure MFA and reset employee passwords.
+  - SIM swapping of telecom employees and identity abuse (`T1078`).
+  - Cloud infrastructure compromise: AWS, GCP, and Azure admin console takeover, hypervisor manipulation (ESXi), and data exfiltration.
+
+*(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
+
+        elif "fancy bear" in q_lower or "apt28" in q_lower or "strontium" in q_lower:
+            return """### 🕵️ Threat Actor Profile: **Fancy Bear (APT28 / Sofacy / Strontium)**
+
+- **Origin & Attribution:** Russian Federation - Main Intelligence Directorate (GRU 85th Main Special Service Center).
+- **Core Motivation:** Military and geopolitical intelligence gathering, hack-and-leak influence operations.
+- **Targeted Sectors:** NATO allies, defense contractors, government ministries, critical infrastructure.
+- **Key TTPs:** Spearphishing with weaponized Office documents (`T1566`), Zero-day exploitation in Microsoft Outlook (e.g. CVE-2023-23397 NTLM credential leak), credential harvesting, and GooseEgg privilege escalation malware.
+
+*(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
+
+        elif "lockbit" in q_lower:
+            return """### 🕵️ Threat Actor Profile: **LockBit Ransomware Syndicate**
+
+- **Origin & Attribution:** Russian-speaking Ransomware-as-a-Service (RaaS) criminal cartel.
+- **Core Motivation:** High-volume financial extortion and corporate data hostage-taking.
+- **Signature Malware:** LockBit 2.0, LockBit 3.0 (LockBit Black), and LockBit Green, featuring ultra-fast multi-threaded encryption and StealBit exfiltration tool.
+- **Defensive Priorities:** Patch perimeter gateways (Citrix Bleed CVE-2023-4966), disable remote PowerShell without MFA, and enforce immutable offsite backups.
+
+*(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
+
+        # Active workspace investigation actor
+        elif "this actor" in q_lower or "this threat" in q_lower or "active actor" in q_lower or "who is the attacker" in q_lower or (actor.lower().split()[0] in q_lower if actor else False) or "who attacked" in q_lower:
             return f"""### 🕵️ Threat Actor Profile: **{actor}**
 
 - **Identity & Attribution:** {actor}
@@ -572,23 +672,137 @@ Based on the active threat intelligence context, here are the immediate hardenin
 
 **Attack Signature:** This adversary heavily relies on exploiting public-facing applications ({', '.join(cves) if cves else 'edge gateways'}), establishing web shells for persistence, and utilizing dual-use administrative utilities to evade detection."""
 
+        # General Cybersecurity Knowledge Handlers (Offline Local Mode)
+        elif "phish" in q_lower:
+            return """### 🎣 Cybersecurity Concept: Phishing Attacks & Defense
+
+**Phishing** is a form of social engineering where attackers deceive individuals into divulging sensitive credentials, session tokens, or executing malicious payloads.
+
+- **Primary Variants:**
+  - **Spear Phishing:** Highly targeted attacks directed at specific personnel using intelligence gathered via OSINT.
+  - **Whaling:** Executive-targeted phishing aimed at C-level leaders for wire fraud or high-privilege account takeover.
+  - **Smishing / Vishing:** SMS or voice-call deception to bypass multi-factor authentication (MFA fatigue / OTP harvesting).
+- **Adversary Techniques (MITRE ATT&CK):**
+  - `T1566.001`: Spearphishing Attachment (malicious Word/PDF macros, ISO/LNK containers).
+  - `T1566.002`: Spearphishing Link (spoofed login portals, credential theft).
+- **Core Enterprise Defenses:**
+  - Enforce SPF, DKIM, and strict DMARC (`p=reject`) policies on all inbound/outbound mail gateways.
+  - Deploy phishing-resistant FIDO2 / WebAuthn hardware security keys.
+  - Implement automated URL detonation and suspicious domain analysis.
+
+*(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
+
+        elif "ransom" in q_lower:
+            return """### 🔒 Cybersecurity Concept: Ransomware Operations & Mitigation
+
+**Ransomware** is extortion-driven malware that exfiltrates and encrypts an organization's critical data, locks servers, and demands cryptocurrency ransoms.
+
+- **Modern Multi-Extortion Tactics:**
+  - **Exfiltration First:** Terabytes of proprietary files and customer PII are exfiltrated prior to any encryption.
+  - **System-Wide Encryption:** High-speed cryptographic locking (AES-256 + RSA-4096) targeting backups, VM hypervisors, and storage arrays.
+  - **Extortion Pressure:** Publishing victim names on dark-web leak sites and initiating DDoS attacks against company customer portals.
+- **Initial Footholds:**
+  - Exploitation of public-facing edge gateways (VPNs, firewalls, MFT portals - `T1190`).
+  - Stolen corporate remote access credentials (RDP, Citrix, VPN) sold on illicit broker forums.
+- **Key Defensive Controls:**
+  - Immutable, air-gapped backups (3-2-1-1-0 backup rule with WORM storage).
+  - Micro-segmentation and strict access controls on internal SMB/RPC traffic.
+
+*(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
+
+        elif "sql injection" in q_lower or "sqli" in q_lower:
+            return """### 💉 Cybersecurity Concept: SQL Injection (SQLi) Vulnerabilities
+
+**SQL Injection (SQLi)** occurs when untrusted user input is directly concatenated into a dynamic database query, allowing an attacker to manipulate SQL syntax, bypass authentication, and access or delete backend data.
+
+- **Common Attack Classes:**
+  - **In-Band SQLi:** Data extracted directly through standard application HTTP responses or database error messages.
+  - **Inferential (Blind) SQLi:** Vulnerabilities probed using Boolean conditional statements or database sleep timers (`WAITFOR DELAY` / `pg_sleep()`).
+  - **Out-of-Band SQLi:** DNS or HTTP interaction triggered from the database server to adversary-controlled listeners.
+- **MITRE ATT&CK Mapping:** `T1190: Exploit Public-Facing Application`.
+- **Defensive Best Practices:**
+  - Use Parameterized Queries / Prepared Statements exclusively across all database queries.
+  - Deploy Web Application Firewall (WAF) inspection rules with virtual patching.
+  - Enforce Principle of Least Privilege on database user service accounts.
+
+*(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
+
+        elif "zero day" in q_lower or "zero-day" in q_lower or "0day" in q_lower:
+            return """### ⚡ Cybersecurity Concept: Zero-Day Vulnerabilities & Exploitation
+
+A **Zero-Day (0-day)** vulnerability is a software security flaw that is unknown to the vendor, or for which no official vendor patch currently exists.
+
+- **The Zero-Day Lifecycle:**
+  - **Discovery:** Flaw identified by security researchers or threat actors.
+  - **Weaponization:** Exploit payloads developed to bypass standard security defenses.
+  - **Active Exploitation:** Attackers compromise enterprise assets before security vendors publish signatures.
+  - **Disclosure & Mitigation:** Vendor releases a CVE advisory and emergency out-of-band security update.
+- **Defensive Strategies Against Zero-Days:**
+  - Behavioral heuristic EDR/XDR that detects anomalous child processes, memory injection, or web shell creation.
+  - Strict network segmentation and zero-trust perimeter isolation for exposed edge devices.
+  - Virtual patching via Web Application Firewalls (Cloudflare, AWS WAF, F5).
+
+*(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
+
+        elif "lazarus" in q_lower:
+            return """### 🕵️ Threat Actor Profile: **Lazarus Group (APT38 / Hidden Cobra)**
+
+- **Origin & Attribution:** Democratic People's Republic of Korea (DPRK / North Korea) - Reconnaissance General Bureau (RGB).
+- **Core Motivation:** State revenue generation via financial extortion, cryptocurrency theft, and cyber espionage.
+- **Signature Campaigns & Targets:**
+  - **Cryptocurrency & Web3:** Exploitation of DeFi bridges, cross-chain protocols, and crypto exchanges (Ronin Network $620M heist).
+  - **Targeted Software:** AppleJeus trojanized trading applications, Job Offer spearphishing targeting blockchain developers.
+  - **Ransomware / Destructive Operations:** WannaCry (2017), HermeticWiper-style attacks.
+- **Observed TTPs:** Custom malware loaders, DLL side-loading, GitHub social engineering targeting open-source contributors.
+
+*(Running in Local CTI Engine. Add your Google Gemini API Key in Settings to unlock real-time internet search for any custom query.)*"""
+
         else:
-            return f"""### 🤖 AI Threat Intel Copilot Analysis
+            return f"""### 🤖 AI Threat Intel Copilot (Local CTI Engine)
 
 Regarding your query: *"{query}"*
 
-- **Actor Impact:** {actor} actively exploits vulnerabilities like {cves[0] if cves else 'CVEs'} to execute techniques such as {mitre[0] if mitre else 'T1190'}.
-- **Tactical Implication:** Detection should prioritize both network egress traffic to known C2 IPs and anomaly detection around process injection or suspicious PowerShell scripts.
-- **Next Step:** You can ask me to write a custom detection logic, generate specific snort signatures, or assess risk for your specific operating systems."""
+Currently, this workstation is operating in **Local Heuristic CTI Mode** (grounded in the active workspace threat: **{actor}**).
 
-    system_prompt = f"""You are an elite Cyber Threat Intelligence Copilot assisting a Senior Security Operations Center (SOC) Analyst.
-Answer questions accurately, professionally, and concisely using Markdown with clear headings and bullet points.
-Grounded context:
-{grounded_context}
+- **Current Active Threat Context:** {actor} (exploiting {', '.join(cves) if cves else 'public-facing vulnerabilities'} via {mitre[0] if mitre else 'T1190'}).
+- **Live Internet Answering:** To enable live internet search, real-time threat intelligence updates, and open-ended generative AI reasoning for ANY question, please connect your free Google Gemini API Key.
+
+**How to activate Live Internet AI:**
+1. Navigate to the **Settings** tab in the sidebar.
+2. In the **AI Intelligence Engine & Gemini API** section, paste your Gemini API Key.
+3. Click **Save & Connect** — Copilot will instantly unlock full Google Search Grounding across all internet threat feeds!"""
+
+    system_prompt = f"""You are an elite Cyber Threat Intelligence (CTI) Copilot assisting a Senior Security Operations Center (SOC) Analyst, powered by Google Gemini with live internet search grounding.
+
+CURRENT ACTIVE INVESTIGATION ON ANALYST WORKSPACE:
+- Report Title: {context_threat.get('title', 'Active Threat Incident')}
+- Threat Actor: {actor}
+- Exploited CVEs: {', '.join(cves) if cves else 'None identified'}
+- MITRE Techniques: {', '.join(mitre) if mitre else 'None identified'}
+- Indicators of Compromise (IoCs): {', '.join(iocs) if iocs else 'None listed'}
+- Threat Overview: {summary[:500] if summary else 'No summary available.'}
+
+CRITICAL ANSWERING GUIDELINES:
+1. QUERY CONTEXT EVALUATION:
+   - If the user asks about the active investigation (e.g., "what are our 1-hour actions?", "summarize this attack", "block IPs", "which software versions in this campaign", or references '{actor}'):
+     Ground your response thoroughly in the active investigation context above.
+   - If the user asks a GENERAL cybersecurity question (e.g., "What is Ransomware?", "Explain zero-day vulnerabilities", "Who is Lazarus Group?", "How does DNS cache poisoning work?", "What are the latest 2026 cyber threats?"):
+     DO NOT artificially force or focus on '{actor}'! Answer the user's specific question directly, professionally, and accurately using your broad cybersecurity expertise and live Google Search results.
+   - If the user asks about a DIFFERENT threat actor, CVE, software, or security tool, answer specifically for that entity.
+2. FORMATTING:
+   - Use clean Markdown with headings, bullet points, and code snippets where appropriate.
+   - Be actionable, concise, and technically authoritative.
 """
     prompt = f"User Analyst Query: {query}\nProvide actionable, technically precise guidance."
     try:
-        reply = await call_gemini_api(api_key, model, prompt, system_prompt=system_prompt)
+        reply = await call_gemini_api(
+            api_key=api_key, 
+            model_name=model, 
+            prompt=prompt, 
+            system_prompt=system_prompt,
+            response_mime_type=None,
+            enable_grounding=True
+        )
         return reply
     except Exception as e:
-        return f"*(Gemini Copilot Fallback)* Based on the active threat analysis for **{actor}**:\n\n{str(e)[:100]}\n\nImmediate Action: Validate that all listed IoCs are blocked and patch {', '.join(cves) if cves else 'affected software'}."
+        return f"*(Gemini API Notice: {str(e)[:120]})*\n\nBased on local threat telemetry for **{actor}**:\nImmediate action: Ingest active perimeter IOCs and patch {', '.join(cves) if cves else 'exposed services'}."
