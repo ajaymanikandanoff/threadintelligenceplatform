@@ -87,7 +87,7 @@ export default function SettingsModal({ isOpen, onClose, apiKey, setApiKey, sele
               type="password"
               value={tempKey}
               onChange={e => setTempKey(e.target.value)}
-              placeholder="AIzaSy…"
+              placeholder="Enter Gemini API key..."
               className="input"
               style={{
                 fontFamily: 'var(--font-mono)',

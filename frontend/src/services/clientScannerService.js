@@ -731,3 +731,4 @@ export async function clientResearchPdf(fileOrTitle, userEmail = 'analyst@threat
 
   return result;
 }
+
