@@ -48,13 +48,33 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
     },
     resetView: () => {
       if (mapRef.current) {
-        mapRef.current.flyTo({
-          center: [15, 25],
-          zoom: 1.45,
-          pitch: 0,
-          bearing: 0,
-          duration: 900
-        });
+        try {
+          mapRef.current.fitBounds([[-125, -35], [152, 62]], {
+            padding: 40,
+            duration: 800
+          });
+        } catch (e) {
+          mapRef.current.flyTo({
+            center: [15, 25],
+            zoom: 1.45,
+            pitch: 0,
+            bearing: 0,
+            duration: 800
+          });
+        }
+      }
+    },
+    fitBoundsCoords: (bounds) => {
+      if (mapRef.current && bounds) {
+        try {
+          mapRef.current.fitBounds(bounds, {
+            padding: 90,
+            maxZoom: 4,
+            duration: 1000
+          });
+        } catch (err) {
+          console.warn('fitBounds error:', err);
+        }
       }
     },
     flyToCoords: (lng, lat, zoom = 4) => {
@@ -78,8 +98,14 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
       allFeatures = generated.features;
     }
 
-    const originFeatures = allFeatures.filter(f => f.properties?.nodeType !== 'TARGET');
-    const targetFeatures = allFeatures.filter(f => f.properties?.nodeType === 'TARGET');
+    const originFeatures = allFeatures.filter(f => {
+      const t = f.properties?.nodeType || f.properties?.node_type;
+      return t !== 'TARGET';
+    });
+    const targetFeatures = allFeatures.filter(f => {
+      const t = f.properties?.nodeType || f.properties?.node_type;
+      return t === 'TARGET';
+    });
 
     return {
       origins: { type: 'FeatureCollection', features: originFeatures },
@@ -126,6 +152,7 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
       container: mapContainerRef.current,
       style: {
         version: 8,
+        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
         sources: {
           'esri-dark-base': {
             type: 'raster',
@@ -263,19 +290,19 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
           'line-color': [
             'match',
             ['downcase', ['coalesce', ['get', 'severity'], 'critical']],
-            'critical', SEVERITY_COLORS.critical,
-            'high', SEVERITY_COLORS.high,
-            'medium', SEVERITY_COLORS.medium,
-            'low', SEVERITY_COLORS.low,
-            SEVERITY_COLORS.info
+            'critical', '#ff3366',
+            'high', '#f97316',
+            'medium', '#eab308',
+            'low', '#00e5ff',
+            '#00e5ff'
           ],
-          'line-width': 5.5,
-          'line-opacity': 0.65,
-          'line-blur': 1.8
+          'line-width': 7.5,
+          'line-opacity': 0.85,
+          'line-blur': 2.0
         }
       });
 
-      // Inner Core Line (Sharp and bright)
+      // Inner Core Line (Sharp, bright white/neon)
       map.addLayer({
         id: 'attack-routes-core',
         type: 'line',
@@ -286,21 +313,13 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
           visibility: visibleLayers.routes !== false ? 'visible' : 'none'
         },
         paint: {
-          'line-color': [
-            'match',
-            ['downcase', ['coalesce', ['get', 'severity'], 'critical']],
-            'critical', '#ff4d6d',
-            'high', '#ffa94d',
-            'medium', '#ffe066',
-            'low', '#38d9a9',
-            '#4dabf7'
-          ],
-          'line-width': 2.4,
+          'line-color': '#ffffff',
+          'line-width': 2.6,
           'line-opacity': 0.95
         }
       });
 
-      // 4. ANIMATED ATTACK FLOW BEACONS (Missiles / Particles traveling along the trajectory!)
+      // 4. ANIMATED ATTACK FLOW BEACONS (Missiles / Packets traveling along the trajectory!)
       map.addSource('attack-flow-beacons', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] }
@@ -315,10 +334,10 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
           visibility: visibleLayers.routes !== false ? 'visible' : 'none'
         },
         paint: {
-          'circle-radius': 9,
+          'circle-radius': 10,
           'circle-color': ['coalesce', ['get', 'color'], '#00e5ff'],
-          'circle-opacity': 0.6,
-          'circle-blur': 0.6
+          'circle-opacity': 0.7,
+          'circle-blur': 0.7
         }
       });
 
@@ -338,121 +357,90 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
         }
       });
 
-      // 5. Threat Origin Nodes (Clustered Source)
+      // 5. Threat Origin Nodes (Unclustered for 100% individual visibility)
       map.addSource('threat-origin-nodes', {
         type: 'geojson',
-        data: initialNodes.origins,
-        cluster: true,
-        clusterMaxZoom: 4,
-        clusterRadius: 35
+        data: initialNodes.origins
       });
 
-      // Cluster Circle Layer
-      map.addLayer({
-        id: 'threat-clusters',
-        type: 'circle',
-        source: 'threat-origin-nodes',
-        filter: ['has', 'point_count'],
-        layout: {
-          visibility: visibleLayers.markers !== false ? 'visible' : 'none'
-        },
-        paint: {
-          'circle-color': [
-            'step',
-            ['get', 'point_count'],
-            'rgba(249, 115, 22, 0.85)',
-            4, 'rgba(244, 63, 94, 0.9)',
-            8, 'rgba(225, 29, 72, 0.95)'
-          ],
-          'circle-radius': [
-            'step',
-            ['get', 'point_count'],
-            15,
-            4, 20,
-            8, 25
-          ],
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#06090f'
-        }
-      });
-
-      // Cluster Count Text
-      map.addLayer({
-        id: 'threat-cluster-count',
-        type: 'symbol',
-        source: 'threat-origin-nodes',
-        filter: ['has', 'point_count'],
-        layout: {
-          'text-field': '{point_count_abbreviated}',
-          'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-          'text-size': 11,
-          visibility: visibleLayers.markers !== false ? 'visible' : 'none'
-        },
-        paint: {
-          'text-color': '#ffffff'
-        }
-      });
-
-      // Unclustered Origin Node Outer Halo Ping
+      // Origin Node Outer Pulsing Halo
       map.addLayer({
         id: 'threat-origin-halo',
         type: 'circle',
         source: 'threat-origin-nodes',
-        filter: ['!', ['has', 'point_count']],
         layout: {
           visibility: visibleLayers.markers !== false ? 'visible' : 'none'
         },
         paint: {
-          'circle-radius': 12,
+          'circle-radius': 14,
           'circle-color': [
             'match',
             ['downcase', ['coalesce', ['get', 'severity'], 'critical']],
-            'critical', SEVERITY_COLORS.critical,
-            'high', SEVERITY_COLORS.high,
-            'medium', SEVERITY_COLORS.medium,
-            'low', SEVERITY_COLORS.low,
-            SEVERITY_COLORS.info
+            'critical', '#f43f5e',
+            'high', '#f97316',
+            'medium', '#eab308',
+            'low', '#00e5ff',
+            '#00e5ff'
           ],
-          'circle-opacity': 0.3,
-          'circle-stroke-width': 1.5,
+          'circle-opacity': 0.35,
+          'circle-stroke-width': 1.8,
           'circle-stroke-color': [
             'match',
             ['downcase', ['coalesce', ['get', 'severity'], 'critical']],
-            'critical', SEVERITY_COLORS.critical,
-            'high', SEVERITY_COLORS.high,
-            'medium', SEVERITY_COLORS.medium,
-            'low', SEVERITY_COLORS.low,
-            SEVERITY_COLORS.info
+            'critical', '#f43f5e',
+            'high', '#f97316',
+            'medium', '#eab308',
+            'low', '#00e5ff',
+            '#00e5ff'
           ]
         }
       });
 
-      // Unclustered Origin Node Center Circle
+      // Origin Node Center Circle (Neon core with white border)
       map.addLayer({
         id: 'threat-origin-center',
         type: 'circle',
         source: 'threat-origin-nodes',
-        filter: ['!', ['has', 'point_count']],
         layout: {
           visibility: visibleLayers.markers !== false ? 'visible' : 'none'
         },
         paint: {
-          'circle-radius': 6,
+          'circle-radius': 6.5,
           'circle-color': [
             'match',
             ['downcase', ['coalesce', ['get', 'severity'], 'critical']],
-            'critical', SEVERITY_COLORS.critical,
-            'high', SEVERITY_COLORS.high,
-            'medium', SEVERITY_COLORS.medium,
-            'low', SEVERITY_COLORS.low,
-            SEVERITY_COLORS.info
+            'critical', '#f43f5e',
+            'high', '#f97316',
+            'medium', '#eab308',
+            'low', '#00e5ff',
+            '#00e5ff'
           ],
-          'circle-stroke-width': 1.5,
-          'circle-stroke-color': '#06090f'
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#ffffff'
         }
       });
 
-      // 6. Target Infrastructure Nodes Source & Layer
+      // Origin Node Text Label (City name)
+      map.addLayer({
+        id: 'threat-origin-labels',
+        type: 'symbol',
+        source: 'threat-origin-nodes',
+        layout: {
+          'text-field': ['coalesce', ['get', 'city'], ['get', 'name']],
+          'text-size': 11,
+          'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+          'text-offset': [0, 1.3],
+          'text-anchor': 'top',
+          visibility: visibleLayers.markers !== false ? 'visible' : 'none'
+        },
+        paint: {
+          'text-color': '#fca5a5',
+          'text-halo-color': '#06090f',
+          'text-halo-width': 2
+        }
+      });
+
+      // 6. Target Infrastructure Nodes Source & Layers
       map.addSource('threat-target-nodes', {
         type: 'geojson',
         data: initialNodes.targets
@@ -466,10 +454,10 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
           visibility: visibleLayers.targets !== false ? 'visible' : 'none'
         },
         paint: {
-          'circle-radius': 10,
+          'circle-radius': 13,
           'circle-color': '#00e5ff',
-          'circle-opacity': 0.25,
-          'circle-stroke-width': 1.2,
+          'circle-opacity': 0.35,
+          'circle-stroke-width': 1.6,
           'circle-stroke-color': '#00e5ff'
         }
       });
@@ -482,10 +470,30 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
           visibility: visibleLayers.targets !== false ? 'visible' : 'none'
         },
         paint: {
-          'circle-radius': 5,
+          'circle-radius': 6,
           'circle-color': '#00e5ff',
-          'circle-stroke-width': 1.5,
-          'circle-stroke-color': '#06090f'
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#ffffff'
+        }
+      });
+
+      // Target Bastion Text Label (City name)
+      map.addLayer({
+        id: 'threat-target-labels',
+        type: 'symbol',
+        source: 'threat-target-nodes',
+        layout: {
+          'text-field': ['coalesce', ['get', 'city'], ['get', 'name']],
+          'text-size': 11,
+          'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+          'text-offset': [0, 1.3],
+          'text-anchor': 'top',
+          visibility: visibleLayers.targets !== false ? 'visible' : 'none'
+        },
+        paint: {
+          'text-color': '#67e8f9',
+          'text-halo-color': '#06090f',
+          'text-halo-width': 2
         }
       });
 
@@ -589,19 +597,6 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
         if (onSelectCountry) onSelectCountry(profile);
       });
 
-      // B. Cluster Click: Smoothly zoom in to expand
-      map.on('click', 'threat-clusters', (e) => {
-        const features = map.queryRenderedFeatures(e.point, { layers: ['threat-clusters'] });
-        const clusterId = features[0].properties.cluster_id;
-        map.getSource('threat-origin-nodes').getClusterExpansionZoom(clusterId, (err, zoom) => {
-          if (err) return;
-          map.easeTo({
-            center: features[0].geometry.coordinates,
-            zoom: zoom + 0.5
-          });
-        });
-      });
-
       // C. Threat Node Click: Show rich popup with 3-tier attribution distinction
       const handleNodeClick = (e) => {
         if (!e.features || e.features.length === 0) return;
@@ -614,7 +609,7 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
 
         const sev = (p.severity || 'info').toLowerCase();
         const sevColor = SEVERITY_COLORS[sev] || '#00e5ff';
-        const isTarget = p.nodeType === 'TARGET';
+        const isTarget = p.nodeType === 'TARGET' || p.node_type === 'TARGET';
 
         const popupContent = `
           <div style="font-family: system-ui, -apple-system, sans-serif; font-size: 11px; color: #f8fafc; line-height: 1.45; padding: 4px;">
@@ -657,7 +652,7 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
 
             <div style="margin-bottom: 4px;">
               <strong style="color: #94a3b8;">First/Last Observed:</strong>
-              <span style="color: #94a3b8; font-size: 10px;">${p.firstObserved || '2026-11-01 10:00 UTC'} &rarr; ${p.lastObserved || 'Active'}</span>
+              <span style="color: #94a3b8; font-size: 10px;">${p.firstObserved || p.first_observed || '2026-10-28 08:14 UTC'} &rarr; ${p.lastObserved || p.last_observed || 'Active'}</span>
             </div>
 
             ${p.evidence ? `
@@ -682,17 +677,19 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
           .setHTML(popupContent)
           .addTo(map);
 
-        const matchedEvt = events.find(ev => ev.id === p.eventId);
+        const matchedEvt = events.find(ev => ev.id === p.eventId || ev.id === p.event_id);
         if (matchedEvt && onSelectEvent) {
           onSelectEvent(matchedEvt);
         }
       };
 
       map.on('click', 'threat-origin-center', handleNodeClick);
+      map.on('click', 'threat-origin-halo', handleNodeClick);
       map.on('click', 'threat-target-center', handleNodeClick);
+      map.on('click', 'threat-target-halo', handleNodeClick);
 
       // D. Attack Route Click: Show vector and data transfer telemetry popup
-      map.on('click', 'attack-routes-glow', (e) => {
+      const handleRouteClick = (e) => {
         if (!e.features || e.features.length === 0) return;
         const p = e.features[0].properties;
         const sev = (p.severity || 'critical').toLowerCase();
@@ -721,9 +718,9 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
             <div style="margin-bottom: 6px; background: rgba(0, 229, 255, 0.08); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 6px; padding: 6px 8px;">
               <div style="font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">Data Transfer Channel</div>
               <div style="color: #38bdf8; font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: space-between;">
-                <span>${p.sourceCity || 'Origin'} (${p.sourceCountry || ''})</span>
+                <span>${p.sourceCity || p.source_city || 'Origin'} (${p.sourceCountry || p.source_country || ''})</span>
                 <span style="color: #f43f5e; margin: 0 4px;">➔</span>
-                <span>${p.destCity || 'Target'} (${p.destCountry || ''})</span>
+                <span>${p.destCity || p.dest_city || 'Target'} (${p.destCountry || p.dest_country || ''})</span>
               </div>
             </div>
 
@@ -786,20 +783,35 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
         if (matchedEvt && onSelectEvent) {
           onSelectEvent(matchedEvt);
         }
-      });
+      };
+
+      map.on('click', 'attack-routes-glow', handleRouteClick);
+      map.on('click', 'attack-routes-core', handleRouteClick);
 
       // Cursor pointer styling
       const cursorLayers = [
         'countries-fill',
-        'threat-clusters',
+        'threat-origin-halo',
         'threat-origin-center',
+        'threat-target-halo',
         'threat-target-center',
-        'attack-routes-glow'
+        'attack-routes-glow',
+        'attack-routes-core'
       ];
       cursorLayers.forEach(l => {
         map.on('mouseenter', l, () => { map.getCanvas().style.cursor = 'pointer'; });
         map.on('mouseleave', l, () => { map.getCanvas().style.cursor = ''; });
       });
+
+      // Fit view to frame global threat activity on initial load
+      try {
+        map.fitBounds([[-125, -35], [152, 62]], {
+          padding: 40,
+          duration: 0
+        });
+      } catch (err) {
+        // Fallback default
+      }
 
       setMapLoaded(true);
     });
@@ -869,12 +881,12 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
     toggleVis('attack-routes-core', visibleLayers.routes !== false);
     toggleVis('attack-flow-aura', visibleLayers.routes !== false);
     toggleVis('attack-flow-core', visibleLayers.routes !== false);
-    toggleVis('threat-clusters', visibleLayers.markers !== false);
-    toggleVis('threat-cluster-count', visibleLayers.markers !== false);
     toggleVis('threat-origin-halo', visibleLayers.markers !== false);
     toggleVis('threat-origin-center', visibleLayers.markers !== false);
+    toggleVis('threat-origin-labels', visibleLayers.markers !== false);
     toggleVis('threat-target-halo', visibleLayers.targets !== false);
     toggleVis('threat-target-center', visibleLayers.targets !== false);
+    toggleVis('threat-target-labels', visibleLayers.targets !== false);
     toggleVis('countries-boundary', visibleLayers.borders !== false);
     toggleVis('threat-density-heatmap', !!visibleLayers.heatmap);
   }, [visibleLayers, mapLoaded]);

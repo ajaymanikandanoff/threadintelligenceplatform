@@ -218,13 +218,32 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
   // Trace Data Flow on Globe
   const handleTraceRoute = (evt) => {
     setSelectedEvent(evt);
-    if (evt.sourceGeo?.iso3 && countryProfiles[evt.sourceGeo.iso3]) {
-      setSelectedCountry(countryProfiles[evt.sourceGeo.iso3]);
+    const srcGeo = evt.sourceGeo || evt.source_geo;
+    const dstGeo = evt.destGeo || evt.dest_geo;
+    const iso3 = srcGeo?.iso3;
+    if (iso3 && countryProfiles[iso3]) {
+      setSelectedCountry(countryProfiles[iso3]);
     }
-    if (mapRef.current && evt.sourceGeo && evt.destGeo) {
-      const midLng = (evt.sourceGeo.lng + evt.destGeo.lng) / 2;
-      const midLat = (evt.sourceGeo.lat + evt.destGeo.lat) / 2;
-      mapRef.current.flyToCoords(midLng, midLat, 2.4);
+    if (mapRef.current && srcGeo && dstGeo) {
+      const minLng = Math.min(srcGeo.lng, dstGeo.lng);
+      const maxLng = Math.max(srcGeo.lng, dstGeo.lng);
+      const minLat = Math.min(srcGeo.lat, dstGeo.lat);
+      const maxLat = Math.max(srcGeo.lat, dstGeo.lat);
+
+      if (maxLng - minLng > 180) {
+        // Trans-pacific or wide trajectory: frame globally
+        if (mapRef.current.resetView) {
+          mapRef.current.resetView();
+        } else if (mapRef.current.flyToCoords) {
+          mapRef.current.flyToCoords(0, 30, 1.8);
+        }
+      } else if (mapRef.current.fitBoundsCoords) {
+        mapRef.current.fitBoundsCoords([[minLng, minLat], [maxLng, maxLat]]);
+      } else if (mapRef.current.flyToCoords) {
+        const midLng = (srcGeo.lng + dstGeo.lng) / 2;
+        const midLat = (srcGeo.lat + dstGeo.lat) / 2;
+        mapRef.current.flyToCoords(midLng, midLat, 2.8);
+      }
     }
   };
 
