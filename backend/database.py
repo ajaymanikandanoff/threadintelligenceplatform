@@ -313,3 +313,4 @@ def clear_all_investigations() -> int:
         logger.error(f"Local JSON clear_all_investigations error: {e}")
 
     return count
+

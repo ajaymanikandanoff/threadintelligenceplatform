@@ -17,6 +17,7 @@ import ssl
 import json
 import urllib.request
 import math
+import concurrent.futures
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 try:
@@ -39,7 +40,7 @@ def calculate_shannon_entropy(string: str) -> float:
     return -sum([p * math.log(p) / math.log(2.0) for p in prob])
 
 def resolve_dns_records(domain: str) -> Dict[str, List[Any]]:
-    """Resolves A, AAAA, MX, TXT, NS, and CNAME records."""
+    """Resolves A, AAAA, MX, TXT, NS, and CNAME records in parallel."""
     records: Dict[str, List[Any]] = {
         "A": [],
         "AAAA": [],
@@ -64,25 +65,34 @@ def resolve_dns_records(domain: str) -> Dict[str, List[Any]]:
         return records
 
     resolver = dns.resolver.Resolver()
-    resolver.timeout = 2.5
-    resolver.lifetime = 3.0
+    resolver.timeout = 1.0
+    resolver.lifetime = 1.5
 
-    # Record types to query
-    for rtype in ["A", "AAAA", "MX", "TXT", "NS", "CNAME"]:
+    def query_record(rtype: str):
         try:
             answers = resolver.resolve(domain, rtype)
+            res = []
             for rdata in answers:
                 if rtype == "MX":
-                    records["MX"].append({
+                    res.append({
                         "host": str(rdata.exchange).rstrip('.'),
                         "preference": rdata.preference
                     })
                 elif rtype in ("A", "AAAA", "NS", "CNAME"):
-                    records[rtype].append(str(rdata).rstrip('.'))
+                    res.append(str(rdata).rstrip('.'))
                 elif rtype == "TXT":
-                    records["TXT"].append(str(rdata).strip('"'))
-        except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.Timeout, Exception):
-            pass
+                    res.append(str(rdata).strip('"'))
+            return rtype, res
+        except Exception:
+            return rtype, []
+
+    rtypes = ["A", "AAAA", "MX", "TXT", "NS", "CNAME"]
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+            for rtype, res in executor.map(query_record, rtypes):
+                records[rtype] = res
+    except Exception:
+        pass
 
     return records
 
@@ -100,7 +110,7 @@ def fetch_domain_rdap(domain: str) -> Dict[str, Any]:
     try:
         url = f"https://rdap.org/domain/{domain}"
         req = urllib.request.Request(url, headers={"User-Agent": "ThreatLens-CTI/1.0"})
-        with urllib.request.urlopen(req, timeout=4.0) as resp:
+        with urllib.request.urlopen(req, timeout=2.0) as resp:
             data = json.loads(resp.read().decode('utf-8'))
             
             # Events: registration, expiration, last changed
@@ -151,7 +161,7 @@ def fetch_ssl_certificate(domain: str) -> Optional[Dict[str, Any]]:
 
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(3.0)
+        sock.settimeout(1.5)
         wrapped = ctx.wrap_socket(sock, server_hostname=domain)
         wrapped.connect((domain, 443))
         cert = wrapped.getpeercert(binary_form=False)
@@ -222,15 +232,17 @@ def scan_domain_intelligence(domain_input: str) -> Dict[str, Any]:
     tld = cleaned.split('.')[-1]
     name_body = cleaned.split('.')[0]
 
-    # 1. DNS Records
-    dns_records = resolve_dns_records(cleaned)
+    # Parallelize DNS, RDAP, and SSL inspection
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        f_dns = executor.submit(resolve_dns_records, cleaned)
+        f_rdap = executor.submit(fetch_domain_rdap, cleaned)
+        f_ssl = executor.submit(fetch_ssl_certificate, cleaned)
+
+        dns_records = f_dns.result()
+        rdap = f_rdap.result()
+        ssl_info = f_ssl.result()
+
     resolved_ips = dns_records.get("A", []) + dns_records.get("AAAA", [])
-
-    # 2. WHOIS / RDAP
-    rdap = fetch_domain_rdap(cleaned)
-
-    # 3. SSL Certificate
-    ssl_info = fetch_ssl_certificate(cleaned)
 
     # 4. Risk Factors & Suspicious Indicators
     risk_score = 0

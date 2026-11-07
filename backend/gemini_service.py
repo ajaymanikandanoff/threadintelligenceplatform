@@ -524,10 +524,41 @@ Make sure graph_data has nodes for actor, malware, cve, techniques, target secto
 def generate_rule_based_copilot_response(query: str, context_threat: Dict[str, Any]) -> str:
     """Generates a rich, structured SOC CTI Copilot response offline or when Gemini quota is exhausted."""
     summary = context_threat.get("executive_summary", "")
-    actor = context_threat.get("threat_actor", {}).get("name", "CL0P Gang (TA505)")
-    cves = [c.get("id") for c in context_threat.get("cves", [])]
-    iocs = [f"{i.get('type')}: {i.get('value')}" for i in context_threat.get("iocs", [])[:8]]
-    mitre = [f"{m.get('id')} ({m.get('name')})" for m in context_threat.get("mitre_techniques", [])]
+    actor_info = context_threat.get("threat_actor")
+    actor = actor_info.get("name", "CL0P Gang (TA505)") if isinstance(actor_info, dict) else str(actor_info or "CL0P Gang (TA505)")
+
+    raw_cves = context_threat.get("cves", [])
+    cves = []
+    if isinstance(raw_cves, list):
+        for c in raw_cves:
+            cves.append(c.get("id", str(c)) if isinstance(c, dict) else str(c))
+    elif isinstance(raw_cves, str) and raw_cves:
+        cves.append(raw_cves)
+
+    raw_iocs = context_threat.get("iocs", [])
+    iocs = []
+    if isinstance(raw_iocs, list):
+        for i in raw_iocs[:8]:
+            if isinstance(i, dict):
+                iocs.append(f"{i.get('type')}: {i.get('value')}")
+            else:
+                iocs.append(str(i))
+    elif isinstance(raw_iocs, dict):
+        for k, v in raw_iocs.items():
+            if isinstance(v, list):
+                for item in v[:3]:
+                    iocs.append(f"{k}: {item}")
+            elif v:
+                iocs.append(f"{k}: {v}")
+
+    raw_mitre = context_threat.get("mitre_techniques", [])
+    mitre = []
+    if isinstance(raw_mitre, list):
+        for m in raw_mitre:
+            if isinstance(m, dict):
+                mitre.append(f"{m.get('id', '')} ({m.get('name', '')})")
+            else:
+                mitre.append(str(m))
 
     q_lower = query.lower()
     if "patch" in q_lower or "version" in q_lower or "software" in q_lower or "cve" in q_lower or "vulnerab" in q_lower:
@@ -789,10 +820,41 @@ async def chat_with_copilot(context_threat: Dict[str, Any], query: str, chat_his
         api_key = os.environ.get("GEMINI_API_KEY", "")
 
     summary = context_threat.get("executive_summary", "")
-    actor = context_threat.get("threat_actor", {}).get("name", "CL0P Gang (TA505)")
-    cves = [c.get("id") for c in context_threat.get("cves", [])]
-    iocs = [f"{i.get('type')}: {i.get('value')}" for i in context_threat.get("iocs", [])[:8]]
-    mitre = [f"{m.get('id')} ({m.get('name')})" for m in context_threat.get("mitre_techniques", [])]
+    actor_info = context_threat.get("threat_actor")
+    actor = actor_info.get("name", "CL0P Gang (TA505)") if isinstance(actor_info, dict) else str(actor_info or "CL0P Gang (TA505)")
+
+    raw_cves = context_threat.get("cves", [])
+    cves = []
+    if isinstance(raw_cves, list):
+        for c in raw_cves:
+            cves.append(c.get("id", str(c)) if isinstance(c, dict) else str(c))
+    elif isinstance(raw_cves, str) and raw_cves:
+        cves.append(raw_cves)
+
+    raw_iocs = context_threat.get("iocs", [])
+    iocs = []
+    if isinstance(raw_iocs, list):
+        for i in raw_iocs[:8]:
+            if isinstance(i, dict):
+                iocs.append(f"{i.get('type')}: {i.get('value')}")
+            else:
+                iocs.append(str(i))
+    elif isinstance(raw_iocs, dict):
+        for k, v in raw_iocs.items():
+            if isinstance(v, list):
+                for item in v[:3]:
+                    iocs.append(f"{k}: {item}")
+            elif v:
+                iocs.append(f"{k}: {v}")
+
+    raw_mitre = context_threat.get("mitre_techniques", [])
+    mitre = []
+    if isinstance(raw_mitre, list):
+        for m in raw_mitre:
+            if isinstance(m, dict):
+                mitre.append(f"{m.get('id', '')} ({m.get('name', '')})")
+            else:
+                mitre.append(str(m))
 
     if not api_key or not api_key.strip():
         return generate_rule_based_copilot_response(query, context_threat)

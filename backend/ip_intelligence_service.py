@@ -18,6 +18,7 @@ import ipaddress
 import urllib.request
 import json
 import os
+import concurrent.futures
 from typing import Dict, Any, List, Optional
 
 # Public DNSBL (DNS-based Blackhole Lists)
@@ -37,7 +38,7 @@ SAFE_PROBE_PORTS = [
 ]
 
 def check_ip_blacklist(ip_str: str) -> List[Dict[str, Any]]:
-    """Checks the IP against standard DNSBL blacklists."""
+    """Checks the IP against standard DNSBL blacklists in parallel."""
     results = []
     try:
         ip_obj = ipaddress.ip_address(ip_str)
@@ -45,60 +46,73 @@ def check_ip_blacklist(ip_str: str) -> List[Dict[str, Any]]:
             return []
             
         if ip_obj.version == 4:
-            # Reverse octets for IPv4 DNSBL query: 1.2.3.4 -> 4.3.2.1
             reversed_ip = ".".join(reversed(ip_str.split(".")))
-            for dnsbl_host, provider_name in DNSBL_SERVICES:
+            
+            def check_single_dnsbl(item):
+                dnsbl_host, provider_name = item
                 query = f"{reversed_ip}.{dnsbl_host}"
                 try:
-                    socket.setdefaulttimeout(1.5)
+                    socket.setdefaulttimeout(1.0)
                     answers = socket.gethostbyname(query)
                     if answers:
-                        results.append({
+                        return {
                             "blacklist": provider_name,
                             "query": query,
                             "listed": True,
                             "response": answers,
                             "severity": "High"
-                        })
+                        }
                 except (socket.gaierror, socket.timeout):
-                    # Not listed or timeout
-                    results.append({
-                        "blacklist": provider_name,
-                        "query": query,
-                        "listed": False,
-                        "severity": "Clean"
-                    })
+                    pass
+                return {
+                    "blacklist": provider_name,
+                    "query": query,
+                    "listed": False,
+                    "severity": "Clean"
+                }
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                results = list(executor.map(check_single_dnsbl, DNSBL_SERVICES))
     except Exception:
         pass
     return results
 
-def probe_open_ports(ip_str: str, timeout: float = 1.0) -> List[Dict[str, Any]]:
-    """Non-intrusively probes standard public service ports using safe TCP connect."""
+def probe_open_ports(ip_str: str, timeout: float = 0.5) -> List[Dict[str, Any]]:
+    """Non-intrusively probes standard public service ports in parallel."""
     open_ports = []
     try:
         ip_obj = ipaddress.ip_address(ip_str)
-        # Avoid probing local or non-routable IPs
         if ip_obj.is_loopback or ip_obj.is_unspecified:
             return []
     except ValueError:
         return []
 
-    for port, service in SAFE_PROBE_PORTS:
+    def probe_single(item):
+        port, service = item
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)
         try:
             res = sock.connect_ex((ip_str, port))
             if res == 0:
-                open_ports.append({
+                return {
                     "port": port,
                     "service": service,
                     "state": "open",
                     "protocol": "tcp"
-                })
+                }
         except Exception:
             pass
         finally:
             sock.close()
+        return None
+
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+            port_results = executor.map(probe_single, SAFE_PROBE_PORTS)
+            open_ports = [p for p in port_results if p is not None]
+    except Exception:
+        pass
+
     return open_ports
 
 def scan_ip_intelligence(ip_input: str) -> Dict[str, Any]:
@@ -128,17 +142,7 @@ def scan_ip_intelligence(ip_input: str) -> Dict[str, Any]:
     
     ip_scope = "Private / RFC 1918" if is_private else "Loopback" if is_loopback else "Multicast" if is_multicast else "Reserved / Bogon" if is_reserved else "Public"
 
-    # 2. Reverse DNS (PTR)
-    reverse_dns = None
-    try:
-        socket.setdefaulttimeout(2.5)
-        host_info = socket.gethostbyaddr(cleaned_ip)
-        if host_info and host_info[0]:
-            reverse_dns = host_info[0]
-    except Exception:
-        reverse_dns = "No PTR record found"
-
-    # 3. GeoIP & ASN (For public IPs)
+    reverse_dns = "No PTR record found"
     geo_data = {
         "country": "Unknown",
         "country_code": "XX",
@@ -151,21 +155,33 @@ def scan_ip_intelligence(ip_input: str) -> Dict[str, Any]:
         "latitude": None,
         "longitude": None
     }
-    
-    if not (is_private or is_loopback or is_reserved):
+    blacklist_results = []
+    listed_count = 0
+    open_ports = []
+
+    def get_rdns():
+        try:
+            socket.setdefaulttimeout(1.5)
+            host_info = socket.gethostbyaddr(cleaned_ip)
+            if host_info and host_info[0]:
+                return host_info[0]
+        except Exception:
+            pass
+        return "No PTR record found"
+
+    def get_geo():
         try:
             req = urllib.request.Request(
                 f"http://ip-api.com/json/{cleaned_ip}?fields=status,message,country,countryCode,regionName,city,lat,lon,timezone,isp,as,org,query",
                 headers={"User-Agent": "ThreatLens-CTI/1.0"}
             )
-            with urllib.request.urlopen(req, timeout=3.5) as resp:
+            with urllib.request.urlopen(req, timeout=2.0) as resp:
                 data = json.loads(resp.read().decode('utf-8'))
                 if data.get("status") == "success":
                     as_raw = data.get("as", "")
                     as_num = as_raw.split(" ")[0] if as_raw else "N/A"
                     as_org = " ".join(as_raw.split(" ")[1:]) if " " in as_raw else as_raw
-                    
-                    geo_data = {
+                    return {
                         "country": data.get("country", "Unknown"),
                         "country_code": data.get("countryCode", "XX"),
                         "region": data.get("regionName", "Unknown"),
@@ -177,20 +193,35 @@ def scan_ip_intelligence(ip_input: str) -> Dict[str, Any]:
                         "latitude": data.get("lat"),
                         "longitude": data.get("lon")
                     }
-        except Exception as e:
-            geo_data["isp"] = "Lookup unavailable (Offline or rate limited)"
+        except Exception:
+            pass
+        return {
+            "country": "Unknown",
+            "country_code": "XX",
+            "region": "Unknown",
+            "city": "Unknown",
+            "isp": "Lookup unavailable (Offline or rate limited)",
+            "as_number": "N/A",
+            "as_org": "N/A",
+            "timezone": "UTC",
+            "latitude": None,
+            "longitude": None
+        }
 
-    # 4. Blacklist checks
-    blacklist_results = []
-    listed_count = 0
     if not (is_private or is_loopback or is_reserved):
-        blacklist_results = check_ip_blacklist(cleaned_ip)
-        listed_count = sum(1 for b in blacklist_results if b.get("listed"))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+            f_rdns = executor.submit(get_rdns)
+            f_geo = executor.submit(get_geo)
+            f_bl = executor.submit(check_ip_blacklist, cleaned_ip)
+            f_ports = executor.submit(probe_open_ports, cleaned_ip, 0.5)
 
-    # 5. Open ports probe (Safe non-intrusive banner check)
-    open_ports = []
-    if not (is_private or is_loopback or is_reserved):
-        open_ports = probe_open_ports(cleaned_ip, timeout=0.8)
+            reverse_dns = f_rdns.result()
+            geo_data = f_geo.result()
+            blacklist_results = f_bl.result()
+            open_ports = f_ports.result()
+            listed_count = sum(1 for b in blacklist_results if b.get("listed"))
+    else:
+        reverse_dns = get_rdns()
 
     # 6. Abuse Confidence & Reputation Calculation
     abuse_score = 0
