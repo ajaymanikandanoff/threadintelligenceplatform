@@ -255,7 +255,6 @@ export default function InvestigationHistoryView({ onOpenInvestigation }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {filtered.length > 0 ? (
           filtered.map((item, idx) => {
-            const badge = getScoreBadge(item.risk_score || item.score);
             return (
               <div
                 key={item.id || idx}
