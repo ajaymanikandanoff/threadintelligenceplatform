@@ -40,59 +40,54 @@ export default function ThreatCopilot({
   };
 
   return (
-    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', gap: '14px' }}>
+    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', gap: '12px' }}>
 
       {/* Copilot Header */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 18px', background: 'var(--bg-elevated)', borderRadius: '12px',
-        border: '1px solid var(--border)'
+        padding: '12px 16px', background: '#161b22', borderRadius: '6px',
+        border: '1px solid #21262d'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
-            width: '32px', height: '32px', borderRadius: '8px',
-            background: 'linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(129,140,248,0.2) 100%)',
-            border: '1px solid rgba(56,189,248,0.3)',
+            width: '30px', height: '30px', borderRadius: '5px',
+            background: 'rgba(0, 229, 255, 0.08)',
+            border: '1px solid rgba(0, 229, 255, 0.25)',
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            <Bot size={17} color="var(--accent)" />
+            <Bot size={16} color="var(--accent)" />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-primary)' }}>
+              <span style={{ fontSize: '14px', fontWeight: '700', color: '#e6edf3' }}>
                 AI Threat Intelligence Copilot
               </span>
               {threatActor && (
-                <span className="badge badge-red" title="Active workspace investigation report">
+                <span style={{
+                  background: 'rgba(248, 81, 73, 0.1)',
+                  color: '#f85149',
+                  border: '1px solid rgba(248, 81, 73, 0.25)',
+                  padding: '1px 7px',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontWeight: '600'
+                }}>
                   {threatActor}
                 </span>
               )}
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '1px' }}>
-              Context-grounded autonomous security assistant · Powered by Google Gemini 3 Flash
+            <div style={{ fontSize: '11px', color: '#8b949e', marginTop: '1px' }}>
+              Context-grounded autonomous security assistant · Enterprise SOC Engine
             </div>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px',
-            color: 'var(--green)', background: 'var(--bg-overlay)',
-            padding: '4px 12px', borderRadius: '20px',
-            border: '1px solid rgba(16,185,129,0.3)',
-            fontFamily: 'var(--font-mono)'
-          }}>
-            <span className="status-dot" style={{ background: 'var(--green)', width: '6px', height: '6px' }} />
-            <span>LIVE AGENT · ONLINE</span>
           </div>
         </div>
       </div>
 
       {/* Messages Canvas */}
       <div style={{
-        flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px',
-        background: 'var(--bg-elevated)', borderRadius: '12px', border: '1px solid var(--border)',
-        padding: '20px'
+        flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px',
+        background: '#161b22', borderRadius: '6px', border: '1px solid #21262d',
+        padding: '16px'
       }}>
         {messages.map((msg, i) => {
           const isUser = msg.role === 'user';
@@ -101,34 +96,33 @@ export default function ThreatCopilot({
               key={i}
               style={{
                 display: 'flex',
-                gap: '12px',
+                gap: '10px',
                 flexDirection: isUser ? 'row-reverse' : 'row',
                 alignItems: 'flex-start'
               }}
             >
               {/* Avatar */}
               <div style={{
-                width: '30px', height: '30px', borderRadius: '8px', flexShrink: 0,
-                background: isUser ? 'var(--purple-dim)' : 'var(--bg-overlay)',
-                border: `1px solid ${isUser ? 'rgba(129,140,248,0.3)' : 'var(--border)'}`,
+                width: '28px', height: '28px', borderRadius: '5px', flexShrink: 0,
+                background: isUser ? '#1f242c' : '#0d1117',
+                border: `1px solid ${isUser ? '#30363d' : '#21262d'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>
-                {isUser ? <User size={15} color="var(--purple)" /> : <Bot size={15} color="var(--accent)" />}
+                {isUser ? <User size={14} color="#8b949e" /> : <Bot size={14} color="#00e5ff" />}
               </div>
 
               {/* Message Bubble */}
               <div style={{
                 maxWidth: '78%',
-                background: isUser ? 'linear-gradient(135deg, rgba(56,189,248,0.15) 0%, rgba(56,189,248,0.05) 100%)' : 'var(--bg-overlay)',
-                border: `1px solid ${isUser ? 'rgba(56,189,248,0.35)' : 'var(--border)'}`,
-                borderRadius: isUser ? '12px 2px 12px 12px' : '2px 12px 12px 12px',
-                padding: '12px 16px',
+                background: isUser ? '#1f242c' : '#0d1117',
+                border: `1px solid ${isUser ? '#30363d' : '#21262d'}`,
+                borderRadius: '6px',
+                padding: '10px 14px',
                 fontSize: '13px',
-                lineHeight: '1.65',
-                color: 'var(--text-primary)',
+                lineHeight: '1.6',
+                color: '#e6edf3',
                 whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                boxShadow: 'var(--shadow-sm)'
+                wordBreak: 'break-word'
               }}>
                 {msg.content}
               </div>
@@ -137,21 +131,21 @@ export default function ThreatCopilot({
         })}
 
         {isLoading && (
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
             <div style={{
-              width: '30px', height: '30px', borderRadius: '8px',
-              background: 'var(--bg-overlay)', border: '1px solid var(--border)',
+              width: '28px', height: '28px', borderRadius: '5px',
+              background: '#0d1117', border: '1px solid #21262d',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
             }}>
-              <Loader size={15} color="var(--accent)" className="spin" />
+              <Loader size={14} color="#00e5ff" className="spin" />
             </div>
             <div style={{
-              background: 'var(--bg-overlay)', border: '1px solid var(--border)',
-              borderRadius: '2px 12px 12px 12px', padding: '12px 16px',
-              fontSize: '13px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '8px'
+              background: '#0d1117', border: '1px solid #21262d',
+              borderRadius: '6px', padding: '10px 14px',
+              fontSize: '12px', color: '#8b949e', display: 'flex', alignItems: 'center', gap: '8px'
             }}>
               <span>Correlating threat advisory telemetry</span>
-              <span className="status-dot status-dot-pulse" style={{ background: 'var(--accent)', width: '6px', height: '6px' }} />
+              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#00e5ff' }} />
             </div>
           </div>
         )}
@@ -166,21 +160,21 @@ export default function ThreatCopilot({
             onClick={() => !isLoading && onSendMessage(p.text)}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: '6px',
-              padding: '6px 12px', borderRadius: '20px', fontSize: '11.5px',
-              background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-              color: 'var(--text-secondary)', cursor: 'pointer',
-              transition: 'all 0.15s ease', fontFamily: 'var(--font-sans)',
+              padding: '5px 10px', borderRadius: '5px', fontSize: '11px',
+              background: '#161b22', border: '1px solid #21262d',
+              color: '#8b949e', cursor: 'pointer',
+              transition: 'all 0.12s ease', fontFamily: 'var(--font-sans)',
               fontWeight: '500'
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.borderColor = 'var(--border-accent)';
-              e.currentTarget.style.color = 'var(--accent)';
-              e.currentTarget.style.background = 'var(--bg-hover)';
+              e.currentTarget.style.borderColor = '#00e5ff';
+              e.currentTarget.style.color = '#e6edf3';
+              e.currentTarget.style.background = '#21262d';
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.borderColor = 'var(--border)';
-              e.currentTarget.style.color = 'var(--text-secondary)';
-              e.currentTarget.style.background = 'var(--bg-elevated)';
+              e.currentTarget.style.borderColor = '#21262d';
+              e.currentTarget.style.color = '#8b949e';
+              e.currentTarget.style.background = '#161b22';
             }}
           >
             <span>{p.icon}</span>
@@ -190,23 +184,48 @@ export default function ThreatCopilot({
       </div>
 
       {/* Query Input Bar */}
-      <form onSubmit={submit} style={{ display: 'flex', gap: '10px' }}>
+      <form onSubmit={submit} style={{ display: 'flex', gap: '8px' }}>
         <div style={{ flex: 1, position: 'relative' }}>
           <input
             className="input"
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder="Ask AI Copilot — query threat attribution, malware behaviors, firewall rules, containment procedures…"
-            style={{ padding: '11px 16px', fontSize: '13px', borderRadius: '10px' }}
+            style={{
+              padding: '10px 14px',
+              fontSize: '12.5px',
+              borderRadius: '6px',
+              background: '#0d1117',
+              border: '1px solid #21262d',
+              color: '#e6edf3',
+              width: '100%'
+            }}
           />
         </div>
         <button
           type="submit"
-          className="btn-primary"
           disabled={isLoading || !input.trim()}
-          style={{ padding: '0 20px', borderRadius: '10px', height: '42px', flexShrink: 0 }}
+          style={{
+            padding: '0 18px',
+            borderRadius: '6px',
+            height: '38px',
+            flexShrink: 0,
+            background: '#0284c7',
+            border: '1px solid #0369a1',
+            color: '#ffffff',
+            fontSize: '12.5px',
+            fontWeight: '600',
+            cursor: isLoading || !input.trim() ? 'not-allowed' : 'pointer',
+            opacity: isLoading || !input.trim() ? 0.5 : 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'background 0.12s ease'
+          }}
+          onMouseEnter={e => { if (!isLoading && input.trim()) e.currentTarget.style.background = '#0ea5e9'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = '#0284c7'; }}
         >
-          <Send size={15} />
+          <Send size={14} />
           <span>Send</span>
         </button>
       </form>

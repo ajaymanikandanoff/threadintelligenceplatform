@@ -812,4 +812,5 @@ CRITICAL ANSWERING GUIDELINES:
         )
         return reply
     except Exception as e:
-        return f"*(Gemini API Notice: {str(e)[:120]})*\n\nBased on local threat telemetry for **{actor}**:\nImmediate action: Ingest active perimeter IOCs and patch {', '.join(cves) if cves else 'exposed services'}."
+        logger.warning(f"Gemini API copilot query failed ({e}), falling back to rule-based CTI engine.")
+        return generate_rule_based_copilot_response(query, context_threat)
