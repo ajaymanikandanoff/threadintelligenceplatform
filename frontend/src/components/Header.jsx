@@ -17,14 +17,6 @@ export default function Header({
 }) {
   const [searchValue, setSearchValue] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-
-  const getInitials = (name) => {
-    if (!name) return 'AM';
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return name.slice(0, 2).toUpperCase();
-  };
 
   const handleSearchSubmit = (e) => {
     if (e.key === 'Enter' && searchValue.trim()) {
@@ -213,113 +205,6 @@ export default function Header({
         >
           {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
         </button>
-
-        {/* User Avatar Circle & Dropdown */}
-        <div style={{ position: 'relative' }}>
-          <button
-            onClick={() => setShowUserMenu(p => !p)}
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 100%)',
-              border: '1px solid rgba(129, 140, 248, 0.4)',
-              color: '#ffffff',
-              fontWeight: '800',
-              fontSize: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              boxShadow: '0 0 12px rgba(99, 102, 241, 0.35)'
-            }}
-            title={`Analyst Profile (${currentUser?.name || 'Ajay M.'}) - Click for options`}
-          >
-            {getInitials(currentUser?.name)}
-          </button>
-
-          {showUserMenu && (
-            <div style={{
-              position: 'absolute',
-              top: '42px',
-              right: 0,
-              width: '230px',
-              background: 'var(--bg-glass-card)',
-              border: '1px solid var(--border)',
-              borderRadius: '12px',
-              padding: '14px',
-              boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              zIndex: 200,
-              backdropFilter: 'blur(16px)'
-            }}>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-primary)' }}>
-                  {currentUser?.name || 'Ajay M.'}
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px', wordBreak: 'break-all' }}>
-                  {currentUser?.email || 'analyst@example.com'}
-                </div>
-                <div style={{
-                  display: 'inline-block',
-                  marginTop: '6px',
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  fontSize: '10px',
-                  fontWeight: '600',
-                  background: 'rgba(56, 189, 248, 0.12)',
-                  color: '#38bdf8',
-                  border: '1px solid rgba(56, 189, 248, 0.25)'
-                }}>
-                  {currentUser?.authProvider || 'LOCAL'} SESSION
-                </div>
-              </div>
-
-              <div style={{ height: '1px', background: 'var(--border)' }} />
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <button
-                  type="button"
-                  onClick={() => { setShowUserMenu(false); onOpenAuth(); }}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'var(--text-primary)',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    textAlign: 'left',
-                    padding: '6px 8px',
-                    borderRadius: '6px',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  Switch account / Sign in
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setShowUserMenu(false); onSignOut(); }}
-                  style={{
-                    background: 'rgba(244, 63, 94, 0.1)',
-                    border: '1px solid rgba(244, 63, 94, 0.25)',
-                    color: '#fb7185',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    textAlign: 'left',
-                    padding: '6px 8px',
-                    borderRadius: '6px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Sign out
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </header>
   );

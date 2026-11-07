@@ -37,7 +37,8 @@ import {
   Link2,
   FileSearch,
   Share2,
-  Radio
+  Radio,
+  LogOut
 } from 'lucide-react';
 
 export default function App() {
@@ -539,18 +540,33 @@ export default function App() {
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               title="Click to view Settings & Profile"
             >
-              <div style={{
-                width: '32px', height: '32px', borderRadius: '50%',
-                background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 100%)',
-                color: '#ffffff',
-                fontWeight: '800',
-                fontSize: '12px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                {currentUser?.name ? currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'AM'}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              {currentUser?.avatar ? (
+                <img
+                  src={currentUser.avatar}
+                  alt={currentUser.name}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '1px solid var(--accent)',
+                    flexShrink: 0
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: '32px', height: '32px', borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 100%)',
+                  color: '#ffffff',
+                  fontWeight: '800',
+                  fontSize: '12px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  {currentUser?.name ? currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'AM'}
+                </div>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
                 <span style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {currentUser.name}
                 </span>
@@ -558,6 +574,36 @@ export default function App() {
                   {currentUser.role}
                 </span>
               </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSignOut();
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-tertiary)',
+                  padding: '5px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.15s ease'
+                }}
+                title="Sign out of ThreatLens"
+                onMouseEnter={e => {
+                  e.currentTarget.style.color = '#f43f5e';
+                  e.currentTarget.style.background = 'rgba(244, 63, 94, 0.12)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.color = 'var(--text-tertiary)';
+                  e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                <LogOut size={14} />
+              </button>
             </div>
           </div>
         </aside>

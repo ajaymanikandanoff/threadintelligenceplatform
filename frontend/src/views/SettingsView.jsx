@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Check,
   Palette,
@@ -9,7 +9,11 @@ import {
   ShieldCheck,
   AlertCircle,
   ExternalLink,
-  Loader
+  Loader,
+  Upload,
+  Trash2,
+  Camera,
+  Lock
 } from 'lucide-react';
 
 export default function SettingsView({
@@ -19,8 +23,10 @@ export default function SettingsView({
   cyberAccent = 'cyan',
   onChangeCyberAccent
 }) {
+  const fileInputRef = useRef(null);
   const [displayName, setDisplayName] = useState(currentUser?.name || 'Ajay M.');
-  const [email, setEmail] = useState(currentUser?.email || 'analyst@example.com');
+  const [avatar, setAvatar] = useState(currentUser?.avatar || null);
+  const email = currentUser?.email || 'analyst@example.com';
   const [isSaved, setIsSaved] = useState(false);
 
   // Preference toggles
@@ -36,16 +42,44 @@ export default function SettingsView({
   const [pwError, setPwError] = useState('');
   const [isPwLoading, setIsPwLoading] = useState(false);
 
+  const handleAvatarUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2.5 * 1024 * 1024) {
+      alert('Profile picture size must be under 2.5 MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result;
+      setAvatar(base64);
+      const updated = { ...currentUser, avatar: base64 };
+      if (onUpdateUser) onUpdateUser(updated);
+      try { localStorage.setItem('user_session', JSON.stringify(updated)); } catch {}
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveAvatar = () => {
+    setAvatar(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    const updated = { ...currentUser, avatar: null };
+    if (onUpdateUser) onUpdateUser(updated);
+    try { localStorage.setItem('user_session', JSON.stringify(updated)); } catch {}
+  };
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
+    const updated = { ...currentUser, name: displayName, avatar };
     if (onUpdateUser) {
-      onUpdateUser({ ...currentUser, name: displayName, email });
+      onUpdateUser(updated);
     }
     try {
+      localStorage.setItem('user_session', JSON.stringify(updated));
       await fetch('http://localhost:8000/api/auth/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name: displayName })
+        body: JSON.stringify({ email: currentUser?.email || email, name: displayName, avatar })
       });
     } catch { }
     setIsSaved(true);
@@ -123,21 +157,122 @@ export default function SettingsView({
       }}>
         <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>Profile</div>
 
-        <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-            {/* Avatar AM */}
-            <div style={{
-              width: '52px', height: '52px', borderRadius: '50%',
-              background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 100%)',
-              color: '#ffffff', fontWeight: '800', fontSize: '18px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 0 16px rgba(99, 102, 241, 0.35)',
-              flexShrink: 0
-            }}>
-              AM
+        <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+          {/* Profile Picture & Actions */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '20px',
+            flexWrap: 'wrap',
+            paddingBottom: '16px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+          }}>
+            {/* Hidden File Input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png, image/jpeg, image/jpg, image/webp, image/gif"
+              style={{ display: 'none' }}
+              onChange={handleAvatarUpload}
+            />
+
+            {/* Avatar Preview */}
+            <div style={{ position: 'relative' }}>
+              {avatar ? (
+                <img
+                  src={avatar}
+                  alt={displayName}
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '2px solid var(--accent)',
+                    boxShadow: '0 0 20px rgba(0, 229, 255, 0.35)',
+                    flexShrink: 0
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 100%)',
+                  color: '#ffffff',
+                  fontWeight: '800',
+                  fontSize: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 0 16px rgba(99, 102, 241, 0.35)',
+                  flexShrink: 0
+                }}>
+                  {displayName ? displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'AM'}
+                </div>
+              )}
             </div>
 
-            {/* Display Name */}
+            {/* Upload & Remove Buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'rgba(0, 229, 255, 0.12)',
+                    color: '#00e5ff',
+                    border: '1px solid rgba(0, 229, 255, 0.3)',
+                    borderRadius: '8px',
+                    padding: '7px 14px',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0, 229, 255, 0.2)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0, 229, 255, 0.12)'; }}
+                >
+                  <Camera size={14} />
+                  <span>{avatar ? 'Change photo' : 'Upload photo'}</span>
+                </button>
+
+                {avatar && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: 'rgba(244, 63, 94, 0.1)',
+                      color: '#fb7185',
+                      border: '1px solid rgba(244, 63, 94, 0.25)',
+                      borderRadius: '8px',
+                      padding: '7px 12px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(244, 63, 94, 0.18)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(244, 63, 94, 0.1)'; }}
+                  >
+                    <Trash2 size={13} />
+                    <span>Remove</span>
+                  </button>
+                )}
+              </div>
+              <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                Upload PNG, JPG, WebP, or GIF (max 2.5 MB)
+              </span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+            {/* Display Name (Editable) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 240px' }}>
               <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>Display name</label>
               <input
@@ -152,18 +287,40 @@ export default function SettingsView({
               />
             </div>
 
-            {/* Email */}
+            {/* Email (Locked & Non-Editable) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 280px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>Email</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>Email</label>
+                <span style={{
+                  fontSize: '10px',
+                  color: 'var(--text-tertiary)',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid var(--border)',
+                  padding: '1px 6px',
+                  borderRadius: '4px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <Lock size={10} /> Non-editable
+                </span>
+              </div>
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                disabled
+                readOnly
                 style={{
-                  background: 'var(--bg-input)', border: '1px solid var(--border)',
-                  borderRadius: '8px', padding: '10px 14px',
-                  color: 'var(--text-primary)', fontSize: '13px', outline: 'none'
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '8px',
+                  padding: '10px 14px',
+                  color: 'var(--text-secondary)',
+                  fontSize: '13px',
+                  cursor: 'not-allowed',
+                  opacity: 0.85
                 }}
+                title="Email is bound to this authenticated account and cannot be modified"
               />
             </div>
           </div>
