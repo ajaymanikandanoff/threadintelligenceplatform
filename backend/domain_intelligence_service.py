@@ -19,7 +19,12 @@ import urllib.request
 import math
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-import dns.resolver
+try:
+    import dns.resolver
+    DNS_AVAILABLE = True
+except ImportError:
+    dns = None
+    DNS_AVAILABLE = False
 
 SUSPICIOUS_TLDS = {
     "top", "xyz", "club", "buzz", "work", "loan", "tk", "ml", "ga", "cf", "gq",
@@ -35,10 +40,6 @@ def calculate_shannon_entropy(string: str) -> float:
 
 def resolve_dns_records(domain: str) -> Dict[str, List[Any]]:
     """Resolves A, AAAA, MX, TXT, NS, and CNAME records."""
-    resolver = dns.resolver.Resolver()
-    resolver.timeout = 2.5
-    resolver.lifetime = 3.0
-
     records: Dict[str, List[Any]] = {
         "A": [],
         "AAAA": [],
@@ -47,6 +48,24 @@ def resolve_dns_records(domain: str) -> Dict[str, List[Any]]:
         "NS": [],
         "CNAME": []
     }
+
+    if not DNS_AVAILABLE or dns is None:
+        try:
+            # Fallback to standard library socket resolver
+            addrs = socket.getaddrinfo(domain, None)
+            for addr in addrs:
+                ip = addr[4][0]
+                if ":" in ip and ip not in records["AAAA"]:
+                    records["AAAA"].append(ip)
+                elif ":" not in ip and ip not in records["A"]:
+                    records["A"].append(ip)
+        except Exception:
+            pass
+        return records
+
+    resolver = dns.resolver.Resolver()
+    resolver.timeout = 2.5
+    resolver.lifetime = 3.0
 
     # Record types to query
     for rtype in ["A", "AAAA", "MX", "TXT", "NS", "CNAME"]:

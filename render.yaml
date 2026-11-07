@@ -12,3 +12,4 @@ services:
         value: gemini-3.5-flash
       - key: FRONTEND_URL
         sync: false
+
