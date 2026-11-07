@@ -4,7 +4,7 @@ import re
 import httpx
 from typing import Dict, Any, Optional
 
-DEFAULT_MODEL = "gemini-2.5-flash"
+DEFAULT_MODEL = "gemini-3-flash-preview"
 
 SYSTEM_INSTRUCTION = """You are an elite Cyber Threat Intelligence (CTI) analyst and Knowledge Graph Engineer.
 Analyze the provided threat intelligence report, advisory, or incident log.
@@ -335,6 +335,8 @@ async def call_gemini_api(
 ) -> str:
     """Calls the official Google Gemini REST API using httpx."""
     clean_model = model_name.strip()
+    if any(m in clean_model for m in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]):
+        clean_model = "gemini-3-flash-preview"
     if not clean_model.startswith("models/"):
         clean_model = f"models/{clean_model}"
     

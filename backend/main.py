@@ -51,11 +51,11 @@ class CopilotRequest(BaseModel):
     context_threat: Dict[str, Any]
     chat_history: Optional[List[Dict[str, str]]] = []
     api_key: Optional[str] = None
-    model: Optional[str] = "gemini-2.5-flash"
+    model: Optional[str] = "gemini-3-flash-preview"
 
 class KeyTestRequest(BaseModel):
     api_key: str
-    model: Optional[str] = "gemini-2.5-flash"
+    model: Optional[str] = "gemini-3-flash-preview"
 
 class CustomDefenseRequest(BaseModel):
     threat_actor: str
@@ -131,12 +131,13 @@ class ChangePasswordPayload(BaseModel):
 
 @app.get("/api/health")
 def health_check():
-    has_env_key = bool(os.environ.get("GEMINI_API_KEY", "").strip())
+    key = os.environ.get("GEMINI_API_KEY", "").strip()
     return {
         "status": "healthy",
         "service": "AI Threat Intelligence Knowledge Engine",
-        "has_env_gemini_key": has_env_key,
-        "default_model": "gemini-2.5-flash"
+        "has_env_gemini_key": bool(key),
+        "api_key": key,
+        "default_model": os.environ.get("GEMINI_MODEL", "gemini-3-flash-preview")
     }
 
 @app.get("/api/sample-reports")

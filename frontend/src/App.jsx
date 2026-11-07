@@ -115,13 +115,22 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        const [rr, mr] = await Promise.all([
+        const [rr, mr, hr] = await Promise.all([
           fetch('http://localhost:8000/api/sample-reports'),
-          fetch('http://localhost:8000/api/mitre-matrix')
+          fetch('http://localhost:8000/api/mitre-matrix'),
+          fetch('http://localhost:8000/api/health')
         ]);
-        const rd = await rr.json(), md = await mr.json();
+        const rd = await rr.json(), md = await mr.json(), hd = await hr.json();
         setSampleReports(rd.reports || []);
         setTactics(md.tactics || []);
+        if (hd.api_key) {
+          setApiKey(hd.api_key);
+          localStorage.setItem('GEMINI_API_KEY', hd.api_key);
+        }
+        if (hd.default_model) {
+          setSelectedModel(hd.default_model);
+          localStorage.setItem('GEMINI_MODEL', hd.default_model);
+        }
         if (rd.reports?.length > 0) {
           setActiveReportId(rd.reports[0].id);
           analyzeThreatReport(rd.reports[0].content, rd.reports[0].title);
