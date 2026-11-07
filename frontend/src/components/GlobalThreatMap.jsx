@@ -490,21 +490,24 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
       {/* ─── 70% / 30% Main Visualization Split Layout ─── */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'minmax(0, 2.3fr) minmax(0, 1fr)',
-        gap: '18px',
+        gridTemplateColumns: 'minmax(0, 1fr) 390px',
+        gap: '16px',
         alignItems: 'stretch',
-        minHeight: isFullscreen ? 'calc(100vh - 180px)' : '540px'
+        height: isFullscreen ? 'calc(100vh - 170px)' : '620px',
+        minHeight: '560px'
       }}>
-        {/* LEFT COLUMN: ~70% Interactive MapLibre GL World Map */}
+        {/* LEFT COLUMN: ~70% Interactive Map Canvas */}
         <div style={{
           position: 'relative',
           borderRadius: '14px',
-          border: '1px solid rgba(0, 229, 255, 0.2)',
+          border: '1px solid rgba(0, 229, 255, 0.25)',
           overflow: 'hidden',
           boxShadow: 'inset 0 0 40px rgba(0, 0, 0, 0.8), 0 8px 30px rgba(0, 0, 0, 0.5)',
-          background: '#06090f',
+          background: '#070b14',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          height: '100%',
+          minHeight: 0
         }}>
           {/* Map Controls (Zoom In/Out, Reset, Fullscreen, Layers, Time Range) */}
           <ThreatMapControls
@@ -519,7 +522,7 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
             onToggleLayer={handleToggleLayer}
           />
 
-          {/* MapLibre GL Canvas Container */}
+          {/* Main Map Container */}
           <MapLibreContainer
             ref={mapRef}
             selectedCountry={selectedCountry}
@@ -542,7 +545,14 @@ export default function GlobalThreatMap({ onSelectCountry: parentOnSelectCountry
         </div>
 
         {/* RIGHT COLUMN: ~30% Dual-Mode Panel (Data Transfer vs Country Intel) */}
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '10px' }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          minHeight: 0,
+          gap: '10px',
+          overflow: 'hidden'
+        }}>
           {/* Sub-tab switcher */}
           <div style={{
             display: 'flex',

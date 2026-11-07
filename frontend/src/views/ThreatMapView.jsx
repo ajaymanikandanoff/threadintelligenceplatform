@@ -7,10 +7,8 @@ export default function ThreatMapView({ onNavigateTab }) {
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      gap: '20px',
-      padding: '24px 32px 48px',
-      maxWidth: '1800px',
-      margin: '0 auto',
+      gap: '16px',
+      padding: '0 0 24px 0',
       width: '100%',
       boxSizing: 'border-box'
     }}>

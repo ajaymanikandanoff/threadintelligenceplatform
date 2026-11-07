@@ -47,7 +47,7 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
   const svgRef = useRef(null);
 
   // ViewBox state for smooth pan & zoom: [minX, minY, width, height]
-  const [viewBox, setViewBox] = useState({ x: 0, y: 0, w: 1000, h: 500 });
+  const [viewBox, setViewBox] = useState({ x: 0, y: 35, w: 1000, h: 430 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [hoveredEntity, setHoveredEntity] = useState(null);
@@ -187,7 +187,7 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
       });
     },
     resetView: () => {
-      setViewBox({ x: 0, y: 0, w: 1000, h: 500 });
+      setViewBox({ x: 0, y: 35, w: 1000, h: 430 });
       setActivePopup(null);
     },
     flyToCoords: (lng, lat, zoom = 3) => {
@@ -308,7 +308,8 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
       style={{
         width: '100%',
         height: '100%',
-        minHeight: '520px',
+        flex: 1,
+        minHeight: 0,
         position: 'relative',
         background: '#070b14',
         overflow: 'hidden',
@@ -319,6 +320,7 @@ const MapLibreContainer = forwardRef(function MapLibreContainer({
       <svg
         ref={svgRef}
         viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`}
+        preserveAspectRatio="xMidYMid meet"
         style={{
           width: '100%',
           height: '100%',

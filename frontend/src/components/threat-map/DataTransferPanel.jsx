@@ -40,7 +40,8 @@ export default function DataTransferPanel({
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
-      minHeight: '520px',
+      flex: 1,
+      minHeight: 0,
       overflow: 'hidden',
       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)'
     }}>
